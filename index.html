@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signoff — Formal client sign-off for freelance web developers</title>
+  <meta name="description" content="Get formal, timestamped client approval on every milestone. Send one link, the client approves, scope creep stops. Built for freelance web developers.">
+  <meta property="og:title" content="Signoff — Stop doing free revisions">
+  <meta property="og:description" content="Formal, timestamped client sign-off on every milestone. No client login. Built for freelance web devs.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0b0d0c">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322c55e'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='%230b0d0c' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="logo" aria-label="Signoff home">
+        <span class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+        Signoff
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#problem">Problem</a>
+        <a href="#how">How it works</a>
+        <a href="#join" class="btn btn-small">Get early access</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="dot"></span> Early access is open</p>
+          <h1>Get it <span class="accent">signed off.</span><br>Stop doing free revisions.</h1>
+          <p class="lead">Signoff gives freelance web developers formal, timestamped client approval on every milestone. Send one link. Your client reviews the work and clicks <strong>Approve</strong>. Everything after that is a new request, on the record.</p>
+
+          <form class="signup" name="early-access" method="POST" action="/thanks.html" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="early-access">
+            <input type="hidden" name="source" value="hero">
+            <p class="hidden"><label>Don't fill this out: <input name="bot-field"></label></p>
+            <label for="email-hero" class="sr-only">Email address</label>
+            <input id="email-hero" type="email" name="email" placeholder="you@yourstudio.dev" autocomplete="email" required>
+            <button type="submit" class="btn">Get early access</button>
+          </form>
+          <p class="fine">Free for early users. No spam, one email when it's ready.</p>
+        </div>
+
+        <!-- Mock client review card -->
+        <div class="mock" aria-label="Example of a client review page">
+          <div class="mock-bar">
+            <span></span><span></span><span></span>
+            <code>signoff.dev/r/k7f2q9</code>
+          </div>
+          <div class="mock-body">
+            <p class="mock-label">Milestone 2 of 4</p>
+            <h3>Homepage &amp; booking flow</h3>
+            <p class="mock-meta">Work-Out website · €1,800</p>
+            <ul class="deliverables">
+              <li><span class="tag">URL</span> staging.work-out.be</li>
+              <li><span class="tag">IMG</span> mobile-screens.png</li>
+              <li><span class="tag">NOTE</span> Booking form now sends to Calendly</li>
+            </ul>
+            <div class="mock-actions">
+              <span class="btn btn-ghost btn-small">Leave feedback</span>
+              <span class="btn btn-small">Approve</span>
+            </div>
+            <div class="stamp">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <div>
+                <strong>Approved by Marie Dubois</strong>
+                <code>2026-10-14 · 15:42 CET</code>
+              </div>
+            </div>
+          </div>
+          <p class="mock-foot">Powered by Signoff</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section id="problem" class="section">
+      <div class="container">
+        <p class="kicker">The problem</p>
+        <h2>"Can you just tweak one more thing?"</h2>
+        <p class="section-lead">You send a staging link by email. The client answers on WhatsApp three days later with vague feedback. Nobody knows who approved what, or when. And the "small changes" never stop.</p>
+
+        <div class="stats">
+          <div class="stat">
+            <p class="stat-num">43%</p>
+            <p class="stat-text">average scope creep markup in freelance web dev, the highest of any category</p>
+            <p class="stat-src">Memvers, Q1 2026</p>
+          </div>
+          <div class="stat">
+            <p class="stat-num">$4,300</p>
+            <p class="stat-text">lost per project, on average, to unbilled revision time</p>
+            <p class="stat-src">Industry estimate</p>
+          </div>
+          <div class="stat">
+            <p class="stat-num">53%</p>
+            <p class="stat-text">of freelancers name scope creep as their #1 profitability problem</p>
+            <p class="stat-src">Payoneer, 2025</p>
+          </div>
+          <div class="stat">
+            <p class="stat-num">3–5×</p>
+            <p class="stat-text">a week you face the same call: do it for free, or say no?</p>
+            <p class="stat-src">Freelancer surveys</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOLUTION -->
+    <section id="solution" class="section section-alt">
+      <div class="container">
+        <p class="kicker">The solution</p>
+        <h2>One link. One click. A record that holds.</h2>
+        <p class="section-lead">Signoff turns "looks good I guess" into a formal approval you can point to when the next request comes in.</p>
+
+        <div class="features">
+          <article class="feature">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></div>
+            <h3>Staging URLs as deliverables</h3>
+            <p>Attach staging links, screenshots and notes to each milestone. Built for how developers actually ship.</p>
+          </article>
+          <article class="feature">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/><path d="M17 4l3 3M20 4l-3 3"/></svg></div>
+            <h3>No client login</h3>
+            <p>Your client gets a unique link. No account, no password, no app to download. They just review and decide.</p>
+          </article>
+          <article class="feature">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <h3>Timestamped sign-off</h3>
+            <p>Every approval records the client's name, date and time. No more "I never agreed to that."</p>
+          </article>
+          <article class="feature">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg></div>
+            <h3>All projects, one dashboard</h3>
+            <p>See every client project and the status of each milestone at a glance: waiting, in feedback, approved.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="section">
+      <div class="container">
+        <p class="kicker">How it works</p>
+        <h2>From staging link to signed off in four steps</h2>
+
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num">01</span>
+            <h3>Define your milestones</h3>
+            <p>Create a project and split it into milestones, each with a title, a description and an amount.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">02</span>
+            <h3>Attach the deliverables</h3>
+            <p>Add the staging URL, screenshots and notes that show the milestone is done.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">03</span>
+            <h3>Send one link</h3>
+            <p>Your client opens a clean review page and clicks <em>Approve</em> or <em>Leave feedback</em>.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">04</span>
+            <h3>Get it on record</h3>
+            <p>The approval is timestamped and stored. Anything new after that is a separate request, so you can bill it.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="join" class="section cta">
+      <div class="container cta-inner">
+        <h2>Your next client approval, <span class="accent">on the record.</span></h2>
+        <p class="section-lead">Signoff is being built right now by a freelance web developer who has the same problem. Join the early-access list and help shape it.</p>
+        <form class="signup signup-center" name="early-access" method="POST" action="/thanks.html" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="hidden" name="form-name" value="early-access">
+          <input type="hidden" name="source" value="cta">
+          <p class="hidden"><label>Don't fill this out: <input name="bot-field"></label></p>
+          <label for="email-cta" class="sr-only">Email address</label>
+          <input id="email-cta" type="email" name="email" placeholder="you@yourstudio.dev" autocomplete="email" required>
+          <button type="submit" class="btn">Join early access</button>
+        </form>
+        <p class="fine">Planned pricing: one flat rate, around $29/month. Early users get it free while we build.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <a href="#" class="logo logo-small">
+        <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        Signoff
+      </a>
+      <p>Built in public in Brussels by <a href="https://github.com/KCIORGANISATION" rel="noopener">Kostia Masset-Depasse</a>.</p>
+      <p class="copy">© <span id="year">2026</span> Signoff</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
