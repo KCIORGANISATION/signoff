@@ -1,4 +1,4 @@
-# signoff-landing
+# signoff
 
 Landing page de validation de Signoff (phase 1). Objectif : 30 emails early-access = feu vert pour le MVP.
 
@@ -20,8 +20,8 @@ Les inscriptions apparaissent dans Netlify > site > **Forms** > `early-access`. 
 
 ## Déployer
 
-1. Créer le repo `signoff-landing` sur GitHub et y pousser ces fichiers.
-2. Netlify > Add new site > Import from GitHub > `signoff-landing`. Pas de commande de build, dossier de publication `.`.
+1. Repo GitHub : `KCIORGANISATION/signoff` (déjà en place).
+2. Netlify > Add new site > Import from GitHub > `signoff`. Pas de commande de build, dossier de publication `.`.
 3. Vérifier que Forms est activé (Site configuration > Forms > Enable form detection), puis redéployer une fois.
 4. Tester une inscription depuis le site en ligne.
 
