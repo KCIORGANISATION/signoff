@@ -19,6 +19,7 @@ Mesures de sécurité communes : HTTPS, mots de passe hachés (bcrypt), jetons d
 | Mot de passe (haché) | Authentification | Exécution du contrat (art. 6.1.b) | Durée du compte + 1 an | Render (UE), Neon (UE), Cloudflare R2 (UE, sauvegardes) |
 | Langue préférée | Afficher l'interface et les emails dans la bonne langue | Exécution du contrat (art. 6.1.b) | Durée du compte + 1 an | Render (UE), Neon (UE) |
 | Projets, jalons, montants, livrables (liens, notes), lien et instructions de paiement (IBAN éventuel) | Fournir le service | Exécution du contrat (art. 6.1.b) | Durée du compte + 1 an, ou suppression immédiate par le développeur | Render (UE), Neon (UE), Cloudflare R2 (UE, sauvegardes) |
+| Fichiers téléversés par le développeur (captures, PDF, maquettes, textes), nom, taille, empreinte SHA-256 | Fournir le service : montrer les fichiers au client et les inscrire au certificat | Exécution du contrat (art. 6.1.b) | Jusqu'à la suppression du jalon, du projet ou du compte (suppression immédiate du stockage) ; figés après approbation du jalon | Cloudflare R2 (UE, bucket privé `signoff-files`), Render (UE, transit) |
 | Jeton de réinitialisation du mot de passe (haché), email | Réinitialiser le mot de passe | Exécution du contrat (art. 6.1.b) | Lien valable 1 h ; ligne conservée avec le compte | Neon (UE), Resend (US) |
 | Cookie de session (identifiant du compte, langue, jeton CSRF) | Garder la session ouverte, protéger les formulaires | Intérêt légitime (art. 6.1.f), cookie strictement nécessaire | 30 jours | Aucun (stocké dans le navigateur) |
 | Adresse IP (limitation des tentatives de connexion, journaux de l'hébergeur) | Sécurité du service | Intérêt légitime (art. 6.1.f) | 15 minutes (limitation) ; journaux selon l'hébergeur (quelques semaines) | Render (UE) |
@@ -32,6 +33,7 @@ Mesures de sécurité communes : HTTPS, mots de passe hachés (bcrypt), jetons d
 | Nom et email du client | Envoyer le lien de validation, l'afficher sur le certificat | Celle du développeur (en pratique exécution du contrat ou intérêt légitime) | Durée du compte du développeur + 1 an, ou suppression immédiate du projet | Render (UE), Neon (UE), Resend (US), Cloudflare R2 (UE, sauvegardes) |
 | Messages de feedback du client | Transmettre les demandes de correction au développeur | Celle du développeur | Durée du compte + 1 an | Render (UE), Neon (UE), Resend (US), Cloudflare R2 (UE, sauvegardes) |
 | Preuve d'approbation : date et heure UTC, adresse IP, navigateur, copie figée des livrables | Prouver l'accord du client sur le jalon | Intérêt légitime du développeur (art. 6.1.f) | Durée du compte + 1 an | Render (UE), Neon (UE), Cloudflare R2 (UE, sauvegardes) |
+| Données personnelles éventuellement présentes dans les fichiers téléversés (captures d'écran, documents du client) | Montrer les livrables au client et prouver ce qui a été approuvé | Celle du développeur | Jusqu'à la suppression du jalon, du projet ou du compte par le développeur | Cloudflare R2 (UE, bucket privé `signoff-files`), Render (UE, transit) |
 | Adresse IP et navigateur à l'ouverture du lien et au feedback | Historique du jalon | Intérêt légitime du développeur (art. 6.1.f) | Durée du compte + 1 an | Render (UE), Neon (UE), Cloudflare R2 (UE, sauvegardes) |
 
 ## Transferts hors UE
@@ -40,6 +42,7 @@ Resend, GitHub et Netlify sont établis aux États-Unis ; Render, Neon et Cloudf
 
 ## À tenir à jour
 
-- Ajouter une ligne pour tout nouveau type de donnée ou nouveau fournisseur (paiement Stripe, upload de fichiers, analytics…).
+- Ajouter une ligne pour tout nouveau type de donnée ou nouveau fournisseur (paiement Stripe, analytics…).
+- Le bucket de fichiers `signoff-files` n'est pas sauvegardé pour l'instant (seule la base l'est).
 - Noter ici la date d'acceptation du DPA de chaque fournisseur.
 - Garder ce registre cohérent avec `/privacy` et `/terms`.

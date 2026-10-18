@@ -89,7 +89,7 @@ export function isExpired(milestone) {
 }
 
 // A frozen copy of what the client sees at the moment they approve.
-export function buildSnapshot(milestone, deliverables) {
+export function buildSnapshot(milestone, deliverables, files = []) {
   return {
     provider: milestone.dev_name,
     project: milestone.project_name,
@@ -99,6 +99,7 @@ export function buildSnapshot(milestone, deliverables) {
     description: milestone.description,
     amount: milestone.amount,
     deliverables: deliverables.map(({ kind, label, url, body }) => ({ kind, label, url, body })),
+    files: files.map(({ name, mime, size, sha256 }) => ({ name, mime, size: Number(size), sha256 })),
   };
 }
 

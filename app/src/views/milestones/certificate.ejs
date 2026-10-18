@@ -35,6 +35,18 @@
       <h2><%= t('cert.approvedContent') %></h2>
       <% if (s.description) { %><p style="white-space: pre-wrap; margin-bottom: 14px;"><%= s.description %></p><% } %>
       <%- include('../partials/deliverables', { deliverables: s.deliverables, removable: false }) %>
+      <% if (s.files && s.files.length > 0) { %>
+        <h2><%= t('cert.files') %></h2>
+        <p class="muted small" style="margin-bottom: 12px;"><%= t('cert.files.intro') %></p>
+        <ol class="cert-files">
+          <% s.files.forEach((f) => { %>
+            <li>
+              <span class="file-name"><%= f.name %></span> <span class="meta">· <%= fmt.bytes(f.size) %></span>
+              <div class="mono hash">SHA-256 <%= f.sha256 %></div>
+            </li>
+          <% }) %>
+        </ol>
+      <% } %>
     </article>
   <% } %>
 </div>

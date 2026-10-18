@@ -16,6 +16,13 @@
     <%- include('../partials/deliverables', { deliverables, removable: false }) %>
   </section>
 
+  <% if (files.length > 0) { %>
+    <section class="card" style="margin-top: 20px;" id="files">
+      <div class="card-header"><h2><%= t('files.title') %></h2></div>
+      <%- include('../partials/files', { files, baseUrl: `/r/${milestone.token}/files`, removable: false }) %>
+    </section>
+  <% } %>
+
   <section class="card decision" style="margin-top: 20px;">
     <% if (milestone.status === 'approved') { %>
       <div class="alert alert-success"><%= t('review.approved', { date: fmt.dateTime(milestone.approved_at) }) %></div>
