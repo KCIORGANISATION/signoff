@@ -6,6 +6,7 @@
     <p class="muted small" style="margin-bottom: 20px;"><%= project.name %></p>
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
     <form method="post" action="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones` %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="field">
         <label for="title"><%= t('milestone.title') %></label>
         <input id="title" name="title" type="text" required value="<%= values.title ?? '' %>">
@@ -27,6 +28,7 @@
   </div>
   <% if (milestone) { %>
     <form method="post" action="/milestones/<%= milestone.id %>/delete" data-confirm="<%= t('milestone.delete.confirm') %>" style="margin-top: 20px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <button class="btn btn-danger btn-small" type="submit"><%= t('milestone.delete') %></button>
     </form>
   <% } %>

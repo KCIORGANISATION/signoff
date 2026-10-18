@@ -7,18 +7,26 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node --env-file-if-exists=.env src/server.js",
-    "dev": "node --env-file-if-exists=.env --watch src/server.js"
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "test": "node --test test/*.test.js",
+    "backup": "node --env-file-if-exists=.env scripts/backup.js",
+    "restore": "node --env-file-if-exists=.env scripts/restore.js"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
     "@electric-sql/pglite": "^0.5.10",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "bcryptjs": "^3.0.3",
     "cookie-session": "^2.1.1",
     "ejs": "^7.0.2",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.1",
-    "pg": "^8.23.1"
+    "helmet": "^8.3.0",
+    "pg": "^8.23.1",
+    "resend": "^6.34.1"
   }
 }

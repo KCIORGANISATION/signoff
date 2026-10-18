@@ -4,6 +4,14 @@
     <h1 style="font-size: 24px; margin-bottom: 20px;"><%= t('auth.signup.title') %></h1>
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
     <form method="post" action="/signup">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (inviteRequired) { %>
+        <div class="field">
+          <label for="invite_code"><%= t('auth.invite') %></label>
+          <input id="invite_code" name="invite_code" type="text" autocomplete="off" required>
+          <p class="hint"><%= t('auth.invite.hint') %></p>
+        </div>
+      <% } %>
       <div class="field">
         <label for="name"><%= t('auth.name') %></label>
         <input id="name" name="name" type="text" autocomplete="organization" required value="<%= values.name ?? '' %>">

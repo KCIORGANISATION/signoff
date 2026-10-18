@@ -1,0 +1,52 @@
+name: Nightly database backup
+
+on:
+  schedule:
+    # GitHub schedules run in UTC: 01:00 UTC is 3:00 in Brussels in summer (2:00 in winter).
+    - cron: '0 1 * * *'
+  # Lets you start a backup by hand from the Actions tab.
+  workflow_dispatch:
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      # pg_dump must be the same major version as the Neon database, or newer.
+      PG_MAJOR: '17'
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq "postgresql-client-${PG_MAJOR}"
+          echo "/usr/lib/postgresql/${PG_MAJOR}/bin" >> "$GITHUB_PATH"
+
+      - run: npm ci --omit=dev
+
+      - name: Back up the database to R2
+        run: node scripts/backup.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
