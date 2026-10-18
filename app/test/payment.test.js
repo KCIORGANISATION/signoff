@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { Browser, startServer } from './helpers.js';
+import { Browser, approve, startServer } from './helpers.js';
 import { parsePaymentLink, parsePaymentNote } from '../src/payment.js';
 
 const LINK = 'https://buy.stripe.com/test_4gw5kE9xY';
@@ -96,21 +96,26 @@ test('the payment link and note reach the client only after approval', async () 
   const reviewPath = new URL(devPage.text.match(/id="share-url"[^>]*value="([^"]+)"/)[1]).pathname;
 
   const client = new Browser(server.base);
-  const pending = await client.get(reviewPath);
-  assert.equal(pending.status, 200);
-  for (const secret of ['buy.stripe.com', 'test_4gw5kE9xY', 'BE71 0961', 'Invoice 14', 'Pay now']) {
-    assert.ok(!pending.text.includes(secret), `"${secret}" is not in the page before approval`);
+  // Neither the welcome card nor the milestone page carries the payment details before approval.
+  for (const path of [reviewPath, `${reviewPath}/review`]) {
+    const pending = await client.get(path);
+    assert.equal(pending.status, 200);
+    for (const secret of ['buy.stripe.com', 'test_4gw5kE9xY', 'BE71 0961', 'Invoice 14', 'Pay now']) {
+      assert.ok(!pending.text.includes(secret), `"${secret}" is not in ${path} before approval`);
+    }
   }
+  assert.match((await client.get(`${reviewPath}/review`)).text, /After approving the milestone, you can pay through the link provided by the developer\./);
 
   await client.get('/lang/fr');
-  const pendingFr = await client.get(reviewPath);
-  assert.ok(!pendingFr.text.includes('buy.stripe.com'));
-  assert.ok(!pendingFr.text.includes('Payer maintenant'));
+  for (const path of [reviewPath, `${reviewPath}/review`]) {
+    const pendingFr = await client.get(path);
+    assert.ok(!pendingFr.text.includes('buy.stripe.com'));
+    assert.ok(!pendingFr.text.includes('Payer maintenant'));
+  }
   await client.get('/lang/en');
 
-  await client.get(reviewPath);
-  const approve = await client.post(`${reviewPath}/approve`);
-  assert.equal(approve.status, 302);
+  const approval = await approve(client, reviewPath);
+  assert.equal(approval.status, 302);
 
   const approved = await client.get(reviewPath);
   assert.match(approved.text, /Pay now/);
@@ -137,8 +142,7 @@ test('a milestone without payment details shows no payment block', async () => {
   const reviewPath = new URL(devPage.text.match(/id="share-url"[^>]*value="([^"]+)"/)[1]).pathname;
 
   const client = new Browser(server.base);
-  await client.get(reviewPath);
-  await client.post(`${reviewPath}/approve`);
+  await approve(client, reviewPath);
   const approved = await client.get(reviewPath);
   assert.match(approved.text, /You approved this milestone/);
   assert.doesNotMatch(approved.text, /Pay now/);

@@ -151,3 +151,7 @@ CREATE INDEX IF NOT EXISTS files_milestone_idx ON files(milestone_id);
 CREATE OR REPLACE TRIGGER files_locked
   BEFORE INSERT OR UPDATE OR DELETE ON files
   FOR EACH ROW EXECUTE FUNCTION signoff_deliverables_locked();
+
+-- With a feedback, the files of the milestone in the order the client saw them,
+-- so "/fichier2" keeps pointing at the right file even if files change later.
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS files JSONB;

@@ -1,182 +1,164 @@
-<%- include('../partials/head', { title: milestone.title }) %>
-<div class="container">
-  <a class="back" href="/projects/<%= milestone.project_id %>">← <%= milestone.project_name %></a>
-  <div class="page-header">
-    <div>
-      <div class="row">
-        <h1><%= milestone.title %></h1>
-        <%- include('../partials/badge', { status: milestone.status }) %>
-      </div>
-      <p class="muted">
-        <%= milestone.client_name %><% if (milestone.amount !== null) { %> · <%= fmt.money(milestone.amount, milestone.currency) %><% } %>
-      </p>
+<%- include('../partials/head', { title: milestone.title, crumbs: [{ label: t('nav.projects'), href: '/dashboard' }, { label: milestone.project_name, href: `/projects/${milestone.project_id}` }, { label: milestone.title }] }) %>
+<div class="page-title reveal">
+  <div style="min-width: 0;">
+    <div class="row">
+      <h1 style="overflow-wrap: anywhere;"><%= milestone.title %></h1>
+      <%- include('../partials/badge', { status: milestone.status }) %>
     </div>
-    <a class="btn btn-ghost btn-small" href="/milestones/<%= milestone.id %>/edit"><%= locked ? t('milestone.payment.edit') : t('common.edit') %></a>
+    <p><%= milestone.client_name %><% if (milestone.amount !== null) { %> · <%= fmt.money(milestone.amount, milestone.currency) %><% } %></p>
+  </div>
+  <div class="row">
+    <a class="btn" href="/milestones/<%= milestone.id %>/preview"><%- include('../partials/icon', { name: 'eye' }) %><%= t('milestone.form.preview') %></a>
+    <a class="btn" href="/milestones/<%= milestone.id %>/edit"><%- include('../partials/icon', { name: 'pencil' }) %><%= locked ? t('milestone.payment.edit') : t('common.edit') %></a>
+  </div>
+</div>
+
+<div class="split">
+  <div class="stack">
+    <% if (locked) { %>
+      <div class="locked-banner reveal" role="status">
+        <p><%- include('../partials/icon', { name: 'lock' }) %><span><%= t('milestone.locked') %></span></p>
+        <form method="post" action="/milestones/<%= milestone.id %>/follow-up">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn-light btn-small" type="submit"><%- include('../partials/icon', { name: 'plus', cls: 'icon-sm' }) %><%= t('milestone.followUp') %></button>
+        </form>
+      </div>
+    <% } %>
+
+    <% if (editedAfterApproval) { %><%- include('../partials/alert', { kind: 'info', text: t('milestone.editedAfterApproval') }) %><% } %>
+
+    <section class="glass panel reveal" style="--i: 1;" aria-labelledby="desc-title">
+      <h2 id="desc-title"><%= t('review.description') %></h2>
+      <% if (milestone.description) { %>
+        <%- include('../partials/description', { text: milestone.description }) %>
+      <% } else { %>
+        <p class="empty"><%= t('review.description.empty') %></p>
+      <% } %>
+    </section>
+
+    <section class="glass panel reveal" style="--i: 2;" id="files" aria-labelledby="files-title">
+      <h2 id="files-title"><%= t('files.title') %></h2>
+      <%- include('../partials/upload', { milestone, files, filesEnabled, locked, quota }) %>
+    </section>
+
+    <section class="glass panel reveal" style="--i: 3;" id="deliverables" aria-labelledby="deliverables-title">
+      <h2 id="deliverables-title"><%= t('milestone.deliverables') %></h2>
+      <% if (deliverables.length === 0) { %>
+        <p class="empty"><%= locked ? t('milestone.deliverables.none') : t('milestone.deliverables.empty') %></p>
+      <% } else { %>
+        <div><%- include('../partials/deliverables', { deliverables, removable: !locked, milestoneId: milestone.id }) %></div>
+      <% } %>
+
+      <% if (!locked) { %>
+      <div>
+        <% const urlError = formError && formError.kind === 'url' ? formError : null; %>
+        <details class="add" <%= urlError ? 'open' : '' %>>
+          <summary><%- include('../partials/icon', { name: 'link', cls: 'icon-sm' }) %><%= t('milestone.addUrl') %></summary>
+          <form method="post" action="/milestones/<%= milestone.id %>/deliverables">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% if (urlError) { %><%- include('../partials/alert', { kind: 'error', text: urlError.message }) %><% } %>
+            <input type="hidden" name="kind" value="url">
+            <div class="fields-row" style="margin-top: 4px;">
+              <div class="field">
+                <label for="url"><%= t('milestone.url') %></label>
+                <input id="url" name="url" type="url" required placeholder="https://staging.example.com" value="<%= urlError ? urlError.url : '' %>">
+              </div>
+              <div class="field">
+                <label for="url-label"><%= t('milestone.label') %></label>
+                <input id="url-label" name="label" type="text" placeholder="<%= t('milestone.label.placeholder') %>" value="<%= urlError ? urlError.label : '' %>">
+              </div>
+            </div>
+            <div class="form-actions"><button class="btn btn-small" type="submit"><%= t('milestone.add') %></button></div>
+          </form>
+        </details>
+
+        <% const noteError = formError && formError.kind === 'note' ? formError : null; %>
+        <details class="add" <%= noteError ? 'open' : '' %>>
+          <summary><%- include('../partials/icon', { name: 'file', cls: 'icon-sm' }) %><%= t('milestone.addNote') %></summary>
+          <form method="post" action="/milestones/<%= milestone.id %>/deliverables">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% if (noteError) { %><%- include('../partials/alert', { kind: 'error', text: noteError.message }) %><% } %>
+            <input type="hidden" name="kind" value="note">
+            <div class="field">
+              <label for="note-label"><%= t('milestone.label') %></label>
+              <input id="note-label" name="label" type="text" value="<%= noteError ? noteError.label : '' %>">
+            </div>
+            <div class="field">
+              <label for="note-body"><%= t('milestone.note') %></label>
+              <textarea id="note-body" name="body" required><%= noteError ? noteError.body : '' %></textarea>
+            </div>
+            <div class="form-actions"><button class="btn btn-small" type="submit"><%= t('milestone.add') %></button></div>
+          </form>
+        </details>
+      </div>
+      <% } %>
+    </section>
   </div>
 
-  <% if (locked) { %>
-    <div class="alert alert-info locked" role="status">
-      <p><%= t('milestone.locked') %></p>
-      <form method="post" action="/milestones/<%= milestone.id %>/follow-up" style="margin-top: 10px;">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn btn-small" type="submit"><%= t('milestone.followUp') %></button>
-      </form>
-    </div>
-  <% } %>
-
-  <% if (editedAfterApproval) { %>
-    <div class="alert alert-info"><%= t('milestone.editedAfterApproval') %></div>
-  <% } %>
-
-  <% if (milestone.description) { %>
-    <section class="card"><p style="white-space: pre-wrap;"><%= milestone.description %></p></section>
-  <% } %>
-
-  <% if (milestone.payment_link || milestone.payment_note) { %>
-    <section class="card" id="payment">
-      <div class="card-header"><h2><%= t('milestone.payment') %></h2></div>
-      <% if (milestone.payment_link) { %>
-        <p><a class="url" href="<%= milestone.payment_link %>" target="_blank" rel="noopener noreferrer"><%= milestone.payment_link %></a></p>
-      <% } %>
-      <% if (milestone.payment_note) { %><p class="note" style="margin-top: 8px;"><%= milestone.payment_note %></p><% } %>
-      <p class="hint"><%= t('milestone.payment.hint') %></p>
-    </section>
-  <% } %>
-
-  <section class="card" id="share">
-    <div class="card-header">
-      <h2><%= t('milestone.share') %></h2>
-      <% if (approval) { %><a class="btn btn-small" href="/milestones/<%= milestone.id %>/certificate"><%= t('milestone.certificate') %></a><% } %>
-    </div>
-    <% if (milestone.status === 'draft') { %>
-      <p class="muted"><%= t('milestone.share.draft', { email: milestone.client_email }) %></p>
-      <form method="post" action="/milestones/<%= milestone.id %>/send" style="margin-top: 14px;">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn" type="submit"><%= t('milestone.share.button') %></button>
-      </form>
-    <% } else { %>
-      <% if (milestone.status === 'feedback') { %>
-        <p class="muted"><%= t('milestone.share.againHint', { email: milestone.client_email }) %></p>
-      <% } %>
-      <% if (expired) { %>
-        <p class="muted"><%= t('milestone.share.expired', { date: fmt.date(milestone.expires_at) }) %></p>
+  <aside class="split-side">
+    <section class="glass panel panel-tight reveal" style="--i: 1;" id="share" aria-labelledby="share-title">
+      <h2 id="share-title"><%= t('milestone.share') %></h2>
+      <% if (milestone.status === 'draft') { %>
+        <p class="muted small"><%= t('milestone.share.draft', { email: milestone.client_email }) %></p>
+        <form method="post" action="/milestones/<%= milestone.id %>/send">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn-primary btn-large btn-block" type="submit" data-loading><%- include('../partials/icon', { name: 'send' }) %><%= t('milestone.share.button') %></button>
+        </form>
       <% } else { %>
-        <div class="share-link">
-          <input id="share-url" type="text" readonly value="<%= link %>" aria-label="<%= t('milestone.share') %>">
-          <button class="btn btn-ghost" type="button" data-copy="#share-url" data-copied-label="<%= t('milestone.share.copied') %>"><%= t('milestone.share.copy') %></button>
-        </div>
-        <% if (milestone.expires_at) { %>
-          <p class="hint"><%= t('milestone.share.expires', { date: fmt.date(milestone.expires_at) }) %></p>
+        <% if (milestone.status === 'feedback') { %><p class="muted small"><%= t('milestone.share.againHint', { email: milestone.client_email }) %></p><% } %>
+        <% if (expired) { %>
+          <p class="muted small"><%= t('milestone.share.expired', { date: fmt.date(milestone.expires_at) }) %></p>
+        <% } else { %>
+          <div class="share-link">
+            <input id="share-url" type="text" readonly value="<%= link %>" aria-label="<%= t('milestone.share') %>">
+            <button class="btn" type="button" data-copy="#share-url" data-copied-label="<%= t('milestone.share.copied') %>"><%- include('../partials/icon', { name: 'copy', cls: 'icon-sm' }) %><%= t('milestone.share.copy') %></button>
+          </div>
+          <% if (milestone.expires_at) { %><p class="hint" style="margin: 0;"><%= t('milestone.share.expires', { date: fmt.date(milestone.expires_at) }) %></p><% } %>
+        <% } %>
+        <% if (milestone.status === 'feedback') { %>
+          <form method="post" action="/milestones/<%= milestone.id %>/send">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn-primary btn-large btn-block" type="submit" data-loading><%- include('../partials/icon', { name: 'send' }) %><%= t('milestone.share.again') %></button>
+          </form>
         <% } %>
       <% } %>
-      <% if (milestone.status === 'feedback') { %>
-        <form method="post" action="/milestones/<%= milestone.id %>/send" style="margin-top: 14px;">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button class="btn" type="submit"><%= t('milestone.share.again') %></button>
-        </form>
+      <% if (approval) { %>
+        <a class="btn btn-block" href="/milestones/<%= milestone.id %>/certificate"><%- include('../partials/icon', { name: 'shield' }) %><%= t('milestone.certificate') %></a>
       <% } %>
-    <% } %>
-  </section>
+    </section>
 
-  <section class="card" id="deliverables">
-    <div class="card-header"><h2><%= t('milestone.deliverables') %></h2></div>
-    <% if (deliverables.length === 0) { %>
-      <p class="empty"><%= locked ? t('milestone.deliverables.none') : t('milestone.deliverables.empty') %></p>
-    <% } else { %>
-      <%- include('../partials/deliverables', { deliverables, removable: !locked, milestoneId: milestone.id }) %>
-    <% } %>
-
-    <% if (!locked) { %>
-
-    <% const urlError = formError && formError.kind === 'url' ? formError : null; %>
-    <details class="add" <%= urlError ? 'open' : '' %>>
-      <summary>+ <%= t('milestone.addUrl') %></summary>
-      <form method="post" action="/milestones/<%= milestone.id %>/deliverables">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <% if (urlError) { %><div class="alert alert-error" role="alert"><%= urlError.message %></div><% } %>
-        <input type="hidden" name="kind" value="url">
-        <div class="two-cols">
-          <div>
-            <label for="url"><%= t('milestone.url') %></label>
-            <input id="url" name="url" type="url" required placeholder="https://staging.example.com" value="<%= urlError ? urlError.url : '' %>">
-          </div>
-          <div>
-            <label for="url-label"><%= t('milestone.label') %></label>
-            <input id="url-label" name="label" type="text" placeholder="<%= t('milestone.label.placeholder') %>" value="<%= urlError ? urlError.label : '' %>">
-          </div>
-        </div>
-        <div class="form-actions"><button class="btn btn-small" type="submit"><%= t('milestone.add') %></button></div>
-      </form>
-    </details>
-
-    <% const noteError = formError && formError.kind === 'note' ? formError : null; %>
-    <details class="add" <%= noteError ? 'open' : '' %>>
-      <summary>+ <%= t('milestone.addNote') %></summary>
-      <form method="post" action="/milestones/<%= milestone.id %>/deliverables">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <% if (noteError) { %><div class="alert alert-error" role="alert"><%= noteError.message %></div><% } %>
-        <input type="hidden" name="kind" value="note">
-        <div class="field">
-          <label for="note-label"><%= t('milestone.label') %></label>
-          <input id="note-label" name="label" type="text" value="<%= noteError ? noteError.label : '' %>">
-        </div>
-        <div class="field">
-          <label for="note-body"><%= t('milestone.note') %></label>
-          <textarea id="note-body" name="body" required><%= noteError ? noteError.body : '' %></textarea>
-        </div>
-        <div class="form-actions"><button class="btn btn-small" type="submit"><%= t('milestone.add') %></button></div>
-      </form>
-    </details>
-    <% } %>
-  </section>
-
-  <section class="card" id="files">
-    <div class="card-header">
-      <h2><%= t('files.title') %></h2>
-      <% if (filesEnabled) { %><span class="meta"><%= t('files.quota', { used: fmt.bytes(quota.used), total: fmt.bytes(quota.total) }) %></span><% } %>
-    </div>
-    <% if (files.length > 0) { %>
-      <%- include('../partials/files', { files, baseUrl: `/milestones/${milestone.id}/files`, removable: !locked, milestoneId: milestone.id }) %>
-    <% } else if (locked || !filesEnabled) { %>
-      <p class="empty"><%= t('files.none') %></p>
+    <% if (milestone.payment_link || milestone.payment_note) { %>
+      <section class="glass panel panel-tight reveal" style="--i: 2;" id="payment" aria-labelledby="payment-title">
+        <h2 id="payment-title"><%= t('milestone.payment') %></h2>
+        <% if (milestone.payment_link) { %>
+          <p><a class="url" href="<%= milestone.payment_link %>" target="_blank" rel="noopener noreferrer" style="overflow-wrap: anywhere;"><%= milestone.payment_link %></a></p>
+        <% } %>
+        <% if (milestone.payment_note) { %><p class="payment-note"><%= milestone.payment_note %></p><% } %>
+        <p class="hint" style="margin: 0;"><%= t('milestone.payment.hint') %></p>
+      </section>
     <% } %>
 
-    <% if (locked) { %>
-      <% if (files.length > 0) { %><p class="hint" style="margin-top: 12px;"><%= t('files.frozen') %></p><% } %>
-    <% } else if (!filesEnabled) { %>
-      <div class="alert alert-info" role="status" style="margin: 12px 0 0;"><%= t('files.disabled') %></div>
-    <% } else { %>
-      <form class="dropzone" method="post" action="/milestones/<%= milestone.id %>/files" enctype="multipart/form-data" data-upload
-            data-error-generic="<%= t('files.error.upload') %>">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <p class="dropzone-title"><%= t('files.drop') %></p>
-        <p class="hint"><%= t('files.rules') %></p>
-        <label class="btn btn-ghost btn-small dropzone-button">
-          <%= t('files.choose') %>
-          <input class="sr-only" type="file" name="files" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,.txt,.md,.csv">
-        </label>
-        <noscript><button class="btn btn-small" type="submit"><%= t('files.upload') %></button></noscript>
-        <progress max="100" value="0" hidden aria-label="<%= t('files.progress') %>"></progress>
-        <p class="upload-error alert alert-error" role="alert" hidden></p>
-      </form>
-    <% } %>
-  </section>
-
-  <section class="card">
-    <div class="card-header"><h2><%= t('milestone.history') %></h2></div>
-    <% if (events.length === 0) { %>
-      <p class="empty"><%= t('milestone.history.empty') %></p>
-    <% } else { %>
-      <ul class="timeline">
-        <% events.forEach((e) => { %>
-          <li>
-            <strong><%= t('event.' + e.type) %></strong>
-            <span class="meta"> · <%= fmt.dateTime(e.created_at) %></span>
-            <% if (e.message) { %><div class="message"><%= e.message %></div><% } %>
-          </li>
-        <% }) %>
-      </ul>
-    <% } %>
-  </section>
+    <section class="glass panel panel-tight reveal" style="--i: 3;" aria-labelledby="history-title">
+      <h2 id="history-title"><%= t('milestone.history') %></h2>
+      <% if (events.length === 0) { %>
+        <p class="empty"><%= t('milestone.history.empty') %></p>
+      <% } else { %>
+        <ul class="timeline">
+          <% events.forEach((e) => { %>
+            <li class="t-<%= e.type %>">
+              <strong><%= t('event.' + e.type) %></strong>
+              <% if (e.type === 'approved' && e.client_name) { %> · <%= e.client_name %><% } %>
+              <span class="meta"><%= fmt.dateTime(e.created_at) %></span>
+              <% if (e.html) { %>
+                <div class="message"><%- e.html %></div>
+              <% } else if (e.message) { %>
+                <div class="message"><%= e.message %></div>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  </aside>
 </div>
 <%- include('../partials/foot') %>

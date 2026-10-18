@@ -94,3 +94,9 @@ export class Browser {
 export function findLink(text) {
   return text.match(/https?:\/\/\S+/)[0];
 }
+
+// The client opens the milestone page of their link, then approves with their full name.
+export async function approve(client, reviewPath, name = 'Jane Client') {
+  await client.get(`${reviewPath}/review`);
+  return client.post(`${reviewPath}/approve`, { name });
+}

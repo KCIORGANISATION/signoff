@@ -56,13 +56,18 @@ test('full flow: sign up, project, milestone, client link, approval, timestamped
   assert.ok(page.text.includes(reviewLink), 'the developer sees the same link');
 
   const client = new Browser(server.base, { 'x-forwarded-for': '203.0.113.7', 'user-agent': 'TestBrowser/1.0' });
-  const review = await client.get(reviewLink);
+  const welcome = await client.get(reviewLink);
+  assert.equal(welcome.status, 200);
+  assert.match(welcome.text, /Studio Test is asking you to approve a milestone/);
+  assert.ok(welcome.text.includes(`href="${new URL(reviewLink).pathname}/review"`), 'one click to the milestone');
+
+  const review = await client.get(`${reviewLink}/review`);
   assert.equal(review.status, 200);
   assert.match(review.text, /Homepage design/);
   assert.match(review.text, /staging\.example\.com/);
 
   const before = Date.now();
-  const approve = await client.post(`${new URL(reviewLink).pathname}/approve`);
+  const approve = await client.post(`${new URL(reviewLink).pathname}/approve`, { name: 'Jane Client' });
   assert.equal(approve.status, 302);
 
   const approvedPage = await client.get(reviewLink);
@@ -180,5 +185,7 @@ test('legal pages exist in French and English, fonts are self-hosted', async () 
 
   const login = await visitor.get('/login');
   assert.ok(!login.text.includes('fonts.googleapis.com'));
-  assert.equal((await visitor.get('/fonts/inter/index.css')).status, 200);
+  assert.equal((await visitor.get('/fonts/jakarta/plus-jakarta-sans-latin-400-normal.woff2')).status, 200);
+  assert.equal((await visitor.get('/fonts/caveat/caveat-latin-600-normal.woff2')).status, 200);
+  assert.equal((await visitor.get('/logo.svg')).status, 200);
 });

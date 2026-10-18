@@ -1,53 +1,60 @@
 <%- include('../partials/head', { title: t('cert.title'), client: true }) %>
-<div class="container">
-  <div class="certificate-actions">
-    <a class="back" style="margin: 0;" href="<%= backUrl %>">← <%= t('common.back') %></a>
-    <% if (certificate) { %><button class="btn btn-small" type="button" data-print><%= t('cert.print') %></button><% } %>
-  </div>
+<div class="certificate-actions" style="max-width: 860px; margin-left: auto; margin-right: auto;">
+  <a class="btn btn-small" href="<%= backUrl %>"><%- include('../partials/icon', { name: 'arrowLeft', cls: 'icon-sm' }) %><%= t('common.back') %></a>
+  <% if (certificate) { %><button class="btn btn-light btn-small" type="button" data-print><%- include('../partials/icon', { name: 'print', cls: 'icon-sm' }) %><%= t('cert.print') %></button><% } %>
+</div>
 
-  <% if (!certificate) { %>
-    <div class="card narrow" style="margin: 0 auto;"><p><%= t('cert.none') %></p></div>
-  <% } else { const s = certificate.snapshot; %>
-    <article class="certificate">
-      <div class="certificate-top">
-        <div>
-          <span class="logo"><span class="logo-mark" aria-hidden="true">✓</span>Signoff</span>
-          <h1 style="margin-top: 16px;"><%= t('cert.title') %></h1>
-          <p class="muted" style="margin-top: 6px;"><%= t('cert.intro') %></p>
-        </div>
-        <span class="badge badge-approved"><%= t('status.approved') %></span>
+<% if (!certificate) { %>
+  <div class="auth"><section class="glass error-card"><span class="empty-icon"><%- include('../partials/icon', { name: 'clock', cls: 'icon-lg' }) %></span><p><%= t('cert.none') %></p></section></div>
+<% } else { const s = certificate.snapshot; %>
+  <article class="certificate glass reveal">
+    <div class="certificate-top">
+      <div>
+        <span class="brand brand-print"><span class="brand-mark"><%- include('../partials/icon', { name: 'check' }) %></span>Signoff</span>
+        <span class="badge badge-approved"><%- include('../partials/icon', { name: 'check' }) %><%= t('status.approved') %></span>
+        <h1><%= t('cert.title') %></h1>
+        <p><%= t('cert.intro') %></p>
       </div>
+    </div>
 
-      <dl>
-        <dt><%= t('cert.milestone') %></dt><dd><%= s.title %></dd>
-        <dt><%= t('cert.project') %></dt><dd><%= s.project %></dd>
-        <% if (s.amount !== null && s.amount !== undefined) { %>
-          <dt><%= t('review.amount') %></dt><dd><%= fmt.money(s.amount, s.currency) %></dd>
-        <% } %>
-        <dt><%= t('cert.provider') %></dt><dd><%= s.provider %></dd>
-        <dt><%= t('cert.client') %></dt><dd><%= certificate.clientName %></dd>
-        <dt><%= t('cert.date') %></dt><dd class="mono"><%= fmt.isoUtc(certificate.approvedAt) %></dd>
-        <dt><%= t('cert.ip') %></dt><dd class="mono"><%= certificate.ip %></dd>
-        <dt><%= t('cert.browser') %></dt><dd class="small"><%= certificate.userAgent %></dd>
-        <dt><%= t('cert.reference') %></dt><dd class="mono"><%= certificate.reference %></dd>
-      </dl>
+    <dl class="cert-facts">
+      <dt><%= t('cert.milestone') %></dt><dd><strong><%= s.title %></strong></dd>
+      <dt><%= t('cert.project') %></dt><dd><%= s.project %></dd>
+      <% if (s.amount !== null && s.amount !== undefined) { %>
+        <dt><%= t('review.amount') %></dt><dd><%= fmt.money(s.amount, s.currency) %></dd>
+      <% } %>
+      <dt><%= t('cert.provider') %></dt><dd><%= s.provider %></dd>
+      <dt><%= t('cert.client') %></dt><dd><%= certificate.clientName %></dd>
+      <dt><%= t('cert.date') %></dt><dd class="mono"><%= fmt.isoUtc(certificate.approvedAt) %></dd>
+      <dt><%= t('cert.ip') %></dt><dd class="mono"><%= certificate.ip %></dd>
+      <dt><%= t('cert.browser') %></dt><dd class="small"><%= certificate.userAgent %></dd>
+      <dt><%= t('cert.reference') %></dt><dd class="mono"><%= certificate.reference %></dd>
+    </dl>
 
+    <section class="cert-section">
       <h2><%= t('cert.approvedContent') %></h2>
-      <% if (s.description) { %><p style="white-space: pre-wrap; margin-bottom: 14px;"><%= s.description %></p><% } %>
-      <%- include('../partials/deliverables', { deliverables: s.deliverables, removable: false }) %>
-      <% if (s.files && s.files.length > 0) { %>
+      <% if (s.description) { %>
+        <%- include('../partials/description', { text: s.description }) %>
+      <% } %>
+      <% if (s.deliverables && s.deliverables.length > 0) { %>
+        <div><%- include('../partials/deliverables', { deliverables: s.deliverables, removable: false }) %></div>
+      <% } %>
+    </section>
+
+    <% if (s.files && s.files.length > 0) { %>
+      <section class="cert-section">
         <h2><%= t('cert.files') %></h2>
-        <p class="muted small" style="margin-bottom: 12px;"><%= t('cert.files.intro') %></p>
+        <p class="muted small"><%= t('cert.files.intro') %></p>
         <ol class="cert-files">
           <% s.files.forEach((f) => { %>
             <li>
-              <span class="file-name"><%= f.name %></span> <span class="meta">· <%= fmt.bytes(f.size) %></span>
+              <span class="file-name"><%= f.name %></span> <span class="file-size small">· <%= fmt.bytes(f.size) %></span>
               <div class="mono hash">SHA-256 <%= f.sha256 %></div>
             </li>
           <% }) %>
         </ol>
-      <% } %>
-    </article>
-  <% } %>
-</div>
+      </section>
+    <% } %>
+  </article>
+<% } %>
 <%- include('../partials/foot', { client: true }) %>

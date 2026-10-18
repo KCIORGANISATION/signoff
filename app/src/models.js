@@ -62,8 +62,8 @@ export function latestApproval(milestoneId) {
 
 export function addEvent(milestoneId, type, fields = {}) {
   return queryOne(
-    `INSERT INTO review_events (milestone_id, type, client_name, message, ip, user_agent, snapshot)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    `INSERT INTO review_events (milestone_id, type, client_name, message, ip, user_agent, snapshot, files)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
     [
       milestoneId,
       type,
@@ -72,8 +72,38 @@ export function addEvent(milestoneId, type, fields = {}) {
       fields.ip ?? null,
       fields.userAgent ?? null,
       fields.snapshot ? JSON.stringify(fields.snapshot) : null,
+      fields.files ? JSON.stringify(fields.files) : null,
     ],
   );
+}
+
+// Where the milestone sits in its project: "Milestone 2 of 4".
+export async function milestonePosition(milestone) {
+  const row = await queryOne(
+    `SELECT COUNT(*) FILTER (WHERE id <= $2)::int AS position, COUNT(*)::int AS total
+       FROM milestones WHERE project_id = $1`,
+    [milestone.project_id, milestone.id],
+  );
+  return row;
+}
+
+// What the client sees in the history panel: when this milestone was sent,
+// and the earlier milestones of the project they already approved.
+export async function clientHistory(milestone) {
+  const [sent, approved] = await Promise.all([
+    query(`SELECT created_at FROM review_events WHERE milestone_id = $1 AND type = 'sent' ORDER BY id`, [milestone.id]),
+    query(
+      `SELECT id, title, approved_at FROM milestones
+        WHERE project_id = $1 AND id <> $2 AND status = 'approved'
+        ORDER BY approved_at DESC LIMIT 5`,
+      [milestone.project_id, milestone.id],
+    ),
+  ]);
+  return {
+    sentAt: sent.length > 0 ? sent[sent.length - 1].created_at : null,
+    sent: sent.map((row) => row.created_at),
+    approved,
+  };
 }
 
 export function touchMilestone(milestoneId) {

@@ -2,7 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import { Browser, startServer } from './helpers.js';
+import { Browser, approve, startServer } from './helpers.js';
 import { load } from '../src/config.js';
 import { ACCOUNT_QUOTA_BYTES, MAX_FILE_BYTES, detectType } from '../src/files.js';
 
@@ -161,7 +161,7 @@ test('files are served only to their developer and to a valid client link, with 
   assert.equal((await intruder.dev.download(`${intruder.milestonePath}/files/${image.id}`)).status, 404);
 
   const client = new Browser(server.base);
-  const review = await client.get(reviewPath);
+  const review = await client.get(`${reviewPath}/review`);
   assert.ok(review.text.includes(`${reviewPath}/files/${image.id}`), 'thumbnail on the review page');
   assert.match(review.text, /brief\.pdf/);
   const viaLink = await client.download(`${reviewPath}/files/${pdf.id}`);
@@ -181,8 +181,7 @@ test('after approval, files are frozen and listed with their fingerprint in the 
   await dev.upload(`${milestonePath}/files`, [{ name: 'home.png', content: PNG }, { name: 'brief.pdf', content: PDF }]);
   const reviewPath = await sendToClient(dev, milestonePath);
   const client = new Browser(server.base);
-  await client.get(reviewPath);
-  await client.post(`${reviewPath}/approve`);
+  await approve(client, reviewPath);
   const [image] = await fileRows(milestoneId);
 
   await dev.get(milestonePath);
@@ -224,8 +223,7 @@ test('deleting a milestone or a project deletes its files from storage', async (
   const [fileB] = await fileRows(second.milestoneId);
   const reviewPath = await sendToClient(second.dev, second.milestonePath);
   const client = new Browser(server.base);
-  await client.get(reviewPath);
-  await client.post(`${reviewPath}/approve`);
+  await approve(client, reviewPath);
 
   await second.dev.get(second.projectPath);
   const deleted = await second.dev.post(`${second.projectPath}/delete`);

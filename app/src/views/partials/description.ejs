@@ -1,0 +1,8 @@
+<%# A description laid out as paragraphs, bullet lists and the "not included" note (see src/text.js). %>
+<div class="desc-body">
+  <% describe(text).forEach((block) => { %>
+    <% if (block.type === 'list') { %><ul><% block.items.forEach((item) => { %><li><%= item %></li><% }) %></ul>
+    <% } else if (block.type === 'excluded') { %><p class="excluded pre"><strong><%= t('review.excluded') %></strong> <%= block.text %></p>
+    <% } else { %><p class="pre"><%= block.text %></p><% } %>
+  <% }) %>
+</div>

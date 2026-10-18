@@ -1,0 +1,16 @@
+<%- include('../partials/head', { title: milestone.title, client: true }) %>
+<div class="welcome">
+  <section class="glass welcome-card reveal" aria-labelledby="welcome-title">
+    <p class="eyebrow"><%= t('welcome.request', { dev: milestone.dev_name }) %></p>
+    <h1 id="welcome-title"><%= milestone.title %></h1>
+    <ul class="pills" style="list-style: none; padding: 0;">
+      <li class="pill"><%= milestone.project_name %></li>
+      <li class="pill"><%= t('welcome.position', position) %></li>
+      <% if (milestone.amount !== null) { %><li class="pill"><%= fmt.money(milestone.amount, milestone.currency) %></li><% } %>
+    </ul>
+    <p><%= t('welcome.body') %></p>
+    <a class="btn btn-primary btn-large btn-block" href="/r/<%= milestone.token %>/review"><%= t('welcome.open') %><%- include('../partials/icon', { name: 'chevronRight' }) %></a>
+    <p class="small"><%= t('welcome.noAccount') %></p>
+  </section>
+</div>
+<%- include('../partials/foot', { client: true }) %>

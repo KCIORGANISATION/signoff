@@ -1,8 +1,10 @@
-<%- include('partials/head', { title: '' }) %>
-<div class="container narrow">
-  <div class="card stack">
+<% const onClientLink = (locals.currentPath || '').startsWith('/r/'); %>
+<%- include('partials/head', { title: '', client: onClientLink }) %>
+<div class="auth">
+  <section class="glass error-card reveal">
+    <span class="empty-icon"><%- include('partials/icon', { name: locals.icon || 'search', cls: 'icon-lg' }) %></span>
     <p><%= message %></p>
-    <a class="btn btn-ghost btn-small" href="/"><%= t('common.back') %></a>
-  </div>
+    <% if (!onClientLink) { %><a class="btn" href="/"><%- include('partials/icon', { name: 'arrowLeft' }) %><%= t('common.back') %></a><% } %>
+  </section>
 </div>
-<%- include('partials/foot') %>
+<%- include('partials/foot', { centered: !onClientLink, client: onClientLink }) %>

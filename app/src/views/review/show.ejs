@@ -1,64 +1,256 @@
-<%- include('../partials/head', { title: milestone.title, client: true }) %>
-<div class="container" style="max-width: 720px;">
-  <header class="client-header">
-    <span class="request"><%= t('review.request', { dev: milestone.dev_name }) %></span>
-    <h1><%= milestone.title %></h1>
-    <p class="muted" style="margin-top: 6px;"><%= t('review.project') %> : <%= milestone.project_name %></p>
-    <% if (milestone.amount !== null) { %><p class="amount"><%= fmt.money(milestone.amount, milestone.currency) %></p><% } %>
-  </header>
+<%
+  const pending = milestone.status !== 'approved' && milestone.status !== 'feedback';
+  const action = (path) => (preview ? '' : `action="/r/${milestone.token}/${path}"`);
+  const disabled = preview ? 'disabled' : '';
+  const amount = milestone.amount !== null ? fmt.money(milestone.amount, milestone.currency) : null;
+  const links = deliverables.filter((d) => d.kind === 'url');
+  const notes = deliverables.filter((d) => d.kind !== 'url');
+  const panes = { files: t('review.files'), amount: t('review.amount'), desc: t('review.descPanel') };
+  const paneButton = (name) => `type="button" class="icon-btn" data-pane-toggle="${name}" aria-controls="vol-${name}" aria-expanded="false" data-label-expand="${escapeLabel(t('review.panel.expand', { panel: panes[name] }))}" data-label-collapse="${escapeLabel(t('review.panel.collapse', { panel: panes[name] }))}" aria-label="${escapeLabel(t('review.panel.expand', { panel: panes[name] }))}"`;
+  function escapeLabel(text) { return String(text).replace(/&/g, '&amp;').replace(/"/g, '&#34;').replace(/</g, '&lt;'); }
+%>
+<%- include('../partials/head', {
+  title: milestone.title,
+  client: true,
+  projectLabel: t('review.projectLabel', { name: milestone.project_name }),
+  positionLabel: t('welcome.position', position),
+  bodyClass: pending ? 'has-mobile-bar' : '',
+  mainClass: preview ? 'has-banner' : '',
+}) %>
 
-  <% if (milestone.description) { %>
-    <section class="card" style="margin-top: 24px;"><p style="white-space: pre-wrap;"><%= milestone.description %></p></section>
-  <% } %>
+<% if (preview) { %>
+  <div class="preview-banner" role="status">
+    <p><%- include('../partials/icon', { name: 'eye' }) %><span><%= t('review.preview.banner') %></span></p>
+    <a class="btn btn-small btn-light" href="/milestones/<%= milestone.id %>"><%- include('../partials/icon', { name: 'arrowLeft', cls: 'icon-sm' }) %><%= t('review.preview.back') %></a>
+  </div>
+<% } %>
 
-  <section class="card" style="margin-top: 20px;">
-    <div class="card-header"><h2><%= t('review.deliverables') %></h2></div>
-    <%- include('../partials/deliverables', { deliverables, removable: false }) %>
-  </section>
+<div class="review" data-review>
+  <section class="glass board reveal" data-focus="" aria-label="<%= t('review.main') %>">
 
-  <% if (files.length > 0) { %>
-    <section class="card" style="margin-top: 20px;" id="files">
-      <div class="card-header"><h2><%= t('files.title') %></h2></div>
-      <%- include('../partials/files', { files, baseUrl: `/r/${milestone.token}/files`, removable: false }) %>
-    </section>
-  <% } %>
-
-  <section class="card decision" style="margin-top: 20px;">
-    <% if (milestone.status === 'approved') { %>
-      <div class="alert alert-success"><%= t('review.approved', { date: fmt.dateTime(milestone.approved_at) }) %></div>
-      <% if (milestone.payment) { %>
-        <div class="payment" id="payment">
-          <h2><%= t('review.payment.title') %></h2>
-          <% if (milestone.amount !== null) { %><p class="amount"><%= fmt.money(milestone.amount, milestone.currency) %></p><% } %>
-          <% if (milestone.payment.link) { %>
-            <a class="btn btn-large" href="<%= milestone.payment.link %>" target="_blank" rel="noopener noreferrer"><%= t('review.payment.pay') %></a>
-            <p class="hint"><%= t('review.payment.redirect', { domain: milestone.payment.domain }) %></p>
-          <% } %>
-          <% if (milestone.payment.note) { %><p class="note"><%= milestone.payment.note %></p><% } %>
-          <p class="hint"><%= t('review.payment.disclaimer', { dev: milestone.dev_name }) %></p>
+    <%# Files %>
+    <div class="vol vol-files" id="vol-files" data-pane="files">
+      <button class="vol-band" type="button" data-pane-open="files" aria-label="<%= t('review.panel.open', { panel: panes.files }) %>">
+        <% if (files.length > 0) { %><span class="band-count" data-viewer-counter-copy>1/<%= files.length %></span><% } %>
+        <span class="band-label"><%= panes.files %></span>
+      </button>
+      <div class="vol-content">
+        <div class="vol-head">
+          <h2><%= panes.files %></h2>
+          <button <%- paneButton('files') %>><%- include('../partials/icon', { name: 'expand', cls: 'icon-expand' }) %><%- include('../partials/icon', { name: 'collapse', cls: 'icon-collapse' }) %><%- include('../partials/icon', { name: 'chevronDown', cls: 'icon-chevron' }) %></button>
         </div>
-      <% } %>
-      <a class="btn btn-ghost" href="/r/<%= milestone.token %>/certificate"><%= t('review.certificate') %></a>
-    <% } else if (milestone.status === 'feedback') { %>
-      <div class="alert alert-info" style="margin: 0;"><%= t('review.feedback.sent', { dev: milestone.dev_name }) %></div>
-    <% } else { %>
-      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-      <form method="post" action="/r/<%= milestone.token %>/approve" data-confirm="<%= t('review.approve.confirm') %>">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn btn-large" type="submit">✓ <%= t('review.approve') %></button>
-      </form>
-      <details <%= error ? 'open' : '' %>>
-        <summary><%= t('review.feedback') %></summary>
-        <form method="post" action="/r/<%= milestone.token %>/feedback">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <label for="message" class="sr-only"><%= t('review.feedback') %></label>
-          <textarea id="message" name="message" required placeholder="<%= t('review.feedback.placeholder') %>"></textarea>
-          <div class="form-actions"><button class="btn btn-ghost" type="submit"><%= t('review.feedback.submit') %></button></div>
-        </form>
-      </details>
-    <% } %>
+        <div class="vol-body">
+          <% if (files.length === 0) { %>
+            <div class="viewer-empty"><%- include('../partials/icon', { name: 'file', cls: 'icon-lg' }) %><p><%= t('review.files.empty') %></p></div>
+          <% } else { %>
+            <div class="viewer" data-viewer>
+              <button class="icon-btn round" type="button" data-viewer-prev aria-label="<%= t('review.files.prev') %>"><%- include('../partials/icon', { name: 'chevronLeft' }) %></button>
+              <div class="viewer-stage">
+                <% files.forEach((f, i) => { const tag = citeTag(i + 1); %>
+                  <figure class="slide" data-slide="<%= i %>" <%= i > 0 ? 'hidden' : '' %>>
+                    <% if (f.mime.startsWith('image/')) { %>
+                      <div class="slide-media"><img src="<%= fileBase %>/<%= f.id %>" alt="<%= f.name %>" loading="<%= i === 0 ? 'eager' : 'lazy' %>"></div>
+                    <% } else { %>
+                      <div class="slide-doc">
+                        <span class="doc-icon"><%= f.mime === 'application/pdf' ? 'PDF' : 'TXT' %></span>
+                        <span class="file-name"><%= f.name %></span>
+                        <span class="file-size small"><%= f.mime === 'application/pdf' ? 'PDF' : 'Text' %> · <%= fmt.bytes(f.size) %></span>
+                        <a class="btn btn-small" href="<%= fileBase %>/<%= f.id %>" download><%- include('../partials/icon', { name: 'download', cls: 'icon-sm' }) %><%= t('files.download') %></a>
+                      </div>
+                    <% } %>
+                    <figcaption class="slide-caption"><%= tag %> · <%= f.name %></figcaption>
+                  </figure>
+                <% }) %>
+              </div>
+              <button class="icon-btn round" type="button" data-viewer-next aria-label="<%= t('review.files.next') %>"><%- include('../partials/icon', { name: 'chevronRight' }) %></button>
+            </div>
+            <span class="viewer-counter" data-viewer-counter aria-live="polite">1/<%= files.length %></span>
+            <div class="vol-more thumbs" role="group" aria-label="<%= panes.files %>">
+              <% files.forEach((f, i) => { %>
+                <button type="button" data-viewer-go="<%= i %>" aria-current="<%= i === 0 %>" aria-label="<%= t('review.files.show', { name: f.name }) %>">
+                  <% if (f.mime.startsWith('image/')) { %><img src="<%= fileBase %>/<%= f.id %>" alt="" loading="lazy"><% } %>
+                  <span class="file-tag"><%= citeTag(i + 1) %></span>
+                  <span><%= f.name %></span>
+                </button>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <%# Title and description %>
+    <div class="vol vol-desc" id="vol-desc" data-pane="desc">
+      <button class="vol-band" type="button" data-pane-open="desc" aria-label="<%= t('review.panel.open', { panel: panes.desc }) %>">
+        <span class="band-label"><%= panes.desc %></span>
+      </button>
+      <div class="vol-content">
+        <div class="vol-head desc-head">
+          <div style="min-width: 0;">
+            <h1><%= milestone.title %></h1>
+            <p><%= history.sentAt ? t('review.sentBy', { dev: milestone.dev_name, date: fmt.date(history.sentAt) }) : t('review.preparedBy', { dev: milestone.dev_name }) %></p>
+          </div>
+          <button <%- paneButton('desc') %>><%- include('../partials/icon', { name: 'expand', cls: 'icon-expand' }) %><%- include('../partials/icon', { name: 'collapse', cls: 'icon-collapse' }) %><%- include('../partials/icon', { name: 'chevronDown', cls: 'icon-chevron' }) %></button>
+        </div>
+        <div class="vol-body">
+          <h2 class="desc-bar"><%= t('review.description') %></h2>
+          <div class="desc-body">
+            <% if (description.length === 0) { %><p class="muted"><%= t('review.description.empty') %></p><% } %>
+            <% description.forEach((block) => { %>
+              <% if (block.type === 'list') { %>
+                <ul><% block.items.forEach((item) => { %><li><%= item %></li><% }) %></ul>
+              <% } else if (block.type === 'excluded') { %>
+                <p class="excluded pre"><strong><%= t('review.excluded') %></strong> <%= block.text %></p>
+              <% } else { %>
+                <p class="pre"><%= block.text %></p>
+              <% } %>
+            <% }) %>
+            <% if (links.length > 0) { %>
+              <h3 class="desc-section-title"><%= t('review.links') %></h3>
+              <ul class="desc-links">
+                <% links.forEach((d) => { %>
+                  <li><a href="<%= d.url %>" target="_blank" rel="noopener noreferrer"><%- include('../partials/icon', { name: 'external' }) %><span class="link-text"><span><%= d.label || d.url %></span><% if (d.label) { %><span class="link-url"><%= d.url %></span><% } %></span><span class="sr-only"><%= t('review.newTab') %></span></a></li>
+                <% }) %>
+              </ul>
+            <% } %>
+            <% if (notes.length > 0) { %>
+              <h3 class="desc-section-title"><%= t('review.notes') %></h3>
+              <% notes.forEach((d) => { %>
+                <div class="deliverable"><% if (d.label) { %><div class="deliverable-label"><%= d.label %></div><% } %><p class="note"><%= d.body %></p></div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Amount %>
+    <div class="vol vol-amount" id="vol-amount" data-pane="amount">
+      <button class="vol-band" type="button" data-pane-open="amount" aria-label="<%= t('review.panel.open', { panel: panes.amount }) %>">
+        <% if (amount) { %><span class="band-extra"><%= amount %></span><% } %>
+        <span class="band-label"><%= panes.amount %></span>
+      </button>
+      <div class="vol-content">
+        <div class="vol-head">
+          <h2><%= panes.amount %></h2>
+          <button <%- paneButton('amount') %>><%- include('../partials/icon', { name: 'expand', cls: 'icon-expand' }) %><%- include('../partials/icon', { name: 'collapse', cls: 'icon-collapse' }) %><%- include('../partials/icon', { name: 'chevronDown', cls: 'icon-chevron' }) %></button>
+        </div>
+        <div class="vol-body">
+          <% if (amount) { %><p class="amount-value"><%= amount %></p><% } else { %><p class="muted"><%= t('review.amount.none') %></p><% } %>
+          <% if (milestone.status === 'approved') { %>
+            <p><%= milestone.payment ? t('review.amount.approved') : t('review.amount.direct', { dev: milestone.dev_name }) %></p>
+          <% } else if (milestone.hasPayment) { %>
+            <p><%= t('review.amount.payLater') %></p>
+          <% } else { %>
+            <p><%= t('review.amount.direct', { dev: milestone.dev_name }) %></p>
+          <% } %>
+          <div class="vol-more amount-detail">
+            <% if (amount) { %><div class="amount-line"><span><%= milestone.title %></span><strong><%= amount %></strong></div><% } %>
+            <p class="muted small"><%= t('review.amount.disclaimer') %></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <p class="privacy"><%= t('review.privacy', { dev: milestone.dev_name }) %></p>
+  <aside class="review-side" aria-label="<%= t('review.aside') %>">
+    <section class="glass panel decision reveal" style="--i: 1;" id="decision" data-decision data-mode="<%= mode %>" aria-labelledby="decision-title" tabindex="-1">
+      <% if (milestone.status === 'approved') { %>
+        <div class="d-step">
+          <div class="done-head">
+            <span class="done-check"><%- include('../partials/icon', { name: 'check' }) %></span>
+            <h2 id="decision-title"><%= t('review.approved.title') %></h2>
+          </div>
+          <p><%= t('review.approved', { date: fmt.dateTime(milestone.approved_at) }) %></p>
+          <% if (approval && approval.client_name) { %><p class="small"><%= t('review.approved.recorded', { name: approval.client_name }) %></p><% } %>
+          <% if (milestone.payment) { %>
+            <div class="stack-sm" id="payment">
+              <% if (milestone.payment.link) { %>
+                <a class="btn btn-primary btn-large btn-block" href="<%= milestone.payment.link %>" target="_blank" rel="noopener noreferrer"><%= amount ? t('review.payment.payAmount', { amount }) : t('review.payment.pay') %></a>
+                <p class="small"><%= t('review.payment.redirect', { domain: milestone.payment.domain }) %></p>
+              <% } %>
+              <% if (milestone.payment.note) { %><p class="payment-note"><%= milestone.payment.note %></p><% } %>
+              <p class="small"><%= t('review.payment.disclaimer', { dev: milestone.dev_name }) %></p>
+            </div>
+          <% } %>
+          <% if (!preview) { %><a class="btn btn-block" href="/r/<%= milestone.token %>/certificate"><%- include('../partials/icon', { name: 'shield' }) %><%= t('review.certificate') %></a><% } %>
+        </div>
+      <% } else if (milestone.status === 'feedback') { %>
+        <div class="d-step">
+          <div class="done-head">
+            <span class="done-check is-feedback"><%- include('../partials/icon', { name: 'message' }) %></span>
+            <h2 id="decision-title"><%= t('review.feedback.sentTitle') %></h2>
+          </div>
+          <p><%= t('review.feedback.sent', { dev: milestone.dev_name }) %></p>
+        </div>
+      <% } else { %>
+        <div class="d-step d-choose">
+          <h2 id="decision-title"><%= t('review.decision') %></h2>
+          <p><%= t('review.decision.intro') %></p>
+          <button class="btn btn-primary btn-large btn-block" type="button" data-mode-set="approve"><%= t('review.approve') %></button>
+          <button class="btn btn-large btn-block" type="button" data-mode-set="feedback" style="font-size: 16px;"><%= t('review.feedback') %></button>
+        </div>
+
+        <form class="d-step d-approve" method="post" <%- action('approve') %>>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <h2><%= t('review.approve.title') %></h2>
+          <p><%= t('review.decision.intro') %></p>
+          <% if (error && mode === 'approve') { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+          <div class="field">
+            <label for="approve-name"><%= t('review.approve.name') %></label>
+            <input id="approve-name" name="name" type="text" autocomplete="name" required maxlength="120" placeholder="<%= t('review.approve.namePlaceholder') %>" value="<%= values.name ?? '' %>" <%- error && mode === 'approve' ? 'aria-invalid="true"' : '' %>>
+          </div>
+          <button class="btn btn-primary btn-large btn-block" type="submit" data-loading <%= disabled %>><%- include('../partials/icon', { name: 'check' }) %><%= t('review.approve.submit') %></button>
+          <button class="link-button" type="button" data-mode-back><%= t('common.back') %></button>
+        </form>
+
+        <form class="d-step d-feedback" method="post" <%- action('feedback') %>>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="vol-head">
+            <h2><%= t('review.feedback.title') %></h2>
+            <button class="icon-btn" type="button" data-widen aria-pressed="false" aria-label="<%= t('review.feedback.widen') %>" data-label-widen="<%= t('review.feedback.widen') %>" data-label-narrow="<%= t('review.feedback.narrow') %>"><%- include('../partials/icon', { name: 'expand' }) %></button>
+          </div>
+          <p class="small"><%= t('review.feedback.intro') %></p>
+          <% if (files.length > 0) { %>
+            <div class="cite-pills">
+              <% files.forEach((f, i) => { const tag = citeTag(i + 1); %>
+                <button type="button" data-cite="<%= tag %>" data-viewer-go="<%= i %>" aria-label="<%= t('review.feedback.cite', { tag, name: f.name }) %>" title="<%= f.name %>"><%= tag %></button>
+              <% }) %>
+            </div>
+          <% } %>
+          <% if (error && mode === 'feedback') { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+          <div class="field">
+            <label for="message"><%= t('review.feedback.title') %></label>
+            <textarea id="message" name="message" required placeholder="<%= t('review.feedback.placeholder') %>" <%- error && mode === 'feedback' ? 'aria-invalid="true"' : '' %>><%= values.message ?? '' %></textarea>
+          </div>
+          <button class="btn btn-large btn-block" type="submit" data-loading <%= disabled %> style="font-size: 16px;"><%- include('../partials/icon', { name: 'send' }) %><%= t('review.feedback.submit') %></button>
+          <button class="link-button" type="button" data-mode-back><%= t('common.back') %></button>
+        </form>
+        <% if (preview) { %><p class="small muted"><%= t('review.preview.disabled') %></p><% } %>
+      <% } %>
+    </section>
+
+    <section class="glass panel panel-tight history reveal" style="--i: 2;" aria-labelledby="history-title">
+      <h2 id="history-title"><%= t('review.history') %></h2>
+      <ul>
+        <% if (history.sent.length === 0 && history.approved.length === 0) { %><li class="when"><%= t('review.history.empty') %></li><% } %>
+        <% history.sent.slice().reverse().forEach((date) => { %>
+          <li><%= t('review.history.sent') %> <span class="when">· <%= fmt.dateTime(date) %></span></li>
+        <% }) %>
+        <% history.approved.forEach((m) => { %>
+          <li><%= t('review.history.approved', { title: m.title }) %> <span class="when">· <%= fmt.dateTime(m.approved_at) %></span></li>
+        <% }) %>
+      </ul>
+    </section>
+
+    <div class="side-logo" aria-hidden="true"><%- logoSvg %></div>
+  </aside>
 </div>
-<%- include('../partials/foot', { client: true }) %>
+
+<% if (pending) { %>
+  <div class="mobile-bar">
+    <a class="btn btn-primary" href="#decision" data-mode-set="approve"><%= t('review.approve') %></a>
+    <a class="btn" href="#decision" data-mode-set="feedback"><%= t('review.feedback') %></a>
+  </div>
+<% } %>
+<%- include('../partials/foot', { client: true, centered: true }) %>

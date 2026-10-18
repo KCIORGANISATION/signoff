@@ -6,6 +6,8 @@ import { emailReviewRequest } from '../email.js';
 import { parsePaymentLink, parsePaymentNote } from '../payment.js';
 import { ACCOUNT_QUOTA_BYTES, listFiles, storageKeys, usedBytes } from '../files.js';
 import { storage } from '../storage.js';
+import { renderFeedback } from '../text.js';
+import { clientPage, hidePayment } from './review.js';
 import {
   addEvent,
   certificateData,
@@ -68,6 +70,38 @@ function reviewLink(req, milestone) {
   return absoluteUrl(req, `/r/${milestone.token}`);
 }
 
+// Emails the review link to the client, for a draft or after feedback. Returns whether it was sent.
+async function sendToClient(req, milestone) {
+  if (milestone.status !== 'draft' && milestone.status !== 'feedback') return false;
+  const updated = await query(
+    `UPDATE milestones SET status = 'sent', updated_at = now() WHERE id = $1 AND status IN ('draft', 'feedback') RETURNING id`,
+    [milestone.id],
+  );
+  if (updated.length === 0) return false;
+  await addEvent(milestone.id, 'sent');
+  await emailReviewRequest({
+    to: milestone.client_email,
+    lang: req.lang,
+    devName: req.session.user.name,
+    clientName: milestone.client_name,
+    title: milestone.title,
+    projectName: milestone.project_name,
+    link: reviewLink(req, milestone),
+  });
+  return true;
+}
+
+// The milestone form has three buttons: save the draft, send to the client, or preview as the client.
+async function afterSave(req, res, milestoneId) {
+  if (req.body.intent === 'send') {
+    const milestone = await findMilestoneForUser(req.session.user.id, milestoneId);
+    await sendToClient(req, milestone);
+    return res.redirect(`/milestones/${milestoneId}#share`);
+  }
+  if (req.body.intent === 'preview') return res.redirect(`/milestones/${milestoneId}/preview`);
+  res.redirect(`/milestones/${milestoneId}`);
+}
+
 async function renderMilestone(req, res, milestone, formError = null, status = 200) {
   const [deliverables, events, approval, files, used] = await Promise.all([
     listDeliverables(milestone.id),
@@ -76,6 +110,15 @@ async function renderMilestone(req, res, milestone, formError = null, status = 2
     listFiles(milestone.id),
     usedBytes(req.session.user.id),
   ]);
+  // Feedback citations (/fichier2) link to the files as they were when the client wrote.
+  const current = new Map(files.map((file) => [file.id, file]));
+  for (const event of events) {
+    if (event.type !== 'feedback' || !event.message) continue;
+    const cited = typeof event.files === 'string' ? JSON.parse(event.files) : event.files;
+    event.html = renderFeedback(event.message, cited, (file) =>
+      current.has(file.id) ? `/milestones/${milestone.id}/files/${file.id}` : null,
+    );
+  }
   const editedAfterApproval =
     milestone.approved_at !== null && new Date(milestone.updated_at) > new Date(milestone.approved_at);
 
@@ -95,11 +138,26 @@ async function renderMilestone(req, res, milestone, formError = null, status = 2
   });
 }
 
+// The create / edit form. An existing milestone also shows its files and upload zone.
+async function renderForm(req, res, locals, status = 200) {
+  const { milestone } = locals;
+  const [files, used] = milestone
+    ? await Promise.all([listFiles(milestone.id), usedBytes(req.session.user.id)])
+    : [[], 0];
+  res.status(status).render('milestones/form', {
+    locked: false,
+    ...locals,
+    files,
+    filesEnabled: storage.enabled,
+    quota: { used, total: ACCOUNT_QUOTA_BYTES },
+  });
+}
+
 router.get('/projects/:projectId/milestones/new', async (req, res) => {
   const project = await findProjectForUser(req.session.user.id, req.params.projectId);
   if (!project) return notFound(req, res);
 
-  res.render('milestones/form', { project, milestone: null, values: {}, error: null });
+  await renderForm(req, res, { project, milestone: null, values: {}, error: null });
 });
 
 router.post('/projects/:projectId/milestones', async (req, res) => {
@@ -108,7 +166,7 @@ router.post('/projects/:projectId/milestones', async (req, res) => {
 
   const { values, error } = readMilestoneForm(req.body);
   if (error) {
-    return res.status(400).render('milestones/form', { project, milestone: null, values, error: req.t(error) });
+    return renderForm(req, res, { project, milestone: null, values, error: req.t(error) }, 400);
   }
 
   const milestone = await queryOne(
@@ -116,7 +174,7 @@ router.post('/projects/:projectId/milestones', async (req, res) => {
      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
     [project.id, values.title, values.description, values.amount, values.payment_link, values.payment_note, newToken()],
   );
-  res.redirect(`/milestones/${milestone.id}`);
+  await afterSave(req, res, milestone.id);
 });
 
 router.get('/milestones/:id', async (req, res) => {
@@ -131,7 +189,7 @@ router.get('/milestones/:id/edit', async (req, res) => {
   if (!milestone) return notFound(req, res);
 
   const project = await findProjectForUser(req.session.user.id, milestone.project_id);
-  res.render('milestones/form', { project, milestone, values: milestone, error: null, locked: isLocked(milestone) });
+  await renderForm(req, res, { project, milestone, values: milestone, error: null, locked: isLocked(milestone) });
 });
 
 router.post('/milestones/:id', async (req, res) => {
@@ -142,7 +200,7 @@ router.post('/milestones/:id', async (req, res) => {
   const { values, error } = readMilestoneForm(req.body);
   if (error) {
     const project = await findProjectForUser(req.session.user.id, milestone.project_id);
-    return res.status(400).render('milestones/form', { project, milestone, values, error: req.t(error) });
+    return renderForm(req, res, { project, milestone, values, error: req.t(error) }, 400);
   }
 
   // The status check also covers an approval that lands while the form is being sent.
@@ -154,7 +212,17 @@ router.post('/milestones/:id', async (req, res) => {
     [values.title, values.description, values.amount, values.payment_link, values.payment_note, milestone.id],
   );
   if (updated.length === 0) return locked(req, res);
-  res.redirect(`/milestones/${milestone.id}`);
+  await afterSave(req, res, milestone.id);
+});
+
+// The client page as the client would see it now, without sending anything or recording any event.
+router.get('/milestones/:id/preview', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+
+  milestone.dev_name = req.session.user.name;
+  const page = await clientPage(hidePayment(milestone), { fileBase: `/milestones/${milestone.id}/files`, preview: true });
+  res.render('review/show', page);
 });
 
 // Payment details stay editable after approval; they are not part of the approval record.
@@ -165,9 +233,9 @@ router.post('/milestones/:id/payment', async (req, res) => {
   const { values, error } = readPaymentForm(req.body);
   if (error) {
     const project = await findProjectForUser(req.session.user.id, milestone.project_id);
-    return res.status(400).render('milestones/form', {
+    return renderForm(req, res, {
       project, milestone, values: { ...milestone, ...values }, error: req.t(error), locked: isLocked(milestone),
-    });
+    }, 400);
   }
 
   await query('UPDATE milestones SET payment_link = $1, payment_note = $2 WHERE id = $3', [
@@ -251,19 +319,7 @@ router.post('/milestones/:id/send', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
 
-  if (milestone.status === 'draft' || milestone.status === 'feedback') {
-    await query(`UPDATE milestones SET status = 'sent', updated_at = now() WHERE id = $1`, [milestone.id]);
-    await addEvent(milestone.id, 'sent');
-    await emailReviewRequest({
-      to: milestone.client_email,
-      lang: req.lang,
-      devName: req.session.user.name,
-      clientName: milestone.client_name,
-      title: milestone.title,
-      projectName: milestone.project_name,
-      link: reviewLink(req, milestone),
-    });
-  }
+  await sendToClient(req, milestone);
   res.redirect(`/milestones/${milestone.id}#share`);
 });
 

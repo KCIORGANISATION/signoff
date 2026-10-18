@@ -1,9 +1,10 @@
 <%- include('../partials/head', { title: t('nav.login') }) %>
-<div class="container narrow">
-  <div class="card">
-    <h1 style="font-size: 24px; margin-bottom: 20px;"><%= t('auth.login.title') %></h1>
-    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-    <form method="post" action="/login">
+<div class="auth">
+  <section class="glass auth-card reveal">
+    <h1><%= t('auth.login.title') %></h1>
+    <p class="lead"><%= t('app.tagline') %></p>
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <form method="post" action="/login" style="margin-top: 16px;">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="field">
         <label for="email"><%= t('auth.email') %></label>
@@ -12,11 +13,11 @@
       <div class="field">
         <label for="password"><%= t('auth.password') %></label>
         <input id="password" name="password" type="password" autocomplete="current-password" required>
-        <p class="hint"><a href="/forgot"><%= t('auth.forgot') %></a></p>
+        <p class="hint" style="margin-top: 2px;"><a href="/forgot"><%= t('auth.forgot') %></a></p>
       </div>
-      <div class="form-actions"><button class="btn" type="submit" style="width: 100%;"><%= t('auth.login.submit') %></button></div>
+      <div class="form-actions"><button class="btn btn-light btn-large btn-block" type="submit" data-loading><%= t('auth.login.submit') %></button></div>
     </form>
-  </div>
-  <p class="muted small" style="text-align: center; margin-top: 16px;"><%= t('auth.login.switch') %> <a href="/signup"><%= t('nav.signup') %></a></p>
+    <p class="auth-switch muted"><%= t('auth.login.switch') %> <a href="/signup"><%= t('nav.signup') %></a></p>
+  </section>
 </div>
-<%- include('../partials/foot') %>
+<%- include('../partials/foot', { centered: true }) %>

@@ -1,14 +1,14 @@
 <% deliverables.forEach((d) => { %>
   <div class="deliverable">
     <div class="deliverable-head">
-      <div>
+      <div style="min-width: 0;">
         <div class="kind"><%= d.kind === 'url' ? t('milestone.url') : t('milestone.note') %></div>
         <% if (d.label) { %><div class="deliverable-label"><%= d.label %></div><% } %>
       </div>
       <% if (locals.removable) { %>
         <form method="post" action="/milestones/<%= milestoneId %>/deliverables/<%= d.id %>/delete">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button class="link-button" type="submit"><%= t('milestone.remove') %></button>
+          <button class="link-button danger" type="submit"><%= t('milestone.remove') %></button>
         </form>
       <% } %>
     </div>
