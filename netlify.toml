@@ -7,3 +7,10 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+# The app/ folder is the Node app, not part of the landing site.
+[[redirects]]
+  from = "/app/*"
+  to = "/404"
+  status = 404
+  force = true

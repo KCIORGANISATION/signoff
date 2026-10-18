@@ -1,0 +1,53 @@
+<%- include('partials/head', { title: t('dashboard.title') }) %>
+<div class="container">
+  <div class="page-header">
+    <h1><%= t('dashboard.title') %></h1>
+    <a class="btn" href="/projects/new">+ <%= t('dashboard.newProject') %></a>
+  </div>
+
+  <section class="card">
+    <div class="card-header"><h2><%= t('dashboard.waiting') %></h2></div>
+    <% if (waiting.length === 0) { %>
+      <p class="empty"><%= t('dashboard.waiting.empty') %></p>
+    <% } else { %>
+      <ul class="list">
+        <% waiting.forEach((m) => { %>
+          <li>
+            <div>
+              <a class="title" href="/milestones/<%= m.id %>"><%= m.title %></a>
+              <div class="meta"><%= m.project.name %> · <%= m.project.client_name %> · <%= t('dashboard.lastActivity') %> <%= fmt.dateTime(m.last_activity) %></div>
+            </div>
+            <%- include('partials/badge', { status: m.status }) %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <div class="card-header"><h2><%= t('dashboard.projects') %></h2></div>
+    <% if (projects.length === 0) { %>
+      <p class="empty"><%= t('dashboard.empty') %></p>
+    <% } else { %>
+      <ul class="list">
+        <% projects.forEach((p) => { %>
+          <li style="display: block;">
+            <div class="row spread">
+              <a class="title" href="/projects/<%= p.id %>"><%= p.name %></a>
+              <span class="meta"><%= p.approved_count %>/<%= p.milestone_count %> <%= t('status.approved').toLowerCase() %><% if (p.last_activity) { %> · <%= t('dashboard.lastActivity') %> <%= fmt.dateTime(p.last_activity) %><% } %></span>
+            </div>
+            <div class="meta"><%= p.client_name %></div>
+            <% if (p.milestones.length > 0) { %>
+              <ul class="project-milestones">
+                <% p.milestones.forEach((m) => { %>
+                  <li><a href="/milestones/<%= m.id %>"><%= m.title %> <%- include('partials/badge', { status: m.status }) %></a></li>
+                <% }) %>
+              </ul>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+</div>
+<%- include('partials/foot') %>

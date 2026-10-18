@@ -1,0 +1,8 @@
+<%- include('../partials/head', { title: t('review.expired.title'), client: true }) %>
+<div class="container narrow">
+  <div class="card stack" style="margin-top: 40px; text-align: center;">
+    <h1 style="font-size: 22px;"><%= t('review.expired.title') %></h1>
+    <p class="muted"><%= t('review.expired.body', { dev: milestone.dev_name }) %></p>
+  </div>
+</div>
+<%- include('../partials/foot', { client: true }) %>

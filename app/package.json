@@ -1,0 +1,24 @@
+{
+  "name": "signoff-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Signoff MVP: formal, timestamped client approval on project milestones.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --env-file-if-exists=.env --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "bcryptjs": "^3.0.3",
+    "cookie-session": "^2.1.1",
+    "ejs": "^7.0.2",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "pg": "^8.23.1"
+  }
+}

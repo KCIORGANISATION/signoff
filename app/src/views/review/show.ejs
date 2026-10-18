@@ -1,0 +1,43 @@
+<%- include('../partials/head', { title: milestone.title, client: true }) %>
+<div class="container" style="max-width: 720px;">
+  <header class="client-header">
+    <span class="request"><%= t('review.request', { dev: milestone.dev_name }) %></span>
+    <h1><%= milestone.title %></h1>
+    <p class="muted" style="margin-top: 6px;"><%= t('review.project') %> : <%= milestone.project_name %></p>
+    <% if (milestone.amount !== null) { %><p class="amount"><%= fmt.money(milestone.amount, milestone.currency) %></p><% } %>
+  </header>
+
+  <% if (milestone.description) { %>
+    <section class="card" style="margin-top: 24px;"><p style="white-space: pre-wrap;"><%= milestone.description %></p></section>
+  <% } %>
+
+  <section class="card" style="margin-top: 20px;">
+    <div class="card-header"><h2><%= t('review.deliverables') %></h2></div>
+    <%- include('../partials/deliverables', { deliverables, removable: false }) %>
+  </section>
+
+  <section class="card decision" style="margin-top: 20px;">
+    <% if (milestone.status === 'approved') { %>
+      <div class="alert alert-success"><%= t('review.approved', { date: fmt.dateTime(milestone.approved_at) }) %></div>
+      <a class="btn btn-ghost" href="/r/<%= milestone.token %>/certificate"><%= t('review.certificate') %></a>
+    <% } else if (milestone.status === 'feedback') { %>
+      <div class="alert alert-info" style="margin: 0;"><%= t('review.feedback.sent', { dev: milestone.dev_name }) %></div>
+    <% } else { %>
+      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <form method="post" action="/r/<%= milestone.token %>/approve" data-confirm="<%= t('review.approve.confirm') %>">
+        <button class="btn btn-large" type="submit">✓ <%= t('review.approve') %></button>
+      </form>
+      <details <%= error ? 'open' : '' %>>
+        <summary><%= t('review.feedback') %></summary>
+        <form method="post" action="/r/<%= milestone.token %>/feedback">
+          <label for="message" class="sr-only"><%= t('review.feedback') %></label>
+          <textarea id="message" name="message" required placeholder="<%= t('review.feedback.placeholder') %>"></textarea>
+          <div class="form-actions"><button class="btn btn-ghost" type="submit"><%= t('review.feedback.submit') %></button></div>
+        </form>
+      </details>
+    <% } %>
+  </section>
+
+  <p class="privacy"><%= t('review.privacy', { dev: milestone.dev_name }) %></p>
+</div>
+<%- include('../partials/foot', { client: true }) %>

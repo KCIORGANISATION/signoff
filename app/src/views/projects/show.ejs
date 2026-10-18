@@ -1,0 +1,34 @@
+<%- include('../partials/head', { title: project.name }) %>
+<div class="container">
+  <a class="back" href="/dashboard">← <%= t('nav.dashboard') %></a>
+  <div class="page-header">
+    <div>
+      <h1><%= project.name %></h1>
+      <p class="muted"><%= t('project.client') %> : <%= project.client_name %> · <a href="mailto:<%= project.client_email %>"><%= project.client_email %></a> · <%= project.currency %></p>
+    </div>
+    <a class="btn btn-ghost btn-small" href="/projects/<%= project.id %>/edit"><%= t('common.edit') %></a>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <h2><%= t('project.milestones') %></h2>
+      <a class="btn btn-small" href="/projects/<%= project.id %>/milestones/new">+ <%= t('milestone.new') %></a>
+    </div>
+    <% if (milestones.length === 0) { %>
+      <p class="empty"><%= t('project.milestones.empty') %></p>
+    <% } else { %>
+      <ul class="list">
+        <% milestones.forEach((m) => { %>
+          <li>
+            <div>
+              <a class="title" href="/milestones/<%= m.id %>"><%= m.title %></a>
+              <% if (m.amount !== null) { %><div class="meta"><%= fmt.money(m.amount, project.currency) %></div><% } %>
+            </div>
+            <%- include('../partials/badge', { status: m.status }) %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/foot') %>

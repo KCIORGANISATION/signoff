@@ -1,0 +1,41 @@
+<%- include('../partials/head', { title: t('cert.title'), client: true }) %>
+<div class="container">
+  <div class="certificate-actions">
+    <a class="back" style="margin: 0;" href="<%= backUrl %>">← <%= t('common.back') %></a>
+    <% if (certificate) { %><button class="btn btn-small" type="button" data-print><%= t('cert.print') %></button><% } %>
+  </div>
+
+  <% if (!certificate) { %>
+    <div class="card narrow" style="margin: 0 auto;"><p><%= t('cert.none') %></p></div>
+  <% } else { const s = certificate.snapshot; %>
+    <article class="certificate">
+      <div class="certificate-top">
+        <div>
+          <span class="logo"><span class="logo-mark" aria-hidden="true">✓</span>Signoff</span>
+          <h1 style="margin-top: 16px;"><%= t('cert.title') %></h1>
+          <p class="muted" style="margin-top: 6px;"><%= t('cert.intro') %></p>
+        </div>
+        <span class="badge badge-approved"><%= t('status.approved') %></span>
+      </div>
+
+      <dl>
+        <dt><%= t('cert.milestone') %></dt><dd><%= s.title %></dd>
+        <dt><%= t('cert.project') %></dt><dd><%= s.project %></dd>
+        <% if (s.amount !== null && s.amount !== undefined) { %>
+          <dt><%= t('review.amount') %></dt><dd><%= fmt.money(s.amount, s.currency) %></dd>
+        <% } %>
+        <dt><%= t('cert.provider') %></dt><dd><%= s.provider %></dd>
+        <dt><%= t('cert.client') %></dt><dd><%= certificate.clientName %></dd>
+        <dt><%= t('cert.date') %></dt><dd class="mono"><%= fmt.isoUtc(certificate.approvedAt) %></dd>
+        <dt><%= t('cert.ip') %></dt><dd class="mono"><%= certificate.ip %></dd>
+        <dt><%= t('cert.browser') %></dt><dd class="small"><%= certificate.userAgent %></dd>
+        <dt><%= t('cert.reference') %></dt><dd class="mono"><%= certificate.reference %></dd>
+      </dl>
+
+      <h2><%= t('cert.approvedContent') %></h2>
+      <% if (s.description) { %><p style="white-space: pre-wrap; margin-bottom: 14px;"><%= s.description %></p><% } %>
+      <%- include('../partials/deliverables', { deliverables: s.deliverables, removable: false }) %>
+    </article>
+  <% } %>
+</div>
+<%- include('../partials/foot', { client: true }) %>

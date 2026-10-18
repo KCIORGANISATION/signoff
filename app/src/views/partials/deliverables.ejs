@@ -1,0 +1,20 @@
+<% deliverables.forEach((d) => { %>
+  <div class="deliverable">
+    <div class="deliverable-head">
+      <div>
+        <div class="kind"><%= d.kind === 'url' ? t('milestone.url') : t('milestone.note') %></div>
+        <% if (d.label) { %><div class="deliverable-label"><%= d.label %></div><% } %>
+      </div>
+      <% if (locals.removable) { %>
+        <form method="post" action="/milestones/<%= milestoneId %>/deliverables/<%= d.id %>/delete">
+          <button class="link-button" type="submit"><%= t('milestone.remove') %></button>
+        </form>
+      <% } %>
+    </div>
+    <% if (d.kind === 'url') { %>
+      <a class="url" href="<%= d.url %>" target="_blank" rel="noopener noreferrer"><%= d.url %></a>
+    <% } else { %>
+      <p class="note"><%= d.body %></p>
+    <% } %>
+  </div>
+<% }) %>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title ? `${title} · Signoff` : 'Signoff' %></title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23d63384'/><stop offset='1' stop-color='%238a4fd6'/></linearGradient></defs><rect width='32' height='32' rx='9' fill='url(%23g)'/><path d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<nav class="nav">
+  <div class="container">
+    <% if (locals.client) { %>
+      <span class="logo"><span class="logo-mark" aria-hidden="true">✓</span>Signoff</span>
+    <% } else { %>
+      <a class="logo" href="/"><span class="logo-mark" aria-hidden="true">✓</span>Signoff</a>
+    <% } %>
+    <div class="nav-links">
+      <% if (!locals.client && currentUser) { %>
+        <a href="/dashboard"><%= t('nav.dashboard') %></a>
+        <form class="inline" method="post" action="/logout"><button class="link-button" style="color: var(--text-2); font-size: 14px;"><%= t('nav.logout') %></button></form>
+      <% } %>
+      <span class="lang">
+        <a href="/lang/en?back=<%= encodeURIComponent(currentPath) %>" aria-current="<%= lang === 'en' %>">EN</a>
+        ·
+        <a href="/lang/fr?back=<%= encodeURIComponent(currentPath) %>" aria-current="<%= lang === 'fr' %>">FR</a>
+      </span>
+    </div>
+  </div>
+</nav>
+<main>
