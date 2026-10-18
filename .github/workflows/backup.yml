@@ -13,13 +13,13 @@ concurrency:
 
 jobs:
   backup:
-    runs-on: ubuntu-latest
+    runs-on: runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
     env:
       # pg_dump must be the same major version as the Neon database, or newer.
-      PG_MAJOR: '17'
+      PG_MAJOR: '18'
     defaults:
       run:
         working-directory: app
