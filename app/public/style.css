@@ -212,3 +212,13 @@ details.add form { margin-top: 12px; padding: 16px; background: var(--surface-2)
   .certificate { border: 0; box-shadow: none; padding: 0; }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Payment */
+.fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin: 20px 0 0; }
+.fieldset legend { font-weight: 600; padding: 0 6px; }
+.note { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-2); }
+.payment { margin: 4px 0 20px; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.payment h2 { margin-bottom: 6px; }
+.payment .amount { font-size: 26px; font-weight: 700; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+.payment .btn-large { width: 100%; max-width: 360px; }
+.payment .note { text-align: left; margin-top: 16px; padding: 12px 14px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }

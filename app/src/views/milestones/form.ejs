@@ -20,6 +20,20 @@
         <input id="amount" name="amount" type="text" inputmode="decimal" placeholder="1500" value="<%= values.amount ?? '' %>">
         <p class="hint"><%= t('milestone.amount.hint') %></p>
       </div>
+      <fieldset class="fieldset">
+        <legend><%= t('milestone.payment') %></legend>
+        <p class="hint" style="margin: 0 0 14px;"><%= t('milestone.payment.hint') %></p>
+        <div class="field">
+          <label for="payment_link"><%= t('milestone.paymentLink') %></label>
+          <input id="payment_link" name="payment_link" type="url" maxlength="500" placeholder="https://buy.stripe.com/…" aria-describedby="payment_link-hint" value="<%= values.payment_link ?? '' %>">
+          <p class="hint" id="payment_link-hint"><%= t('milestone.paymentLink.hint') %></p>
+        </div>
+        <div class="field">
+          <label for="payment_note"><%= t('milestone.paymentNote') %></label>
+          <textarea id="payment_note" name="payment_note" maxlength="500" rows="3" aria-describedby="payment_note-hint" placeholder="<%= t('milestone.paymentNote.placeholder') %>"><%= values.payment_note ?? '' %></textarea>
+          <p class="hint" id="payment_note-hint"><%= t('milestone.paymentNote.hint') %></p>
+        </div>
+      </fieldset>
       <div class="form-actions">
         <button class="btn" type="submit"><%= t('milestone.save') %></button>
         <a class="btn btn-ghost" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>"><%= t('common.cancel') %></a>

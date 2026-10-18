@@ -12,6 +12,7 @@ import {
   latestApproval,
   listDeliverables,
 } from '../models.js';
+import { paymentDomain } from '../payment.js';
 
 // Client-facing pages. No account: the secret token in the URL is the access.
 const router = Router();
@@ -33,6 +34,7 @@ function clientDetails(req) {
 }
 
 // Loads the milestone for the token, or answers with a 404 / expired page.
+// Payment details are removed until the client approves, so no page can leak them.
 async function loadMilestone(req, res) {
   const milestone = await findMilestoneByToken(req.params.token);
   if (!milestone || milestone.status === 'draft') {
@@ -43,6 +45,13 @@ async function loadMilestone(req, res) {
     res.status(410).render('review/expired', { milestone });
     return null;
   }
+  const { payment_link: link, payment_note: note } = milestone;
+  delete milestone.payment_link;
+  delete milestone.payment_note;
+  milestone.payment =
+    milestone.status === 'approved' && (link || note)
+      ? { link, domain: link ? paymentDomain(link) : null, note }
+      : null;
   return milestone;
 }
 

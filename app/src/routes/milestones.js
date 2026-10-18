@@ -3,6 +3,7 @@ import { query, queryOne } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { absoluteUrl } from '../config.js';
 import { emailReviewRequest } from '../email.js';
+import { parsePaymentLink, parsePaymentNote } from '../payment.js';
 import {
   addEvent,
   certificateData,
@@ -26,13 +27,22 @@ function notFound(req, res) {
 
 function readMilestoneForm(body) {
   const amountText = (body.amount ?? '').trim().replace(',', '.');
+  const paymentLink = parsePaymentLink(body.payment_link);
+  const paymentNote = parsePaymentNote(body.payment_note);
   const values = {
     title: (body.title ?? '').trim(),
     description: (body.description ?? '').trim(),
     amount: amountText === '' ? null : amountText,
+    payment_link: paymentLink === false ? (body.payment_link ?? '').trim() : paymentLink,
+    payment_note: paymentNote === false ? (body.payment_note ?? '').trim() : paymentNote,
   };
   const amountValid = values.amount === null || (/^\d+(\.\d{1,2})?$/.test(values.amount));
-  return { values, valid: Boolean(values.title) && amountValid };
+
+  let error = null;
+  if (!values.title || !amountValid) error = 'milestone.error.fields';
+  else if (paymentLink === false) error = 'milestone.error.paymentLink';
+  else if (paymentNote === false) error = 'milestone.error.paymentNote';
+  return { values, error };
 }
 
 function reviewLink(req, milestone) {
@@ -71,17 +81,15 @@ router.post('/projects/:projectId/milestones', async (req, res) => {
   const project = await findProjectForUser(req.session.user.id, req.params.projectId);
   if (!project) return notFound(req, res);
 
-  const { values, valid } = readMilestoneForm(req.body);
-  if (!valid) {
-    return res.status(400).render('milestones/form', {
-      project, milestone: null, values, error: req.t('milestone.error.fields'),
-    });
+  const { values, error } = readMilestoneForm(req.body);
+  if (error) {
+    return res.status(400).render('milestones/form', { project, milestone: null, values, error: req.t(error) });
   }
 
   const milestone = await queryOne(
-    `INSERT INTO milestones (project_id, title, description, amount, token)
-     VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-    [project.id, values.title, values.description, values.amount, newToken()],
+    `INSERT INTO milestones (project_id, title, description, amount, payment_link, payment_note, token)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    [project.id, values.title, values.description, values.amount, values.payment_link, values.payment_note, newToken()],
   );
   res.redirect(`/milestones/${milestone.id}`);
 });
@@ -105,17 +113,17 @@ router.post('/milestones/:id', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
 
-  const { values, valid } = readMilestoneForm(req.body);
-  if (!valid) {
+  const { values, error } = readMilestoneForm(req.body);
+  if (error) {
     const project = await findProjectForUser(req.session.user.id, milestone.project_id);
-    return res.status(400).render('milestones/form', {
-      project, milestone, values, error: req.t('milestone.error.fields'),
-    });
+    return res.status(400).render('milestones/form', { project, milestone, values, error: req.t(error) });
   }
 
   await query(
-    'UPDATE milestones SET title = $1, description = $2, amount = $3, updated_at = now() WHERE id = $4',
-    [values.title, values.description, values.amount, milestone.id],
+    `UPDATE milestones
+        SET title = $1, description = $2, amount = $3, payment_link = $4, payment_note = $5, updated_at = now()
+      WHERE id = $6`,
+    [values.title, values.description, values.amount, values.payment_link, values.payment_note, milestone.id],
   );
   res.redirect(`/milestones/${milestone.id}`);
 });
