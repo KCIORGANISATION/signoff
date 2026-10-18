@@ -1,0 +1,26 @@
+<%- include('../partials/head', { title: t('nav.signup') }) %>
+<div class="container narrow">
+  <div class="card">
+    <h1 style="font-size: 24px; margin-bottom: 20px;"><%= t('auth.signup.title') %></h1>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/signup">
+      <div class="field">
+        <label for="name"><%= t('auth.name') %></label>
+        <input id="name" name="name" type="text" autocomplete="organization" required value="<%= values.name ?? '' %>">
+        <p class="hint"><%= t('auth.name.hint') %></p>
+      </div>
+      <div class="field">
+        <label for="email"><%= t('auth.email') %></label>
+        <input id="email" name="email" type="email" autocomplete="email" required value="<%= values.email ?? '' %>">
+      </div>
+      <div class="field">
+        <label for="password"><%= t('auth.password') %></label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+        <p class="hint"><%= t('auth.password.hint') %></p>
+      </div>
+      <div class="form-actions"><button class="btn" type="submit" style="width: 100%;"><%= t('auth.signup.submit') %></button></div>
+    </form>
+  </div>
+  <p class="muted small" style="text-align: center; margin-top: 16px;"><%= t('auth.signup.switch') %> <a href="/login"><%= t('nav.login') %></a></p>
+</div>
+<%- include('../partials/foot') %>

@@ -2,6 +2,8 @@
 
 Landing page de validation de Signoff (phase 1). Objectif : 30 emails early-access = feu vert pour le MVP.
 
+L'application elle-même (MVP) est dans [`app/`](app/README.md).
+
 ## Fichiers
 
 | Fichier | Rôle |

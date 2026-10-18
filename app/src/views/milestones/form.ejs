@@ -1,0 +1,34 @@
+<%- include('../partials/head', { title: milestone ? t('milestone.edit') : t('milestone.new') }) %>
+<div class="container" style="max-width: 640px;">
+  <a class="back" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>">← <%= t('common.back') %></a>
+  <div class="card">
+    <h1 style="font-size: 24px; margin-bottom: 4px;"><%= milestone ? t('milestone.edit') : t('milestone.new') %></h1>
+    <p class="muted small" style="margin-bottom: 20px;"><%= project.name %></p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones` %>">
+      <div class="field">
+        <label for="title"><%= t('milestone.title') %></label>
+        <input id="title" name="title" type="text" required value="<%= values.title ?? '' %>">
+      </div>
+      <div class="field">
+        <label for="description"><%= t('milestone.description') %></label>
+        <textarea id="description" name="description"><%= values.description ?? '' %></textarea>
+      </div>
+      <div class="field" style="max-width: 240px;">
+        <label for="amount"><%= t('milestone.amount') %> (<%= project.currency %>)</label>
+        <input id="amount" name="amount" type="text" inputmode="decimal" placeholder="1500" value="<%= values.amount ?? '' %>">
+        <p class="hint"><%= t('milestone.amount.hint') %></p>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit"><%= t('milestone.save') %></button>
+        <a class="btn btn-ghost" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </div>
+  <% if (milestone) { %>
+    <form method="post" action="/milestones/<%= milestone.id %>/delete" data-confirm="<%= t('milestone.delete.confirm') %>" style="margin-top: 20px;">
+      <button class="btn btn-danger btn-small" type="submit"><%= t('milestone.delete') %></button>
+    </form>
+  <% } %>
+</div>
+<%- include('../partials/foot') %>

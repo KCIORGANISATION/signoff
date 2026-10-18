@@ -1,0 +1,40 @@
+<%- include('../partials/head', { title: project ? t('project.edit') : t('project.new') }) %>
+<div class="container" style="max-width: 640px;">
+  <a class="back" href="<%= project ? `/projects/${project.id}` : '/dashboard' %>">← <%= t('common.back') %></a>
+  <div class="card">
+    <h1 style="font-size: 24px; margin-bottom: 20px;"><%= project ? t('project.edit') : t('project.new') %></h1>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="<%= project ? `/projects/${project.id}` : '/projects' %>">
+      <div class="field">
+        <label for="name"><%= t('project.name') %></label>
+        <input id="name" name="name" type="text" required value="<%= values.name ?? '' %>">
+      </div>
+      <div class="two-cols field">
+        <div>
+          <label for="client_name"><%= t('project.clientName') %></label>
+          <input id="client_name" name="client_name" type="text" required value="<%= values.client_name ?? '' %>">
+        </div>
+        <div>
+          <label for="client_email"><%= t('project.clientEmail') %></label>
+          <input id="client_email" name="client_email" type="email" required value="<%= values.client_email ?? '' %>">
+        </div>
+      </div>
+      <div class="field" style="max-width: 200px;">
+        <label for="currency"><%= t('project.currency') %></label>
+        <select id="currency" name="currency">
+          <% currencies.forEach((c) => { %><option value="<%= c %>" <%= values.currency === c ? 'selected' : '' %>><%= c %></option><% }) %>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit"><%= t('project.save') %></button>
+        <a class="btn btn-ghost" href="<%= project ? `/projects/${project.id}` : '/dashboard' %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </div>
+  <% if (project) { %>
+    <form method="post" action="/projects/<%= project.id %>/delete" data-confirm="<%= t('project.delete.confirm') %>" style="margin-top: 20px;">
+      <button class="btn btn-danger btn-small" type="submit"><%= t('project.delete') %></button>
+    </form>
+  <% } %>
+</div>
+<%- include('../partials/foot') %>
