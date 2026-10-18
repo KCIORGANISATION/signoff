@@ -5,6 +5,7 @@
     <h1 style="font-size: 24px; margin-bottom: 20px;"><%= project ? t('project.edit') : t('project.new') %></h1>
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
     <form method="post" action="<%= project ? `/projects/${project.id}` : '/projects' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="field">
         <label for="name"><%= t('project.name') %></label>
         <input id="name" name="name" type="text" required value="<%= values.name ?? '' %>">
@@ -33,6 +34,7 @@
   </div>
   <% if (project) { %>
     <form method="post" action="/projects/<%= project.id %>/delete" data-confirm="<%= t('project.delete.confirm') %>" style="margin-top: 20px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <button class="btn btn-danger btn-small" type="submit"><%= t('project.delete') %></button>
     </form>
   <% } %>

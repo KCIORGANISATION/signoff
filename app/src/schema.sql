@@ -57,7 +57,21 @@ CREATE TABLE IF NOT EXISTS review_events (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- One row per "forgot password" request. Only a hash of the emailed token is stored.
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Language of the emails sent to the developer.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS lang TEXT NOT NULL DEFAULT 'en';
+
 CREATE INDEX IF NOT EXISTS projects_user_idx ON projects(user_id);
 CREATE INDEX IF NOT EXISTS milestones_project_idx ON milestones(project_id);
 CREATE INDEX IF NOT EXISTS deliverables_milestone_idx ON deliverables(milestone_id);
 CREATE INDEX IF NOT EXISTS review_events_milestone_idx ON review_events(milestone_id);
+CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets(user_id);

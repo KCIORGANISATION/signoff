@@ -25,11 +25,13 @@
     <% } else { %>
       <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
       <form method="post" action="/r/<%= milestone.token %>/approve" data-confirm="<%= t('review.approve.confirm') %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn btn-large" type="submit">✓ <%= t('review.approve') %></button>
       </form>
       <details <%= error ? 'open' : '' %>>
         <summary><%= t('review.feedback') %></summary>
         <form method="post" action="/r/<%= milestone.token %>/feedback">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <label for="message" class="sr-only"><%= t('review.feedback') %></label>
           <textarea id="message" name="message" required placeholder="<%= t('review.feedback.placeholder') %>"></textarea>
           <div class="form-actions"><button class="btn btn-ghost" type="submit"><%= t('review.feedback.submit') %></button></div>

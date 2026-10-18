@@ -7,6 +7,7 @@
       </div>
       <% if (locals.removable) { %>
         <form method="post" action="/milestones/<%= milestoneId %>/deliverables/<%= d.id %>/delete">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button class="link-button" type="submit"><%= t('milestone.remove') %></button>
         </form>
       <% } %>

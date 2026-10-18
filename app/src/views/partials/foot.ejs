@@ -1,9 +1,14 @@
 </main>
-<% if (locals.client) { %>
-<footer class="powered">
-  <%= t('review.poweredBy') %> <a href="<%= landingUrl %>" target="_blank" rel="noopener">Signoff</a>
+<footer class="site-footer">
+  <% if (locals.client) { %>
+    <p><%= t('review.poweredBy') %> <a href="<%= landingUrl %>" target="_blank" rel="noopener">Signoff</a></p>
+  <% } %>
+  <nav aria-label="<%= t('legal.nav') %>">
+    <a href="/legal"><%= t('legal.legal') %></a>
+    <a href="/privacy"><%= t('legal.privacy') %></a>
+    <a href="/terms"><%= t('legal.terms') %></a>
+  </nav>
 </footer>
-<% } %>
 <script src="/app.js"></script>
 </body>
 </html>

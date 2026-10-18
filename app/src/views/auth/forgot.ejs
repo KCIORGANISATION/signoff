@@ -1,0 +1,22 @@
+<%- include('../partials/head', { title: t('forgot.title') }) %>
+<div class="container narrow">
+  <div class="card">
+    <h1 style="font-size: 24px; margin-bottom: 8px;"><%= t('forgot.title') %></h1>
+    <% if (sent) { %>
+      <div class="alert alert-success" role="status" style="margin-top: 16px;"><%= t('forgot.sent') %></div>
+    <% } else { %>
+      <p class="muted" style="margin-bottom: 20px;"><%= t('forgot.intro') %></p>
+      <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+      <form method="post" action="/forgot">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="email"><%= t('auth.email') %></label>
+          <input id="email" name="email" type="email" autocomplete="email" required value="<%= values.email ?? '' %>">
+        </div>
+        <div class="form-actions"><button class="btn" type="submit" style="width: 100%;"><%= t('forgot.submit') %></button></div>
+      </form>
+    <% } %>
+  </div>
+  <p class="muted small" style="text-align: center; margin-top: 16px;"><a href="/login"><%= t('forgot.back') %></a></p>
+</div>
+<%- include('../partials/foot') %>

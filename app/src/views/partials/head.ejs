@@ -22,7 +22,7 @@
     <div class="nav-links">
       <% if (!locals.client && currentUser) { %>
         <a href="/dashboard"><%= t('nav.dashboard') %></a>
-        <form class="inline" method="post" action="/logout"><button class="link-button" style="color: var(--text-2); font-size: 14px;"><%= t('nav.logout') %></button></form>
+        <form class="inline" method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="link-button" style="color: var(--text-2); font-size: 14px;"><%= t('nav.logout') %></button></form>
       <% } %>
       <span class="lang">
         <a href="/lang/en?back=<%= encodeURIComponent(currentPath) %>" aria-current="<%= lang === 'en' %>">EN</a>

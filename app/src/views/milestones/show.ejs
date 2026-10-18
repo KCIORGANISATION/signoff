@@ -28,13 +28,14 @@
       <% if (approval) { %><a class="btn btn-small" href="/milestones/<%= milestone.id %>/certificate"><%= t('milestone.certificate') %></a><% } %>
     </div>
     <% if (milestone.status === 'draft') { %>
-      <p class="muted"><%= t('milestone.share.draft') %></p>
+      <p class="muted"><%= t('milestone.share.draft', { email: milestone.client_email }) %></p>
       <form method="post" action="/milestones/<%= milestone.id %>/send" style="margin-top: 14px;">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn" type="submit"><%= t('milestone.share.button') %></button>
       </form>
     <% } else { %>
       <% if (milestone.status === 'feedback') { %>
-        <p class="muted"><%= t('milestone.share.againHint') %></p>
+        <p class="muted"><%= t('milestone.share.againHint', { email: milestone.client_email }) %></p>
       <% } %>
       <% if (expired) { %>
         <p class="muted"><%= t('milestone.share.expired', { date: fmt.date(milestone.expires_at) }) %></p>
@@ -49,6 +50,7 @@
       <% } %>
       <% if (milestone.status === 'feedback') { %>
         <form method="post" action="/milestones/<%= milestone.id %>/send" style="margin-top: 14px;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button class="btn" type="submit"><%= t('milestone.share.again') %></button>
         </form>
       <% } %>
@@ -67,6 +69,7 @@
     <details class="add" <%= urlError ? 'open' : '' %>>
       <summary>+ <%= t('milestone.addUrl') %></summary>
       <form method="post" action="/milestones/<%= milestone.id %>/deliverables">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <% if (urlError) { %><div class="alert alert-error" role="alert"><%= urlError.message %></div><% } %>
         <input type="hidden" name="kind" value="url">
         <div class="two-cols">
@@ -87,6 +90,7 @@
     <details class="add" <%= noteError ? 'open' : '' %>>
       <summary>+ <%= t('milestone.addNote') %></summary>
       <form method="post" action="/milestones/<%= milestone.id %>/deliverables">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <% if (noteError) { %><div class="alert alert-error" role="alert"><%= noteError.message %></div><% } %>
         <input type="hidden" name="kind" value="note">
         <div class="field">
