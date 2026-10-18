@@ -57,6 +57,7 @@ app/
       review.js      pages client : validation, feedback, certificat
     views/           templates EJS
   public/            style.css et app.js (copier le lien, confirmations, impression)
+  scripts/           sauvegarde et restauration de la base (Cloudflare R2)
   test/              tests automatiques (npm test)
 ```
 
@@ -107,6 +108,56 @@ npm test
 Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
 
 Pour les lancer contre un vrai Postgres jetable : `TEST_DATABASE_URL=postgres://… npm test`.
+
+## Sauvegardes
+
+Chaque nuit, une GitHub Action ([`.github/workflows/backup.yml`](../.github/workflows/backup.yml)) fait une copie complète de la base Neon et l'envoie dans un bucket Cloudflare R2. Les fichiers s'appellent `signoff/2026-10-19T01-00-12Z.dump` (date et heure UTC).
+
+### Mise en place (une seule fois)
+
+1. Dans Cloudflare R2 : crée un bucket (par exemple `signoff-backups`, emplacement Europe) et un jeton API R2 avec les droits *Object Read & Write* sur ce bucket. Note l'Access Key ID, la Secret Access Key et l'endpoint S3 (`https://<account-id>.r2.cloudflarestorage.com`).
+2. Dans GitHub : *Settings > Secrets and variables > Actions*, ajoute 5 secrets : `DATABASE_URL` (la chaîne Neon de production), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT`.
+3. Dans l'onglet *Actions* : ouvre « Nightly database backup » et clique sur *Run workflow* pour tester tout de suite. Le fichier doit apparaître dans le bucket.
+4. Conseillé : dans le bucket R2, ajoute une règle de cycle de vie (*Settings > Object lifecycle rules*) qui supprime les objets de plus de 30 jours, sinon les sauvegardes s'accumulent.
+
+### Bon à savoir
+
+- L'heure : GitHub ne connaît que l'heure UTC. La sauvegarde est programmée à 01:00 UTC, soit 3h à Bruxelles en été et 2h en hiver. GitHub peut la lancer avec quelques minutes de retard.
+- GitHub met en pause les tâches programmées d'un repo public sans aucune activité pendant 60 jours. Si ça arrive, tu reçois un email et il suffit de la réactiver dans l'onglet *Actions*.
+- `pg_dump` doit être de la même version majeure que Neon, ou plus récente. Le workflow installe la version 17 (`PG_MAJOR`). Si ta base Neon est dans une autre version, change ce chiffre.
+- Si une sauvegarde échoue, GitHub t'envoie un email.
+
+### Sauvegarder à la main
+
+Avec les mêmes variables dans `app/.env` (et les outils PostgreSQL installés sur ton ordinateur) :
+
+```bash
+npm run backup
+```
+
+### Restaurer une sauvegarde (procédure de test)
+
+On restaure toujours dans une **base de test**, jamais dans la base de production. Le script refuse si `RESTORE_DATABASE_URL` est identique à `DATABASE_URL`.
+
+1. Crée une base vide de test, par exemple une branche Neon (*Branches > New branch*) ou un Postgres local.
+2. Dans `app/.env`, mets les 4 variables `R2_…` et `RESTORE_DATABASE_URL` (la chaîne de connexion de la base de test).
+3. Liste les sauvegardes disponibles :
+   ```bash
+   npm run restore -- --list
+   ```
+4. Restaure la plus récente :
+   ```bash
+   npm run restore
+   ```
+   ou une sauvegarde précise :
+   ```bash
+   npm run restore -- signoff/2026-10-19T01-00-12Z.dump
+   ```
+5. Le script affiche le nombre de lignes de chaque table. Compare-les avec la production, puis lance l'app sur la base de test pour vérifier (`DATABASE_URL=<base de test> npm run dev`).
+
+Fais cet exercice une fois par mois : une sauvegarde qu'on n'a jamais restaurée n'est pas une vraie sauvegarde.
+
+En cas de vrai sinistre, la même commande peut restaurer dans une nouvelle base Neon, dont tu mettras ensuite la chaîne de connexion dans `DATABASE_URL` sur Render.
 
 ## Pas encore dans cette version
 
