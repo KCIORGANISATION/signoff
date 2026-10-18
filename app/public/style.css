@@ -179,9 +179,7 @@ details.add form { margin-top: 12px; padding: 16px; background: var(--surface-2)
 .legal h3 { font-size: 16px; margin: 20px 0 8px; }
 .legal p, .legal li { line-height: 1.65; }
 .legal p { margin: 0 0 12px; }
-.legal ul { margin: 0 0 12px; }
-.legal ul { padding-left: 22px; }
-.legal .table-scroll { overflow-x: auto; }
+.legal ul { margin: 0 0 12px; padding-left: 22px; }
 .legal table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
 .legal th, .legal td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--border); }
 .legal .placeholder { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
