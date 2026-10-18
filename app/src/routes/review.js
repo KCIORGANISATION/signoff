@@ -74,8 +74,8 @@ router.post('/r/:token/approve', async (req, res) => {
   if (!milestone) return;
   if (milestone.status !== 'sent' && milestone.status !== 'viewed') return res.redirect(`/r/${req.params.token}`);
 
-  const deliverables = await listDeliverables(milestone.id);
   // The status check in the WHERE clause makes a double click record only one approval.
+  // Once approved, the milestone is locked, so the snapshot below is exactly what was approved.
   const updated = await query(
     `UPDATE milestones
         SET status = 'approved', approved_at = now(), updated_at = now(),
@@ -86,10 +86,12 @@ router.post('/r/:token/approve', async (req, res) => {
   );
   if (updated.length === 0) return res.redirect(`/r/${req.params.token}`);
 
+  const approved = await findMilestoneByToken(req.params.token);
+  const deliverables = await listDeliverables(milestone.id);
   await addEvent(milestone.id, 'approved', {
     ...clientDetails(req),
-    clientName: milestone.client_name,
-    snapshot: buildSnapshot(milestone, deliverables),
+    clientName: approved.client_name,
+    snapshot: buildSnapshot(approved, deliverables),
   });
 
   await emailApproved(developerEmail(req, milestone));

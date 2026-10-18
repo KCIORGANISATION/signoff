@@ -1,12 +1,15 @@
-<%- include('../partials/head', { title: milestone ? t('milestone.edit') : t('milestone.new') }) %>
+<% const isLocked = Boolean(locals.locked); %>
+<%- include('../partials/head', { title: isLocked ? t('milestone.payment.edit') : milestone ? t('milestone.edit') : t('milestone.new') }) %>
 <div class="container" style="max-width: 640px;">
   <a class="back" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>">← <%= t('common.back') %></a>
   <div class="card">
-    <h1 style="font-size: 24px; margin-bottom: 4px;"><%= milestone ? t('milestone.edit') : t('milestone.new') %></h1>
-    <p class="muted small" style="margin-bottom: 20px;"><%= project.name %></p>
+    <h1 style="font-size: 24px; margin-bottom: 4px;"><%= isLocked ? t('milestone.payment.edit') : milestone ? t('milestone.edit') : t('milestone.new') %></h1>
+    <p class="muted small" style="margin-bottom: 20px;"><%= project.name %><% if (isLocked) { %> · <%= milestone.title %><% } %></p>
+    <% if (isLocked) { %><div class="alert alert-info"><%= t('milestone.locked') %></div><% } %>
     <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-    <form method="post" action="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones` %>">
+    <form method="post" action="<%= isLocked ? `/milestones/${milestone.id}/payment` : milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones` %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (!isLocked) { %>
       <div class="field">
         <label for="title"><%= t('milestone.title') %></label>
         <input id="title" name="title" type="text" required value="<%= values.title ?? '' %>">
@@ -20,6 +23,7 @@
         <input id="amount" name="amount" type="text" inputmode="decimal" placeholder="1500" value="<%= values.amount ?? '' %>">
         <p class="hint"><%= t('milestone.amount.hint') %></p>
       </div>
+      <% } %>
       <fieldset class="fieldset">
         <legend><%= t('milestone.payment') %></legend>
         <p class="hint" style="margin: 0 0 14px;"><%= t('milestone.payment.hint') %></p>
@@ -35,7 +39,7 @@
         </div>
       </fieldset>
       <div class="form-actions">
-        <button class="btn" type="submit"><%= t('milestone.save') %></button>
+        <button class="btn" type="submit"><%= isLocked ? t('milestone.payment.save') : t('milestone.save') %></button>
         <a class="btn btn-ghost" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>"><%= t('common.cancel') %></a>
       </div>
     </form>

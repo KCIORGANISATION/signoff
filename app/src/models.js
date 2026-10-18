@@ -80,6 +80,10 @@ export function touchMilestone(milestoneId) {
   return query('UPDATE milestones SET updated_at = now() WHERE id = $1', [milestoneId]);
 }
 
+export function isLocked(milestone) {
+  return milestone.status === 'approved';
+}
+
 export function isExpired(milestone) {
   return milestone.expires_at !== null && new Date(milestone.expires_at) < new Date();
 }

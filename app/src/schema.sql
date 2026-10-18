@@ -79,3 +79,56 @@ CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets(user_id);
 -- Payment link and transfer instructions, shown to the client only once the milestone is approved.
 ALTER TABLE milestones ADD COLUMN IF NOT EXISTS payment_link TEXT;
 ALTER TABLE milestones ADD COLUMN IF NOT EXISTS payment_note TEXT;
+
+-- Proof of approval cannot be changed. The database itself refuses:
+-- any change to the review_events log, and deleting a row while its milestone still exists
+-- (deleting a milestone, project or account still removes its log);
+-- any change to the title, description, amount or deliverables of an approved milestone.
+CREATE OR REPLACE FUNCTION signoff_review_events_append_only() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND NOT EXISTS (SELECT 1 FROM milestones WHERE id = OLD.milestone_id) THEN
+    RETURN OLD;
+  END IF;
+  RAISE EXCEPTION 'review_events is append-only';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER review_events_append_only
+  BEFORE UPDATE OR DELETE ON review_events
+  FOR EACH ROW EXECUTE FUNCTION signoff_review_events_append_only();
+
+CREATE OR REPLACE FUNCTION signoff_milestone_locked() RETURNS trigger AS $$
+BEGIN
+  IF OLD.status = 'approved' AND (
+       NEW.status IS DISTINCT FROM OLD.status
+    OR NEW.title IS DISTINCT FROM OLD.title
+    OR NEW.description IS DISTINCT FROM OLD.description
+    OR NEW.amount IS DISTINCT FROM OLD.amount
+    OR NEW.approved_at IS DISTINCT FROM OLD.approved_at
+    OR NEW.project_id IS DISTINCT FROM OLD.project_id
+  ) THEN
+    RAISE EXCEPTION 'milestone % is approved and locked', OLD.id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER milestones_locked
+  BEFORE UPDATE ON milestones
+  FOR EACH ROW EXECUTE FUNCTION signoff_milestone_locked();
+
+CREATE OR REPLACE FUNCTION signoff_deliverables_locked() RETURNS trigger AS $$
+DECLARE
+  target INTEGER := CASE WHEN TG_OP = 'DELETE' THEN OLD.milestone_id ELSE NEW.milestone_id END;
+BEGIN
+  IF EXISTS (SELECT 1 FROM milestones WHERE id = target AND status = 'approved')
+     OR (TG_OP = 'UPDATE' AND EXISTS (SELECT 1 FROM milestones WHERE id = OLD.milestone_id AND status = 'approved')) THEN
+    RAISE EXCEPTION 'deliverables of approved milestone % are locked', target;
+  END IF;
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER deliverables_locked
+  BEFORE INSERT OR UPDATE OR DELETE ON deliverables
+  FOR EACH ROW EXECUTE FUNCTION signoff_deliverables_locked();

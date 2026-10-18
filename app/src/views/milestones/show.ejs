@@ -11,8 +11,18 @@
         <%= milestone.client_name %><% if (milestone.amount !== null) { %> · <%= fmt.money(milestone.amount, milestone.currency) %><% } %>
       </p>
     </div>
-    <a class="btn btn-ghost btn-small" href="/milestones/<%= milestone.id %>/edit"><%= t('common.edit') %></a>
+    <a class="btn btn-ghost btn-small" href="/milestones/<%= milestone.id %>/edit"><%= locked ? t('milestone.payment.edit') : t('common.edit') %></a>
   </div>
+
+  <% if (locked) { %>
+    <div class="alert alert-info locked" role="status">
+      <p><%= t('milestone.locked') %></p>
+      <form method="post" action="/milestones/<%= milestone.id %>/follow-up" style="margin-top: 10px;">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-small" type="submit"><%= t('milestone.followUp') %></button>
+      </form>
+    </div>
+  <% } %>
 
   <% if (editedAfterApproval) { %>
     <div class="alert alert-info"><%= t('milestone.editedAfterApproval') %></div>
@@ -71,10 +81,12 @@
   <section class="card" id="deliverables">
     <div class="card-header"><h2><%= t('milestone.deliverables') %></h2></div>
     <% if (deliverables.length === 0) { %>
-      <p class="empty"><%= t('milestone.deliverables.empty') %></p>
+      <p class="empty"><%= locked ? t('milestone.deliverables.none') : t('milestone.deliverables.empty') %></p>
     <% } else { %>
-      <%- include('../partials/deliverables', { deliverables, removable: true, milestoneId: milestone.id }) %>
+      <%- include('../partials/deliverables', { deliverables, removable: !locked, milestoneId: milestone.id }) %>
     <% } %>
+
+    <% if (!locked) { %>
 
     <% const urlError = formError && formError.kind === 'url' ? formError : null; %>
     <details class="add" <%= urlError ? 'open' : '' %>>
@@ -115,6 +127,7 @@
         <div class="form-actions"><button class="btn btn-small" type="submit"><%= t('milestone.add') %></button></div>
       </form>
     </details>
+    <% } %>
   </section>
 
   <section class="card">

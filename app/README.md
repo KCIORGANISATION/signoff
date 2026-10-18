@@ -28,7 +28,17 @@ Pour repartir de zéro, arrête le serveur et supprime le dossier `app/data/`.
 5. Le client ouvre le lien, sans compte : il voit les livrables et clique sur **J'approuve** ou **Laisser un feedback**.
 6. Feedback : le dev corrige et clique sur « Renvoyer » : le client reçoit à nouveau le même lien.
 7. Approbation : un **certificat** imprimable en PDF est créé. Le lien client (et le certificat côté client) expire **7 jours après l'approbation**. Le dev garde l'accès au certificat pour toujours.
-8. Le dev peut encore modifier le jalon après approbation : le certificat montre toujours ce que le client a réellement approuvé.
+8. Un jalon approuvé est **verrouillé** : titre, description, montant et livrables ne peuvent plus changer (seuls le lien et les instructions de paiement restent modifiables). Pour toute modification, le bouton « Créer un jalon de suite » crée un nouveau jalon brouillon dans le même projet. Il n'y a pas de réouverture pour une nouvelle approbation.
+
+### Preuve d'approbation
+
+Au moment où le client approuve, Signoff enregistre dans `review_events` un instantané du jalon (titre, description, montant, livrables, nom du client) avec la date, l'IP et le navigateur. Le certificat est construit uniquement à partir de cet enregistrement, jamais relu depuis le jalon.
+
+Le verrouillage est appliqué deux fois : par l'app (une requête directe sur un jalon approuvé reçoit une erreur 409) et par la base elle-même (des triggers dans `schema.sql`). La base refuse :
+
+- toute modification d'une ligne de `review_events`, et sa suppression tant que le jalon existe (supprimer un jalon, un projet ou un compte efface toujours son historique) ;
+- tout changement du titre, de la description, du montant ou du statut d'un jalon approuvé ;
+- tout ajout, modification ou suppression de livrable sur un jalon approuvé.
 
 Statuts d'un jalon : brouillon, envoyé, vu, feedback, approuvé.
 
@@ -118,7 +128,7 @@ En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SE
 npm test
 ```
 
-Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
+Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi le verrouillage des jalons approuvés (édition refusée côté serveur et par la base, certificat inchangé après une tentative, paiement toujours modifiable, jalon de suite), le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
 
 Pour les lancer contre un vrai Postgres jetable : `TEST_DATABASE_URL=postgres://… npm test`.
 
