@@ -16,6 +16,7 @@ import milestoneRoutes from './routes/milestones.js';
 import reviewRoutes from './routes/review.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const modules = path.join(here, '..', 'node_modules');
 
 export function createApp() {
   const app = express();
@@ -46,6 +47,9 @@ export function createApp() {
     }),
   );
   app.use(express.static(path.join(here, '..', 'public')));
+  // Fonts are served by the app itself, so visitors' IP addresses are not sent to Google.
+  app.use('/fonts/inter', express.static(path.join(modules, '@fontsource-variable', 'inter')));
+  app.use('/fonts/jetbrains-mono', express.static(path.join(modules, '@fontsource', 'jetbrains-mono')));
   app.use(express.urlencoded({ extended: false }));
   app.use(
     cookieSession({

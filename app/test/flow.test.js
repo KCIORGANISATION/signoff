@@ -162,3 +162,23 @@ test('health check, legal pages and security headers', async () => {
   assert.ok(login.headers.get('content-security-policy'));
   assert.equal(login.headers.get('x-content-type-options'), 'nosniff');
 });
+
+test('legal pages exist in French and English, fonts are self-hosted', async () => {
+  const visitor = new Browser(server.base);
+
+  const pages = {
+    en: { '/legal': 'Article XII.6', '/privacy': 'Data Protection Authority', '/terms': 'not a qualified electronic signature' },
+    fr: { '/legal': 'article XII.6', '/privacy': 'Autorité de protection des données', '/terms': "n'est pas une signature électronique qualifiée" },
+  };
+  for (const [lang, expected] of Object.entries(pages)) {
+    await visitor.get(`/lang/${lang}`);
+    for (const [path, text] of Object.entries(expected)) {
+      const page = await visitor.get(path);
+      assert.ok(page.text.includes(text.replaceAll("'", '&#39;')) || page.text.includes(text), `${lang} ${path}`);
+    }
+  }
+
+  const login = await visitor.get('/login');
+  assert.ok(!login.text.includes('fonts.googleapis.com'));
+  assert.equal((await visitor.get('/fonts/inter/index.css')).status, 200);
+});
