@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db.js';
-import { notifyDeveloper } from '../notify.js';
+import { absoluteUrl } from '../config.js';
+import { emailApproved, emailFeedback } from '../email.js';
 import {
   LINK_LIFETIME_DAYS,
   addEvent,
@@ -15,11 +16,18 @@ import {
 // Client-facing pages. No account: the secret token in the URL is the access.
 const router = Router();
 
-function developerUrl(req, milestone) {
-  const base = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-  return `${base.replace(/\/$/, '')}/milestones/${milestone.id}`;
+function developerEmail(req, milestone) {
+  return {
+    to: milestone.dev_email,
+    lang: milestone.dev_lang,
+    clientName: milestone.client_name,
+    title: milestone.title,
+    projectName: milestone.project_name,
+    link: absoluteUrl(req, `/milestones/${milestone.id}`),
+  };
 }
 
+// req.ip is the client's real address because of the "trust proxy" setting.
 function clientDetails(req) {
   return { ip: req.ip, userAgent: req.get('user-agent') ?? '' };
 }
@@ -75,11 +83,7 @@ router.post('/r/:token/approve', async (req, res) => {
     snapshot: buildSnapshot(milestone, deliverables),
   });
 
-  await notifyDeveloper({
-    to: milestone.dev_email,
-    subject: `${milestone.client_name} approved "${milestone.title}"`,
-    text: `${milestone.client_name} approved the milestone "${milestone.title}" (${milestone.project_name}).\n\n${developerUrl(req, milestone)}`,
-  });
+  await emailApproved(developerEmail(req, milestone));
 
   res.redirect(`/r/${req.params.token}`);
 });
@@ -105,11 +109,7 @@ router.post('/r/:token/feedback', async (req, res) => {
 
   await addEvent(milestone.id, 'feedback', { ...clientDetails(req), clientName: milestone.client_name, message });
 
-  await notifyDeveloper({
-    to: milestone.dev_email,
-    subject: `${milestone.client_name} left feedback on "${milestone.title}"`,
-    text: `${milestone.client_name} left feedback on "${milestone.title}" (${milestone.project_name}):\n\n${message}\n\n${developerUrl(req, milestone)}`,
-  });
+  await emailFeedback({ ...developerEmail(req, milestone), message });
 
   res.redirect(`/r/${req.params.token}`);
 });

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { query, queryOne } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { absoluteUrl } from '../config.js';
+import { emailReviewRequest } from '../email.js';
 import {
   addEvent,
   certificateData,
@@ -34,8 +36,7 @@ function readMilestoneForm(body) {
 }
 
 function reviewLink(req, milestone) {
-  const base = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-  return `${base.replace(/\/$/, '')}/r/${milestone.token}`;
+  return absoluteUrl(req, `/r/${milestone.token}`);
 }
 
 async function renderMilestone(req, res, milestone, formError = null, status = 200) {
@@ -169,7 +170,7 @@ router.post('/milestones/:id/deliverables/:deliverableId/delete', async (req, re
   res.redirect(`/milestones/${milestone.id}#deliverables`);
 });
 
-// The developer sends the link themselves; this records that it went out.
+// Emails the review link to the client. The page also shows the link so the developer can copy it.
 router.post('/milestones/:id/send', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
@@ -177,6 +178,15 @@ router.post('/milestones/:id/send', async (req, res) => {
   if (milestone.status === 'draft' || milestone.status === 'feedback') {
     await query(`UPDATE milestones SET status = 'sent', updated_at = now() WHERE id = $1`, [milestone.id]);
     await addEvent(milestone.id, 'sent');
+    await emailReviewRequest({
+      to: milestone.client_email,
+      lang: req.lang,
+      devName: req.session.user.name,
+      clientName: milestone.client_name,
+      title: milestone.title,
+      projectName: milestone.project_name,
+      link: reviewLink(req, milestone),
+    });
   }
   res.redirect(`/milestones/${milestone.id}#share`);
 });
