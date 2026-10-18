@@ -10,6 +10,7 @@ import {
   findMilestoneForUser,
   findProjectForUser,
   isExpired,
+  isLocked,
   latestApproval,
   listDeliverables,
   listEvents,
@@ -21,27 +22,43 @@ import {
 const router = Router();
 router.use(['/milestones', '/projects/:projectId/milestones'], requireAuth);
 
+// SQL condition that is false once the milestone (whose id is the given parameter) is approved.
+const unlocked = (param) => `EXISTS (SELECT 1 FROM milestones WHERE id = ${param} AND status <> 'approved')`;
+
 function notFound(req, res) {
   res.status(404).render('error', { message: req.t('error.notFound') });
 }
 
-function readMilestoneForm(body) {
-  const amountText = (body.amount ?? '').trim().replace(',', '.');
+// An approved milestone is locked: its content is what the client approved.
+// Only the payment link and note can still change.
+function locked(req, res) {
+  res.status(409).render('error', { message: req.t('milestone.locked.error') });
+}
+
+function readPaymentForm(body) {
   const paymentLink = parsePaymentLink(body.payment_link);
   const paymentNote = parsePaymentNote(body.payment_note);
+  const values = {
+    payment_link: paymentLink === false ? (body.payment_link ?? '').trim() : paymentLink,
+    payment_note: paymentNote === false ? (body.payment_note ?? '').trim() : paymentNote,
+  };
+  let error = null;
+  if (paymentLink === false) error = 'milestone.error.paymentLink';
+  else if (paymentNote === false) error = 'milestone.error.paymentNote';
+  return { values, error };
+}
+
+function readMilestoneForm(body) {
+  const amountText = (body.amount ?? '').trim().replace(',', '.');
+  const payment = readPaymentForm(body);
   const values = {
     title: (body.title ?? '').trim(),
     description: (body.description ?? '').trim(),
     amount: amountText === '' ? null : amountText,
-    payment_link: paymentLink === false ? (body.payment_link ?? '').trim() : paymentLink,
-    payment_note: paymentNote === false ? (body.payment_note ?? '').trim() : paymentNote,
+    ...payment.values,
   };
   const amountValid = values.amount === null || (/^\d+(\.\d{1,2})?$/.test(values.amount));
-
-  let error = null;
-  if (!values.title || !amountValid) error = 'milestone.error.fields';
-  else if (paymentLink === false) error = 'milestone.error.paymentLink';
-  else if (paymentNote === false) error = 'milestone.error.paymentNote';
+  const error = !values.title || !amountValid ? 'milestone.error.fields' : payment.error;
   return { values, error };
 }
 
@@ -64,6 +81,7 @@ async function renderMilestone(req, res, milestone, formError = null, status = 2
     events,
     approval,
     editedAfterApproval,
+    locked: isLocked(milestone),
     expired: isExpired(milestone),
     link: milestone.status === 'draft' ? null : reviewLink(req, milestone),
     formError,
@@ -106,12 +124,13 @@ router.get('/milestones/:id/edit', async (req, res) => {
   if (!milestone) return notFound(req, res);
 
   const project = await findProjectForUser(req.session.user.id, milestone.project_id);
-  res.render('milestones/form', { project, milestone, values: milestone, error: null });
+  res.render('milestones/form', { project, milestone, values: milestone, error: null, locked: isLocked(milestone) });
 });
 
 router.post('/milestones/:id', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (isLocked(milestone)) return locked(req, res);
 
   const { values, error } = readMilestoneForm(req.body);
   if (error) {
@@ -119,13 +138,49 @@ router.post('/milestones/:id', async (req, res) => {
     return res.status(400).render('milestones/form', { project, milestone, values, error: req.t(error) });
   }
 
-  await query(
+  // The status check also covers an approval that lands while the form is being sent.
+  const updated = await query(
     `UPDATE milestones
         SET title = $1, description = $2, amount = $3, payment_link = $4, payment_note = $5, updated_at = now()
-      WHERE id = $6`,
+      WHERE id = $6 AND status <> 'approved'
+      RETURNING id`,
     [values.title, values.description, values.amount, values.payment_link, values.payment_note, milestone.id],
   );
+  if (updated.length === 0) return locked(req, res);
   res.redirect(`/milestones/${milestone.id}`);
+});
+
+// Payment details stay editable after approval; they are not part of the approval record.
+router.post('/milestones/:id/payment', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+
+  const { values, error } = readPaymentForm(req.body);
+  if (error) {
+    const project = await findProjectForUser(req.session.user.id, milestone.project_id);
+    return res.status(400).render('milestones/form', {
+      project, milestone, values: { ...milestone, ...values }, error: req.t(error), locked: isLocked(milestone),
+    });
+  }
+
+  await query('UPDATE milestones SET payment_link = $1, payment_note = $2 WHERE id = $3', [
+    values.payment_link,
+    values.payment_note,
+    milestone.id,
+  ]);
+  res.redirect(`/milestones/${milestone.id}#payment`);
+});
+
+// Starts a new draft milestone in the same project, for changes after an approval.
+router.post('/milestones/:id/follow-up', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+
+  const followUp = await queryOne(
+    `INSERT INTO milestones (project_id, title, token) VALUES ($1, $2, $3) RETURNING id`,
+    [milestone.project_id, req.t('milestone.followUp.title', { title: milestone.title }), newToken()],
+  );
+  res.redirect(`/milestones/${followUp.id}/edit`);
 });
 
 router.post('/milestones/:id/delete', async (req, res) => {
@@ -139,6 +194,7 @@ router.post('/milestones/:id/delete', async (req, res) => {
 router.post('/milestones/:id/deliverables', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (isLocked(milestone)) return locked(req, res);
 
   const label = (req.body.label ?? '').trim();
 
@@ -148,7 +204,8 @@ router.post('/milestones/:id/deliverables', async (req, res) => {
       return renderMilestone(req, res, milestone, { kind: 'url', message: req.t('milestone.error.url'), label, url }, 400);
     }
     await query(
-      `INSERT INTO deliverables (milestone_id, kind, label, url) VALUES ($1, 'url', $2, $3)`,
+      `INSERT INTO deliverables (milestone_id, kind, label, url)
+       SELECT $1::int, 'url', $2::text, $3::text WHERE ${unlocked('$1::int')}`,
       [milestone.id, label, url],
     );
   } else {
@@ -157,7 +214,8 @@ router.post('/milestones/:id/deliverables', async (req, res) => {
       return renderMilestone(req, res, milestone, { kind: 'note', message: req.t('milestone.error.note'), label, body }, 400);
     }
     await query(
-      `INSERT INTO deliverables (milestone_id, kind, label, body) VALUES ($1, 'note', $2, $3)`,
+      `INSERT INTO deliverables (milestone_id, kind, label, body)
+       SELECT $1::int, 'note', $2::text, $3::text WHERE ${unlocked('$1::int')}`,
       [milestone.id, label, body],
     );
   }
@@ -169,8 +227,9 @@ router.post('/milestones/:id/deliverables', async (req, res) => {
 router.post('/milestones/:id/deliverables/:deliverableId/delete', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (isLocked(milestone)) return locked(req, res);
 
-  await query('DELETE FROM deliverables WHERE id = $1 AND milestone_id = $2', [
+  await query(`DELETE FROM deliverables WHERE id = $1 AND milestone_id = $2 AND ${unlocked('$2')}`, [
     toId(req.params.deliverableId),
     milestone.id,
   ]);
