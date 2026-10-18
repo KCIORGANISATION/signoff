@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -8,6 +9,7 @@ import { query, queryOne } from './db.js';
 import { languages, translator } from './i18n.js';
 import { formatters } from './format.js';
 import { csrfProtection } from './csrf.js';
+import { citationTag, describe } from './text.js';
 import authRoutes from './routes/auth.js';
 import passwordRoutes from './routes/password.js';
 import legalRoutes from './routes/legal.js';
@@ -18,6 +20,15 @@ import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const modules = path.join(here, '..', 'node_modules');
+const publicDir = path.join(here, '..', 'public');
+
+// The logo lives in one replaceable file, public/logo.svg. It is also inlined in the pages
+// so its handwritten text uses the Caveat font the app serves.
+const logoSvg = fs
+  .readFileSync(path.join(publicDir, 'logo.svg'), 'utf8')
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace(/<\?xml[^>]*>/, '')
+  .trim();
 
 export function createApp() {
   const app = express();
@@ -47,10 +58,11 @@ export function createApp() {
       strictTransportSecurity: config.production,
     }),
   );
-  app.use(express.static(path.join(here, '..', 'public')));
+  app.use(express.static(publicDir));
   // Fonts are served by the app itself, so visitors' IP addresses are not sent to Google.
-  app.use('/fonts/inter', express.static(path.join(modules, '@fontsource-variable', 'inter')));
-  app.use('/fonts/jetbrains-mono', express.static(path.join(modules, '@fontsource', 'jetbrains-mono')));
+  app.use('/fonts/jakarta', express.static(path.join(modules, '@fontsource', 'plus-jakarta-sans', 'files')));
+  app.use('/fonts/caveat', express.static(path.join(modules, '@fontsource', 'caveat', 'files')));
+  app.use('/fonts/jetbrains-mono', express.static(path.join(modules, '@fontsource', 'jetbrains-mono', 'files')));
   app.use(express.urlencoded({ extended: false }));
   app.use(
     cookieSession({
@@ -74,6 +86,9 @@ export function createApp() {
     res.locals.currentUser = req.session.user ?? null;
     res.locals.currentPath = req.originalUrl;
     res.locals.landingUrl = config.landingUrl;
+    res.locals.logoSvg = logoSvg;
+    res.locals.citeTag = (position) => citationTag(lang, position);
+    res.locals.describe = describe;
     next();
   });
 

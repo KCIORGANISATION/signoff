@@ -1,54 +1,122 @@
-<% const isLocked = Boolean(locals.locked); %>
-<%- include('../partials/head', { title: isLocked ? t('milestone.payment.edit') : milestone ? t('milestone.edit') : t('milestone.new') }) %>
-<div class="container" style="max-width: 640px;">
-  <a class="back" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>">← <%= t('common.back') %></a>
-  <div class="card">
-    <h1 style="font-size: 24px; margin-bottom: 4px;"><%= isLocked ? t('milestone.payment.edit') : milestone ? t('milestone.edit') : t('milestone.new') %></h1>
-    <p class="muted small" style="margin-bottom: 20px;"><%= project.name %><% if (isLocked) { %> · <%= milestone.title %><% } %></p>
-    <% if (isLocked) { %><div class="alert alert-info"><%= t('milestone.locked') %></div><% } %>
-    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-    <form method="post" action="<%= isLocked ? `/milestones/${milestone.id}/payment` : milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones` %>">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <% if (!isLocked) { %>
-      <div class="field">
-        <label for="title"><%= t('milestone.title') %></label>
-        <input id="title" name="title" type="text" required value="<%= values.title ?? '' %>">
-      </div>
-      <div class="field">
-        <label for="description"><%= t('milestone.description') %></label>
-        <textarea id="description" name="description"><%= values.description ?? '' %></textarea>
-      </div>
-      <div class="field" style="max-width: 240px;">
-        <label for="amount"><%= t('milestone.amount') %> (<%= project.currency %>)</label>
-        <input id="amount" name="amount" type="text" inputmode="decimal" placeholder="1500" value="<%= values.amount ?? '' %>">
-        <p class="hint"><%= t('milestone.amount.hint') %></p>
-      </div>
-      <% } %>
-      <fieldset class="fieldset">
-        <legend><%= t('milestone.payment') %></legend>
-        <p class="hint" style="margin: 0 0 14px;"><%= t('milestone.payment.hint') %></p>
-        <div class="field">
-          <label for="payment_link"><%= t('milestone.paymentLink') %></label>
-          <input id="payment_link" name="payment_link" type="url" maxlength="500" placeholder="https://buy.stripe.com/…" aria-describedby="payment_link-hint" value="<%= values.payment_link ?? '' %>">
-          <p class="hint" id="payment_link-hint"><%= t('milestone.paymentLink.hint') %></p>
-        </div>
-        <div class="field">
-          <label for="payment_note"><%= t('milestone.paymentNote') %></label>
-          <textarea id="payment_note" name="payment_note" maxlength="500" rows="3" aria-describedby="payment_note-hint" placeholder="<%= t('milestone.paymentNote.placeholder') %>"><%= values.payment_note ?? '' %></textarea>
-          <p class="hint" id="payment_note-hint"><%= t('milestone.paymentNote.hint') %></p>
-        </div>
-      </fieldset>
-      <div class="form-actions">
-        <button class="btn" type="submit"><%= isLocked ? t('milestone.payment.save') : t('milestone.save') %></button>
-        <a class="btn btn-ghost" href="<%= milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}` %>"><%= t('common.cancel') %></a>
-      </div>
-    </form>
+<% const isLocked = Boolean(locals.locked);
+   const heading = isLocked ? t('milestone.payment.edit') : milestone ? t('milestone.edit') : t('milestone.new');
+   const action = isLocked ? `/milestones/${milestone.id}/payment` : milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones`;
+   const canSend = !milestone || milestone.status === 'draft' || milestone.status === 'feedback';
+   const crumbs = [{ label: t('nav.projects'), href: '/dashboard' }, { label: project.name, href: `/projects/${project.id}` }];
+   if (milestone) crumbs.push({ label: milestone.title, href: `/milestones/${milestone.id}` });
+   crumbs.push({ label: heading }); %>
+<%- include('../partials/head', { title: heading, crumbs }) %>
+<div class="page-title reveal">
+  <div>
+    <h1><%= heading %></h1>
+    <p><%= project.name %> · <%= project.client_name %></p>
   </div>
-  <% if (milestone) { %>
-    <form method="post" action="/milestones/<%= milestone.id %>/delete" data-confirm="<%= t('milestone.delete.confirm') %>" style="margin-top: 20px;">
+</div>
+
+<% if (error) { %><div style="margin-bottom: 20px;"><%- include('../partials/alert', { kind: 'error', text: error }) %></div><% } %>
+
+<div class="split">
+  <div class="stack">
+    <form id="milestone-form" method="post" action="<%= action %>" class="stack">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button class="btn btn-danger btn-small" type="submit"><%= t('milestone.delete') %></button>
+      <%# Pressing Enter in a field saves; it never sends to the client. %>
+      <button class="sr-only" type="submit" name="intent" value="save" tabindex="-1" aria-hidden="true"></button>
+      <% if (isLocked) { %>
+        <div class="locked-banner" role="status"><p><%- include('../partials/icon', { name: 'lock' }) %><span><%= t('milestone.locked') %></span></p></div>
+      <% } else { %>
+        <section class="glass panel reveal" style="--i: 1;" aria-labelledby="info-title">
+          <h2 id="info-title"><%= t('milestone.form.info') %></h2>
+          <div class="field">
+            <label for="title"><%= t('milestone.form.titleLabel') %></label>
+            <input id="title" name="title" type="text" required maxlength="200" value="<%= values.title ?? '' %>">
+          </div>
+        </section>
+
+        <section class="glass panel reveal" style="--i: 2;" aria-labelledby="description-title">
+          <h2 id="description-title"><%= t('milestone.form.description') %></h2>
+          <div class="field">
+            <label for="description"><%= t('milestone.form.descriptionLabel') %></label>
+            <textarea id="description" name="description" rows="8" aria-describedby="description-hint"><%= values.description ?? '' %></textarea>
+            <p class="hint" id="description-hint" style="margin-top: 2px;"><%= t('milestone.form.descriptionHint') %></p>
+          </div>
+        </section>
+      <% } %>
     </form>
-  <% } %>
+
+    <% if (!isLocked) { %>
+      <section class="glass panel reveal" style="--i: 3;" id="files" aria-labelledby="files-title">
+        <h2 id="files-title"><%= t('files.title') %></h2>
+        <% if (milestone) { %>
+          <%- include('../partials/upload', { milestone, files, filesEnabled, locked: false, quota }) %>
+        <% } else { %>
+          <div class="dropzone" aria-disabled="true" style="opacity: 0.75;">
+            <%- include('../partials/icon', { name: 'upload' }) %>
+            <p class="dropzone-title"><%= t('milestone.form.filesLater') %></p>
+            <p class="hint"><%= t('files.rules') %></p>
+          </div>
+        <% } %>
+      </section>
+    <% } %>
+
+    <section class="glass panel reveal" style="--i: 4;" aria-labelledby="payment-title">
+      <h2 id="payment-title"><%= isLocked ? t('milestone.payment') : t('milestone.form.payment') %></h2>
+      <div class="fields-row">
+        <% if (!isLocked) { %>
+          <div class="field" style="max-width: 260px;">
+            <label for="amount"><%= t('milestone.amount') %> (<%= project.currency %>)</label>
+            <input id="amount" name="amount" form="milestone-form" type="text" inputmode="decimal" placeholder="1500" value="<%= values.amount ?? '' %>" aria-describedby="amount-hint">
+            <p class="hint" id="amount-hint" style="margin-top: 2px;"><%= t('milestone.amount.hint') %></p>
+          </div>
+        <% } %>
+        <div class="field" style="grid-column: span 2; min-width: min(100%, 280px);">
+          <label for="payment_link"><%= t('milestone.paymentLink') %></label>
+          <input id="payment_link" name="payment_link" form="milestone-form" type="url" maxlength="500" placeholder="https://buy.stripe.com/…" aria-describedby="payment_link-hint" value="<%= values.payment_link ?? '' %>">
+          <p class="hint" id="payment_link-hint" style="margin-top: 2px;"><%= t('milestone.paymentLink.hint') %></p>
+        </div>
+      </div>
+      <div class="field">
+        <label for="payment_note"><%= t('milestone.paymentNote') %></label>
+        <textarea id="payment_note" name="payment_note" form="milestone-form" maxlength="500" rows="3" aria-describedby="payment_note-hint" placeholder="<%= t('milestone.paymentNote.placeholder') %>" style="min-height: 96px;"><%= values.payment_note ?? '' %></textarea>
+        <p class="hint" id="payment_note-hint" style="margin-top: 2px;"><%= t('milestone.paymentNote.hint') %></p>
+      </div>
+      <p class="lock-note"><%- include('../partials/icon', { name: 'shield', cls: 'icon-sm' }) %><span><%= t('milestone.payment.hint') %></span></p>
+    </section>
+  </div>
+
+  <aside class="split-side" aria-labelledby="status-title">
+    <section class="glass panel panel-tight status-panel reveal" style="--i: 1;">
+      <h2 id="status-title" style="font-size: 18px;"><%= t('milestone.form.status') %></h2>
+      <% if (!milestone) { %>
+        <span class="status-line"><%= t('milestone.form.statusNew') %></span>
+      <% } else if (milestone.status === 'draft') { %>
+        <span class="status-line"><%= t('milestone.form.statusDraft') %></span>
+      <% } else { %>
+        <%- include('../partials/badge', { status: milestone.status }) %>
+      <% } %>
+      <div class="side-actions">
+        <% if (isLocked) { %>
+          <button class="btn btn-light btn-large btn-block" type="submit" form="milestone-form" data-loading><%= t('milestone.payment.save') %></button>
+          <a class="btn btn-block" href="/milestones/<%= milestone.id %>"><%= t('common.cancel') %></a>
+        <% } else { %>
+          <% if (canSend) { %>
+            <button class="btn btn-primary btn-large btn-block" type="submit" form="milestone-form" name="intent" value="send" data-loading><%- include('../partials/icon', { name: 'send' }) %><%= milestone && milestone.status === 'feedback' ? t('milestone.share.again') : t('milestone.share.button') %></button>
+          <% } else { %>
+            <p class="muted small"><%= t('milestone.form.alreadySent', { email: project.client_email }) %></p>
+          <% } %>
+          <button class="btn btn-large btn-block" type="submit" form="milestone-form" name="intent" value="preview"><%- include('../partials/icon', { name: 'eye' }) %><%= t('milestone.form.preview') %></button>
+          <button class="link-button" type="submit" form="milestone-form" name="intent" value="save"><%= canSend && (!milestone || milestone.status === 'draft') ? t('milestone.form.saveDraft') : t('milestone.form.save') %></button>
+        <% } %>
+      </div>
+    </section>
+    <section class="glass panel panel-tight reveal" style="--i: 2;">
+      <p class="lock-note"><%- include('../partials/icon', { name: 'lock', cls: 'icon-sm' }) %><span><%= t('milestone.form.lockNote') %></span></p>
+    </section>
+    <% if (milestone) { %>
+      <form method="post" action="/milestones/<%= milestone.id %>/delete" data-confirm="<%= t('milestone.delete.confirm') %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-danger btn-small" type="submit"><%- include('../partials/icon', { name: 'trash', cls: 'icon-sm' }) %><%= t('milestone.delete') %></button>
+      </form>
+    <% } %>
+  </aside>
 </div>
 <%- include('../partials/foot') %>

@@ -1,1 +1,2 @@
-<span class="badge badge-<%= status %>"><%= t('status.' + status) %></span>
+<% const statusIcons = { draft: 'pencil', sent: 'send', viewed: 'eye', feedback: 'message', approved: 'check' }; %>
+<span class="badge badge-<%= status %>"><%- include('icon', { name: statusIcons[status] }) %><%= t('status.' + status) %></span>

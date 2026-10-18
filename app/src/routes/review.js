@@ -7,14 +7,19 @@ import {
   addEvent,
   buildSnapshot,
   certificateData,
+  clientHistory,
   findMilestoneByToken,
   isExpired,
   latestApproval,
   listDeliverables,
+  milestonePosition,
 } from '../models.js';
 import { paymentDomain } from '../payment.js';
 import { findFile, listFiles, sendFile } from '../files.js';
 import { storage } from '../storage.js';
+import { describe } from '../text.js';
+
+const MAX_NAME_LENGTH = 120;
 
 // Client-facing pages. No account: the secret token in the URL is the access.
 const router = Router();
@@ -47,9 +52,16 @@ async function loadMilestone(req, res) {
     res.status(410).render('review/expired', { milestone });
     return null;
   }
+  return hidePayment(milestone);
+}
+
+// The payment link and note leave the server only once the milestone is approved.
+// Before that, the page only knows whether the developer gave payment details.
+export function hidePayment(milestone) {
   const { payment_link: link, payment_note: note } = milestone;
   delete milestone.payment_link;
   delete milestone.payment_note;
+  milestone.hasPayment = Boolean(link || note);
   milestone.payment =
     milestone.status === 'approved' && (link || note)
       ? { link, domain: link ? paymentDomain(link) : null, note }
@@ -57,24 +69,75 @@ async function loadMilestone(req, res) {
   return milestone;
 }
 
+// Everything the client milestone page shows. fileBase is where the files are served:
+// the client link, or the developer's own URL for the "view as client" preview.
+export async function clientPage(milestone, { fileBase, preview = false, mode = 'choose', error = null, values = {} }) {
+  const [deliverables, files, history, position, approval] = await Promise.all([
+    listDeliverables(milestone.id),
+    listFiles(milestone.id),
+    clientHistory(milestone),
+    milestonePosition(milestone),
+    milestone.status === 'approved' ? latestApproval(milestone.id) : null,
+  ]);
+  return {
+    milestone,
+    approval,
+    deliverables,
+    files,
+    history,
+    position,
+    description: describe(milestone.description),
+    fileBase,
+    preview,
+    mode,
+    error,
+    values,
+  };
+}
+
+async function markViewed(req, milestone) {
+  if (milestone.status !== 'sent') return;
+  const updated = await query(`UPDATE milestones SET status = 'viewed' WHERE id = $1 AND status = 'sent' RETURNING id`, [
+    milestone.id,
+  ]);
+  if (updated.length > 0) await addEvent(milestone.id, 'viewed', clientDetails(req));
+  milestone.status = 'viewed';
+}
+
+function renderReview(req, res, milestone, options = {}, status = 200) {
+  return clientPage(milestone, { fileBase: `/r/${req.params.token}/files`, ...options }).then((page) =>
+    res.status(status).render('review/show', page),
+  );
+}
+
+// The link opens on a short welcome card; once approved or answered, it opens on the milestone.
 router.get('/r/:token', async (req, res) => {
   const milestone = await loadMilestone(req, res);
   if (!milestone) return;
+  await markViewed(req, milestone);
 
-  if (milestone.status === 'sent') {
-    await query(`UPDATE milestones SET status = 'viewed' WHERE id = $1`, [milestone.id]);
-    await addEvent(milestone.id, 'viewed', clientDetails(req));
-    milestone.status = 'viewed';
-  }
+  if (milestone.status !== 'viewed') return renderReview(req, res, milestone);
+  const position = await milestonePosition(milestone);
+  res.render('review/welcome', { milestone, position });
+});
 
-  const [deliverables, files] = await Promise.all([listDeliverables(milestone.id), listFiles(milestone.id)]);
-  res.render('review/show', { milestone, deliverables, files, error: null });
+router.get('/r/:token/review', async (req, res) => {
+  const milestone = await loadMilestone(req, res);
+  if (!milestone) return;
+  await markViewed(req, milestone);
+  await renderReview(req, res, milestone);
 });
 
 router.post('/r/:token/approve', async (req, res) => {
   const milestone = await loadMilestone(req, res);
   if (!milestone) return;
   if (milestone.status !== 'sent' && milestone.status !== 'viewed') return res.redirect(`/r/${req.params.token}`);
+
+  // The client types their full name: it is recorded with the approval and shown on the certificate.
+  const name = (req.body.name ?? '').trim().replace(/\s+/g, ' ');
+  if (!name || name.length > MAX_NAME_LENGTH) {
+    return renderReview(req, res, milestone, { mode: 'approve', error: req.t('review.approve.nameError'), values: { name } }, 400);
+  }
 
   // The status check in the WHERE clause makes a double click record only one approval.
   // Once approved, the milestone is locked, so the snapshot below is exactly what was approved.
@@ -92,11 +155,11 @@ router.post('/r/:token/approve', async (req, res) => {
   const [deliverables, files] = await Promise.all([listDeliverables(milestone.id), listFiles(milestone.id)]);
   await addEvent(milestone.id, 'approved', {
     ...clientDetails(req),
-    clientName: approved.client_name,
+    clientName: name,
     snapshot: buildSnapshot(approved, deliverables, files),
   });
 
-  await emailApproved(developerEmail(req, milestone));
+  await emailApproved({ ...developerEmail(req, milestone), clientName: name });
 
   res.redirect(`/r/${req.params.token}`);
 });
@@ -108,8 +171,7 @@ router.post('/r/:token/feedback', async (req, res) => {
 
   const message = (req.body.message ?? '').trim();
   if (!message) {
-    const [deliverables, files] = await Promise.all([listDeliverables(milestone.id), listFiles(milestone.id)]);
-    return res.status(400).render('review/show', { milestone, deliverables, files, error: req.t('review.feedback.error') });
+    return renderReview(req, res, milestone, { mode: 'feedback', error: req.t('review.feedback.error') }, 400);
   }
 
   const updated = await query(
@@ -120,7 +182,9 @@ router.post('/r/:token/feedback', async (req, res) => {
   );
   if (updated.length === 0) return res.redirect(`/r/${req.params.token}`);
 
-  await addEvent(milestone.id, 'feedback', { ...clientDetails(req), clientName: milestone.client_name, message });
+  // The files in the order the client saw them, so their /fichierN citations keep their meaning.
+  const files = (await listFiles(milestone.id)).map(({ id, name }) => ({ id, name }));
+  await addEvent(milestone.id, 'feedback', { ...clientDetails(req), clientName: milestone.client_name, message, files });
 
   await emailFeedback({ ...developerEmail(req, milestone), message });
 

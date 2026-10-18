@@ -1,17 +1,17 @@
 <%- include('../partials/head', { title: t('reset.title') }) %>
-<div class="container narrow">
-  <div class="card">
-    <h1 style="font-size: 24px; margin-bottom: 20px;"><%= t('reset.title') %></h1>
-    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
-    <form method="post" action="/reset/<%= token %>">
+<div class="auth">
+  <section class="glass auth-card reveal">
+    <h1 style="margin-bottom: 20px;"><%= t('reset.title') %></h1>
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <form method="post" action="/reset/<%= token %>" style="margin-top: 16px;">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="field">
         <label for="password"><%= t('reset.password') %></label>
-        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
-        <p class="hint"><%= t('auth.password.hint') %></p>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-hint">
+        <p class="hint" id="password-hint" style="margin-top: 2px;"><%= t('auth.password.hint') %></p>
       </div>
-      <div class="form-actions"><button class="btn" type="submit" style="width: 100%;"><%= t('reset.submit') %></button></div>
+      <div class="form-actions"><button class="btn btn-light btn-large btn-block" type="submit" data-loading><%= t('reset.submit') %></button></div>
     </form>
-  </div>
+  </section>
 </div>
-<%- include('../partials/foot') %>
+<%- include('../partials/foot', { centered: true }) %>

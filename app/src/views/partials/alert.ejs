@@ -1,0 +1,3 @@
+<%# A message: include('alert', { kind: 'error' | 'success' | 'info', text }) %>
+<% const alertIcons = { error: 'alert', success: 'check', info: 'info' }; %>
+<div class="alert alert-<%= kind %>" role="<%= kind === 'error' ? 'alert' : 'status' %>"><%- include('icon', { name: alertIcons[kind] }) %><span><%= text %></span></div>

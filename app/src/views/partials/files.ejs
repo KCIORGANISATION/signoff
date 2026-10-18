@@ -1,42 +1,28 @@
-<%# Files of a milestone. baseUrl serves them (dev or client link); removable shows delete buttons. %>
-<% const images = files.filter((f) => f.mime.startsWith('image/')); const documents = files.filter((f) => !f.mime.startsWith('image/')); %>
-<% if (images.length > 0) { %>
-  <ul class="thumbs">
-    <% images.forEach((f) => { %>
-      <li class="thumb">
-        <a href="<%= baseUrl %>/<%= f.id %>" target="_blank" rel="noopener" data-lightbox data-caption="<%= f.name %>">
+<%# Files of a milestone, for the developer. baseUrl serves them; removable shows delete buttons. %>
+<ul class="files-grid">
+  <% files.forEach((f, i) => { const image = f.mime.startsWith('image/'); %>
+    <li class="file-card">
+      <% if (image) { %>
+        <a class="file-thumb" href="<%= baseUrl %>/<%= f.id %>" target="_blank" rel="noopener" data-lightbox data-caption="<%= f.name %>">
           <img src="<%= baseUrl %>/<%= f.id %>" alt="<%= f.name %>" loading="lazy">
         </a>
-        <div class="thumb-meta">
-          <span class="file-name" title="<%= f.name %>"><%= f.name %></span>
-          <% if (locals.removable) { %>
-            <form method="post" action="/milestones/<%= milestoneId %>/files/<%= f.id %>/delete" data-confirm="<%= t('files.delete.confirm', { name: f.name }) %>">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button class="link-button" type="submit" aria-label="<%= t('files.delete') %> <%= f.name %>"><%= t('files.delete') %></button>
-            </form>
-          <% } %>
-        </div>
-      </li>
-    <% }) %>
-  </ul>
-<% } %>
-<% if (documents.length > 0) { %>
-  <ul class="file-list">
-    <% documents.forEach((f) => { %>
-      <li>
-        <span class="file-icon" aria-hidden="true"><%= f.mime === 'application/pdf' ? 'PDF' : 'TXT' %></span>
-        <span class="file-info">
-          <span class="file-name"><%= f.name %></span>
-          <span class="meta"><%= fmt.bytes(f.size) %></span>
-        </span>
-        <a class="btn btn-ghost btn-small" href="<%= baseUrl %>/<%= f.id %>" download><%= t('files.download') %></a>
+      <% } else { %>
+        <span class="file-thumb"><span class="doc-icon" style="width: 48px; height: 58px;"><%= f.mime === 'application/pdf' ? 'PDF' : 'TXT' %></span></span>
+      <% } %>
+      <span class="file-meta">
+        <span class="file-tag"><%= citeTag(i + 1) %></span>
+        <span class="file-name" title="<%= f.name %>"><%= f.name %></span>
+        <span class="file-size"><%= fmt.bytes(f.size) %></span>
+      </span>
+      <span class="file-actions">
+        <a href="<%= baseUrl %>/<%= f.id %>" <%- image ? 'target="_blank" rel="noopener"' : 'download' %>><%= image ? t('files.open') : t('files.download') %></a>
         <% if (locals.removable) { %>
           <form method="post" action="/milestones/<%= milestoneId %>/files/<%= f.id %>/delete" data-confirm="<%= t('files.delete.confirm', { name: f.name }) %>">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="link-button" type="submit" aria-label="<%= t('files.delete') %> <%= f.name %>"><%= t('files.delete') %></button>
+            <button class="link-button danger" type="submit" aria-label="<%= t('files.delete') %> <%= f.name %>"><%= t('files.delete') %></button>
           </form>
         <% } %>
-      </li>
-    <% }) %>
-  </ul>
-<% } %>
+      </span>
+    </li>
+  <% }) %>
+</ul>

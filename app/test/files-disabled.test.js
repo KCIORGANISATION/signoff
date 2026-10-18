@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { Browser, startServer } from './helpers.js';
+import { Browser, approve, startServer } from './helpers.js';
 
 // Production without the FILES_R2_* variables: the app runs, uploads are simply off.
 let server;
@@ -32,6 +32,6 @@ test('without file storage the app works and the upload zone is replaced by a me
   const reviewPath = new URL(sent.text.match(/id="share-url"[^>]*value="([^"]+)"/)[1]).pathname;
   const client = new Browser(server.base);
   assert.equal((await client.get(reviewPath)).status, 200);
-  assert.equal((await client.post(`${reviewPath}/approve`)).status, 302);
+  assert.equal((await approve(client, reviewPath)).status, 302);
   assert.equal((await dev.get(`${milestone.location}/certificate`)).status, 200);
 });

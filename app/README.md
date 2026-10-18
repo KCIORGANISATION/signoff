@@ -24,15 +24,15 @@ Pour repartir de zéro, arrête le serveur et supprime le dossier `app/data/`.
 1. Le dev crée un **projet** (nom, client, email du client, devise).
 2. Il ajoute des **jalons** (titre, description, montant facultatif, lien et instructions de paiement facultatifs).
 3. Il attache des **livrables** : liens (staging, Figma…), notes texte et **fichiers** (captures, PDF, maquettes).
-4. Il clique sur « Envoyer au client » : Signoff envoie le **lien client** par email au client, et l'affiche aussi pour que le dev puisse le copier.
-5. Le client ouvre le lien, sans compte : il voit les livrables et clique sur **J'approuve** ou **Laisser un feedback**.
+4. « Voir comme le client » montre la page du client sans rien envoyer ni enregistrer. Puis il clique sur « Envoyer au client » : Signoff envoie le **lien client** par email au client, et l'affiche aussi pour que le dev puisse le copier.
+5. Le client ouvre le lien, sans compte : une carte d'accueil (`/r/:token`) résume le jalon, puis « Voir le jalon » ouvre la page du jalon (`/r/:token/review`) avec les fichiers, le montant et la description. Il clique sur **Approuver ce jalon** (il tape alors son nom complet, puis « Je confirme ») ou **Laisser un retour**. Dans son retour, il peut citer un fichier avec `/fichier2` (`/file2` en anglais) : le dev voit ces citations comme des liens vers le fichier.
 6. Feedback : le dev corrige et clique sur « Renvoyer » : le client reçoit à nouveau le même lien.
 7. Approbation : un **certificat** imprimable en PDF est créé. Le lien client (et le certificat côté client) expire **7 jours après l'approbation**. Le dev garde l'accès au certificat pour toujours.
 8. Un jalon approuvé est **verrouillé** : titre, description, montant et livrables ne peuvent plus changer (seuls le lien et les instructions de paiement restent modifiables). Pour toute modification, le bouton « Créer un jalon de suite » crée un nouveau jalon brouillon dans le même projet. Il n'y a pas de réouverture pour une nouvelle approbation.
 
 ### Preuve d'approbation
 
-Au moment où le client approuve, Signoff enregistre dans `review_events` un instantané du jalon (titre, description, montant, livrables, nom du client) avec la date, l'IP et le navigateur. Le certificat est construit uniquement à partir de cet enregistrement, jamais relu depuis le jalon.
+Au moment où le client approuve, Signoff enregistre dans `review_events` un instantané du jalon (titre, description, montant, livrables) avec le nom complet tapé par le client avec la date, l'IP et le navigateur. Le certificat est construit uniquement à partir de cet enregistrement, jamais relu depuis le jalon.
 
 Le verrouillage est appliqué deux fois : par l'app (une requête directe sur un jalon approuvé reçoit une erreur 409) et par la base elle-même (des triggers dans `schema.sql`). La base refuse :
 
@@ -158,7 +158,7 @@ En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SE
 npm test
 ```
 
-Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi les fichiers (type refusé selon le contenu réel, taille, nombre, quota, CSRF, accès refusé à un autre dev et à un mauvais lien client, en-têtes, fichiers figés après approbation, empreintes dans le certificat, suppression du stockage, app sans stockage configuré), le verrouillage des jalons approuvés (édition refusée côté serveur et par la base, certificat inchangé après une tentative, paiement toujours modifiable, jalon de suite), le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
+Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi les fichiers (type refusé selon le contenu réel, taille, nombre, quota, CSRF, accès refusé à un autre dev et à un mauvais lien client, en-têtes, fichiers figés après approbation, empreintes dans le certificat, suppression du stockage, app sans stockage configuré), le verrouillage des jalons approuvés (édition refusée côté serveur et par la base, certificat inchangé après une tentative, paiement toujours modifiable, jalon de suite), le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales, les en-têtes de sécurité, la page d'accueil client et le nom obligatoire à l'approbation, l'ordre des fichiers gardé avec un retour et l'affichage échappé des `/fichierN`, et l'aperçu « Voir comme le client » sans effet de bord.
 
 Pour les lancer contre un vrai Postgres jetable : `TEST_DATABASE_URL=postgres://… npm test`.
 
@@ -211,6 +211,13 @@ On restaure toujours dans une **base de test**, jamais dans la base de productio
 Fais cet exercice une fois par mois : une sauvegarde qu'on n'a jamais restaurée n'est pas une vraie sauvegarde.
 
 En cas de vrai sinistre, la même commande peut restaurer dans une nouvelle base Neon, dont tu mettras ensuite la chaîne de connexion dans `DATABASE_URL` sur Render.
+
+## Design
+
+- Une seule feuille de style, `public/style.css` : toutes les couleurs, rayons, ombres et durées sont des variables CSS en haut du fichier.
+- Polices hébergées par l'app (aucun appel externe) : Plus Jakarta Sans pour le texte, Caveat pour le logo, fournies par les paquets `@fontsource/*` et servies sous `/fonts/`.
+- Logo : `public/logo.svg`. Pour le changer, remplace ce seul fichier (il est inséré dans les pages par le serveur, d'où l'usage de la police Caveat). Le favicon est `public/favicon.svg`.
+- Maquettes de référence : `design-reference/` à la racine du dépôt.
 
 ## Pas encore dans cette version
 

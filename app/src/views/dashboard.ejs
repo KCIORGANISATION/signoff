@@ -1,52 +1,74 @@
 <%- include('partials/head', { title: t('dashboard.title') }) %>
-<div class="container">
-  <div class="page-header">
-    <h1><%= t('dashboard.title') %></h1>
-    <a class="btn" href="/projects/new">+ <%= t('dashboard.newProject') %></a>
+<div class="page-title reveal">
+  <div>
+    <h1><%= t('dashboard.hello', { name: currentUser.name }) %></h1>
+    <p><%= t('dashboard.intro') %></p>
   </div>
+  <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+</div>
 
-  <section class="card">
-    <div class="card-header"><h2><%= t('dashboard.waiting') %></h2></div>
+<div class="stack">
+  <section class="glass panel reveal" style="--i: 1;" aria-labelledby="waiting-title">
+    <div class="panel-head">
+      <h2 id="waiting-title"><%- include('partials/icon', { name: 'clock' }) %><%= t('dashboard.waiting') %></h2>
+      <% if (waiting.length > 0) { %><span class="pill"><%= waiting.length %></span><% } %>
+    </div>
     <% if (waiting.length === 0) { %>
       <p class="empty"><%= t('dashboard.waiting.empty') %></p>
     <% } else { %>
-      <ul class="list">
+      <ul class="rows">
         <% waiting.forEach((m) => { %>
           <li>
-            <div>
-              <a class="title" href="/milestones/<%= m.id %>"><%= m.title %></a>
-              <div class="meta"><%= m.project.name %> · <%= m.project.client_name %> · <%= t('dashboard.lastActivity') %> <%= fmt.dateTime(m.last_activity) %></div>
-            </div>
-            <%- include('partials/badge', { status: m.status }) %>
+            <a class="row-link" href="/milestones/<%= m.id %>">
+              <span class="row-main">
+                <span class="row-title"><%= m.title %></span>
+                <span class="row-meta"><%= m.project.name %> · <%= m.project.client_name %> · <%= t('dashboard.lastActivity') %> <%= fmt.dateTime(m.last_activity) %></span>
+              </span>
+              <span class="row-end"><%- include('partials/badge', { status: m.status }) %><span class="chev"><%- include('partials/icon', { name: 'chevronRight' }) %></span></span>
+            </a>
           </li>
         <% }) %>
       </ul>
     <% } %>
   </section>
 
-  <section class="card">
-    <div class="card-header"><h2><%= t('dashboard.projects') %></h2></div>
+  <section class="glass panel reveal" style="--i: 2;" aria-labelledby="projects-title">
+    <div class="panel-head">
+      <h2 id="projects-title"><%- include('partials/icon', { name: 'folder' }) %><%= t('dashboard.projects') %></h2>
+    </div>
     <% if (projects.length === 0) { %>
-      <p class="empty"><%= t('dashboard.empty') %></p>
+      <div class="empty-state">
+        <span class="empty-icon"><%- include('partials/icon', { name: 'folder', cls: 'icon-lg' }) %></span>
+        <h3><%= t('dashboard.empty.title') %></h3>
+        <p><%= t('dashboard.empty') %></p>
+        <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+      </div>
     <% } else { %>
-      <ul class="list">
+      <div class="project-grid">
         <% projects.forEach((p) => { %>
-          <li style="display: block;">
-            <div class="row spread">
-              <a class="title" href="/projects/<%= p.id %>"><%= p.name %></a>
-              <span class="meta"><%= p.approved_count %>/<%= p.milestone_count %> <%= t('status.approved').toLowerCase() %><% if (p.last_activity) { %> · <%= t('dashboard.lastActivity') %> <%= fmt.dateTime(p.last_activity) %><% } %></span>
+          <article class="project-card">
+            <div class="row spread" style="align-items: flex-start;">
+              <div style="min-width: 0;">
+                <h3><a href="/projects/<%= p.id %>"><%= p.name %></a></h3>
+                <p class="row-meta"><%= p.client_name %><% if (p.last_activity) { %> · <%= fmt.date(p.last_activity) %><% } %></p>
+              </div>
             </div>
-            <div class="meta"><%= p.client_name %></div>
-            <% if (p.milestones.length > 0) { %>
-              <ul class="project-milestones">
-                <% p.milestones.forEach((m) => { %>
-                  <li><a href="/milestones/<%= m.id %>"><%= m.title %> <%- include('partials/badge', { status: m.status }) %></a></li>
+            <% if (p.milestone_count > 0) { %>
+              <div>
+                <div class="row spread small muted" style="margin-bottom: 6px;"><span><%= t('dashboard.progress', { approved: p.approved_count, total: p.milestone_count }) %></span></div>
+                <div class="progress-track" role="presentation"><div class="progress-fill" style="width: <%= Math.round((p.approved_count / p.milestone_count) * 100) %>%;"></div></div>
+              </div>
+              <ul class="chip-list">
+                <% p.milestones.slice(-4).forEach((m) => { %>
+                  <li><a href="/milestones/<%= m.id %>"><span class="chip-title"><%= m.title %></span><%- include('partials/badge', { status: m.status }) %></a></li>
                 <% }) %>
               </ul>
+            <% } else { %>
+              <p class="empty"><%= t('dashboard.noMilestones') %> · <a href="/projects/<%= p.id %>/milestones/new"><%= t('milestone.new') %></a></p>
             <% } %>
-          </li>
+          </article>
         <% }) %>
-      </ul>
+      </div>
     <% } %>
   </section>
 </div>

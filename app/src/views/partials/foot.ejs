@@ -1,12 +1,12 @@
 </main>
-<footer class="site-footer">
-  <% if (locals.client) { %>
-    <p><%= t('review.poweredBy') %> <a href="<%= landingUrl %>" target="_blank" rel="noopener">Signoff</a></p>
+<footer class="site-footer <%= locals.centered ? 'is-centered' : '' %>">
+  <% if (locals.client && !locals.centered) { %>
+    <span class="footer-chip"><span><%= t('review.poweredBy') %> <a href="<%= landingUrl %>" target="_blank" rel="noopener">Signoff</a></span></span>
   <% } %>
-  <nav aria-label="<%= t('legal.nav') %>">
+  <nav class="footer-chip" aria-label="<%= t('legal.nav') %>">
     <a href="/legal"><%= t('legal.legal') %></a>
-    <a href="/privacy"><%= t('legal.privacy') %></a>
-    <a href="/terms"><%= t('legal.terms') %></a>
+    <a href="/privacy"><%= t('legal.privacy.short') %></a>
+    <a href="/terms"><%= t('legal.terms.short') %></a>
   </nav>
 </footer>
 <script src="/app.js"></script>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Signoff — page du jalon (client)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Caveat:wght@600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer;transition:background .2s ease,transform .15s ease,border-color .2s ease}
+button:hover{border-color:rgba(255,255,255,0.8)}
+button:active{transform:scale(0.97)}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #cfe0ff;outline-offset:2px}
+a{color:#cfe0ff}a:hover{color:#ffffff}
+textarea::placeholder,input::placeholder{color:#b7c6e6}
+@keyframes sfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sf{animation:sfade .45s cubic-bezier(.22,1,.36,1) both}
+@media (prefers-reduced-motion: reduce){.sf{animation:none}*{transition:none!important}}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; box-sizing: border-box; min-height: 980px; padding: 28px 32px 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #ffffff; background: linear-gradient(135deg, #1c0b33 0%, #3d1a66 38%, #7a2f86 68%, #b8508a 100%); display: flex; flex-direction: column; gap: 24px">
+
+<div aria-hidden="true" style="position: absolute; right: -140px; bottom: -160px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.42) 0%, rgba(255,214,236,0.18) 45%, rgba(255,255,255,0) 70%); pointer-events: none"></div>
+
+<header style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 36px; height: 36px; border-radius: 11px; background: #3ee08f; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07281a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</div>
+<span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">Signoff</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+<span style="font-size: 14px; color: #cfe0ff">Projet · Atelier Lumière</span>
+<span style="font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.4); background: rgba(22,9,40,0.45)">Jalon 2 sur 4</span>
+<span style="font-size: 14px; color: #cfe0ff">FR · EN</span>
+</div>
+</header>
+
+<div style="position: relative; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch; flex: 1">
+
+<!-- LE GRAND CARRÉ : 3 volets dans une seule fenêtre -->
+<section aria-label="Contenu du jalon" style="flex: 1 1 620px; min-width: 0; min-height: 720px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; padding: 26px; border-radius: 32px; background: rgba(22,9,40,0.6); border: 1px solid rgba(207,224,255,0.28); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 24px 60px rgba(10,2,24,0.35)">
+
+<div style="flex: 1; display: grid; grid-template-columns: {{cols}}; grid-template-rows: {{rows}}; gap: 14px; min-height: 0; transition: grid-template-columns 0.6s cubic-bezier(.22,1,.36,1), grid-template-rows 0.6s cubic-bezier(.22,1,.36,1)">
+
+<!-- Volet FICHIERS -->
+<div style="grid-column: 1; grid-row: 1; min-width: 0; min-height: 0; box-sizing: border-box; overflow: hidden; border-radius: 22px; background: rgba(10,2,24,0.38); border: 1px solid rgba(207,224,255,0.22); display: flex; flex-direction: column">
+<sc-if value="{{filesMini}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{focusFiles}}" aria-label="Ouvrir les fichiers" class="sf" style="flex: 1; border: none; background: transparent; color: #ffffff; display: flex; flex-direction: {{miniDir}}; align-items: center; justify-content: center; gap: 14px; padding: 8px">
+<span style="font-size: 13px; font-weight: 700; padding: 4px 8px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.4)">{{counter}}</span>
+<span style="writing-mode: {{miniWM}}; font-size: 17px; font-weight: 800">Fichiers</span>
+</button>
+</sc-if>
+<sc-if value="{{filesOpen}}" hint-placeholder-val="{{ true }}">
+<div class="sf" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">Fichiers</h2>
+<button type="button" onClick="{{focusFiles}}" aria-label="{{filesToggleLabel}}" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(207,224,255,0.4); background: rgba(255,255,255,0.08); color: #ffffff">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+</button>
+</div>
+<div style="flex: 1; display: flex; align-items: center; gap: 8px; min-height: 0">
+<button type="button" onClick="{{prev}}" aria-label="Fichier précédent" style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(207,224,255,0.45); background: rgba(255,255,255,0.1); color: #ffffff; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<div style="flex: 1; min-width: 0; align-self: stretch; min-height: 240px; box-sizing: border-box; border-radius: 16px; border: 1px solid rgba(207,224,255,0.3); background: linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05)); padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div aria-hidden="true" style="height: 70px; border-radius: 10px; background: rgba(255,255,255,0.16)"></div>
+<div aria-hidden="true" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px"><div style="height: 48px; border-radius: 8px; background: rgba(255,255,255,0.12)"></div><div style="height: 48px; border-radius: 8px; background: rgba(255,255,255,0.12)"></div><div style="height: 48px; border-radius: 8px; background: rgba(255,255,255,0.12)"></div></div>
+<p style="margin: auto 0 0; font-size: 13px; color: #cfe0ff; overflow-wrap: anywhere">{{currentTag}} · {{currentName}}</p>
+</div>
+<button type="button" onClick="{{next}}" aria-label="Fichier suivant" style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(207,224,255,0.45); background: rgba(255,255,255,0.1); color: #ffffff; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</div>
+<div style="text-align: center"><span aria-live="polite" style="font-size: 14px; font-weight: 700; padding: 5px 14px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.4)">{{counter}}</span></div>
+<sc-if value="{{filesFull}}" hint-placeholder-val="{{ false }}">
+<div class="sf" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="4">
+<button type="button" onClick="{{f.open}}" style="aspect-ratio: 1 / 1; box-sizing: border-box; padding: 10px; border-radius: 16px; color: #ffffff; text-align: left; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; {{f.dyn}}">
+<span style="font-size: 12px; font-weight: 700; color: #cfe0ff">{{f.tag}}</span>
+<span style="font-size: 12px; font-weight: 700; overflow-wrap: anywhere">{{f.name}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+</div>
+
+<!-- Volet TITRE + DESCRIPTION -->
+<div style="grid-column: 2; grid-row: 1 / 3; min-width: 0; min-height: 0; box-sizing: border-box; overflow: hidden; border-radius: 22px; background: rgba(10,2,24,0.38); border: 1px solid rgba(207,224,255,0.22); display: flex; flex-direction: column">
+<sc-if value="{{descMini}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{focusDesc}}" aria-label="Ouvrir la description" class="sf" style="flex: 1; border: none; background: transparent; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px 0">
+<span style="writing-mode: vertical-rl; font-size: 17px; font-weight: 800">Titre et description</span>
+</button>
+</sc-if>
+<sc-if value="{{descOpen}}" hint-placeholder-val="{{ true }}">
+<div class="sf" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<div>
+<h1 style="margin: 0; font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Page d'accueil — v1</h1>
+<p style="margin: 4px 0 0; font-size: 13px; color: #cfe0ff">Envoyé par Kostia M. le 14 oct. 2026</p>
+</div>
+<button type="button" onClick="{{focusDesc}}" aria-label="{{descToggleLabel}}" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(207,224,255,0.4); background: rgba(255,255,255,0.08); color: #ffffff">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+</button>
+</div>
+<h2 style="margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(10,2,24,0.5); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #cfe0ff">Description</h2>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.55; color: #eaf1ff">
+<li>Nouvelle page d'accueil : en-tête, trois blocs de services, formulaire de contact.</li>
+<li>Menu adapté au téléphone.</li>
+<li>Logo et couleurs repris de votre charte.</li>
+</ul>
+<p style="margin: 0; padding: 12px 14px; border-radius: 14px; border: 1px dashed rgba(207,224,255,0.4); background: rgba(255,255,255,0.06); font-size: 14px; line-height: 1.5; color: #eaf1ff"><strong>Pas inclus :</strong> page « Tarifs » et blog (jalons 3 et 4).</p>
+<sc-if value="{{descFull}}" hint-placeholder-val="{{ false }}">
+<p class="sf" style="margin: 0; font-size: 17px; line-height: 1.7; color: #eaf1ff">Toute demande hors périmètre sera notée à part, dans un nouveau jalon, afin que chaque approbation reste claire et datée.</p>
+</sc-if>
+</div>
+</sc-if>
+</div>
+
+<!-- Volet MONTANT -->
+<div style="grid-column: 1; grid-row: 2; min-width: 0; min-height: 0; box-sizing: border-box; overflow: hidden; border-radius: 22px; background: rgba(10,2,24,0.38); border: 1px solid rgba(207,224,255,0.22); display: flex; flex-direction: column">
+<sc-if value="{{amountMini}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{focusAmount}}" aria-label="Ouvrir le montant" class="sf" style="flex: 1; border: none; background: transparent; color: #ffffff; display: flex; flex-direction: {{miniDir}}; align-items: center; justify-content: center; gap: 14px; padding: 8px">
+<span style="font-size: 13px; font-weight: 800">500 €</span>
+<span style="writing-mode: {{miniWM}}; font-size: 17px; font-weight: 800">Montant</span>
+</button>
+</sc-if>
+<sc-if value="{{amountOpen}}" hint-placeholder-val="{{ true }}">
+<div class="sf" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">Montant</h2>
+<button type="button" onClick="{{focusAmount}}" aria-label="{{amountToggleLabel}}" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(207,224,255,0.4); background: rgba(255,255,255,0.08); color: #ffffff">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+</button>
+</div>
+<p style="margin: 0; font-size: 36px; font-weight: 800; letter-spacing: -0.02em">500 €</p>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #eaf1ff">Après avoir approuvé le jalon, vous pourrez procéder au paiement via le lien proposé par le développeur.</p>
+<sc-if value="{{amountFull}}" hint-placeholder-val="{{ false }}">
+<div class="sf" style="display: flex; flex-direction: column; gap: 12px; padding-top: 8px; border-top: 1px solid rgba(207,224,255,0.2)">
+<div style="display: flex; justify-content: space-between; font-size: 16px"><span>Page d'accueil — v1</span><strong>500 €</strong></div>
+<p style="margin: 0; font-size: 15px; line-height: 1.6; color: #cfe0ff">Détail du devis : [LIGNES DU DEVIS RENSEIGNÉES PAR LE DÉVELOPPEUR]</p>
+<p style="margin: 0; font-size: 14px; line-height: 1.6; color: #cfe0ff">Signoff ne traite aucun paiement.</p>
+</div>
+</sc-if>
+</div>
+</sc-if>
+</div>
+
+</div>
+</section>
+
+<!-- Colonne de droite : décision + historique -->
+<aside aria-label="Décision et historique" style="flex: 0 1 {{asideBasis}}; min-width: 300px; display: flex; flex-direction: column; gap: 18px; transition: flex-basis 0.6s cubic-bezier(.22,1,.36,1)">
+
+<section style="padding: 24px; border-radius: 28px; background: rgba(22,9,40,0.62); border: 1px solid rgba(207,224,255,0.3); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 14px">
+
+<sc-if value="{{isIdle}}" hint-placeholder-val="{{ true }}">
+<div class="sf" style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Votre décision</h2>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfe0ff">Votre approbation est enregistrée avec votre nom, la date, l'heure et votre adresse IP.</p>
+<button type="button" onClick="{{startApprove}}" style="min-height: 56px; border-radius: 16px; border: none; background: #3ee08f; color: #07281a; font-size: 18px; font-weight: 800">Approuver ce jalon</button>
+<button type="button" onClick="{{startFeedback}}" style="min-height: 52px; border-radius: 16px; border: 1.5px solid rgba(207,224,255,0.55); background: transparent; color: #ffffff; font-size: 16px; font-weight: 700">Laisser un retour</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isNaming}}" hint-placeholder-val="{{ false }}">
+<div class="sf" style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Confirmer l'approbation</h2>
+<label for="nom" style="font-size: 14px; font-weight: 600; color: #cfe0ff">Votre nom complet</label>
+<input id="nom" type="text" placeholder="Prénom Nom" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.1); color: #ffffff; font-family: inherit; font-size: 16px">
+<button type="button" onClick="{{confirmApprove}}" style="min-height: 56px; border-radius: 16px; border: none; background: #3ee08f; color: #07281a; font-size: 18px; font-weight: 800">Je confirme</button>
+<button type="button" onClick="{{reset}}" style="min-height: 44px; border: none; background: transparent; color: #cfe0ff; font-size: 14px; font-weight: 600; text-decoration: underline">Retour</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isFeedback}}" hint-placeholder-val="{{ false }}">
+<div class="sf" style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Votre retour</h2>
+<button type="button" onClick="{{toggleWide}}" aria-label="{{wideLabel}}" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(207,224,255,0.4); background: rgba(255,255,255,0.08); color: #ffffff">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+</button>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: #cfe0ff">Écrivez librement. Citez un fichier avec son /nom : le fichier s'ouvre à gauche, vous pouvez continuer à écrire.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="4">
+<button type="button" onClick="{{f.cite}}" style="min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.08); color: #ffffff; font-size: 14px; font-weight: 700">{{f.tag}}</button>
+</sc-for>
+</div>
+<label for="retour" style="font-size: 14px; font-weight: 600; color: #cfe0ff">Votre retour</label>
+<textarea id="retour" rows="{{fbRows}}" value="{{fbText}}" onInput="{{onFb}}" placeholder="Sur /fichier1, le titre est trop petit…" style="box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.1); color: #ffffff; font-family: inherit; font-size: 16px; line-height: 1.5; resize: vertical"></textarea>
+<button type="button" onClick="{{reset}}" style="min-height: 52px; border-radius: 16px; border: 1.5px solid rgba(207,224,255,0.55); background: transparent; color: #ffffff; font-size: 16px; font-weight: 700">Envoyer mon retour</button>
+<button type="button" onClick="{{reset}}" style="min-height: 44px; border: none; background: transparent; color: #cfe0ff; font-size: 14px; font-weight: 600; text-decoration: underline">Retour</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+<div class="sf" style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 44px; height: 44px; border-radius: 50%; background: #3ee08f; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#07281a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</div>
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Jalon approuvé</h2>
+</div>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfe0ff">Enregistré le 18 oct. 2026 à 17:42 (heure de Bruxelles).</p>
+<a href="https://example.com" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 16px; background: #3ee08f; color: #07281a; font-size: 18px; font-weight: 800; text-decoration: none">Payer maintenant — 500 €</a>
+<p style="margin: 0; font-size: 13px; color: #cfe0ff">Vous serez redirigé vers le lien de paiement du développeur. Signoff ne traite aucun paiement.</p>
+<button type="button" onClick="{{reset}}" style="min-height: 44px; border: none; background: transparent; color: #cfe0ff; font-size: 14px; font-weight: 600; text-decoration: underline">Revoir l'état initial (démo)</button>
+</div>
+</sc-if>
+
+</section>
+
+<section style="padding: 20px 24px; border-radius: 28px; background: rgba(22,9,40,0.62); border: 1px solid rgba(207,224,255,0.3); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700; color: #cfe0ff">Historique</h2>
+<p style="margin: 0; font-size: 15px; line-height: 1.5">Jalon envoyé · 14 oct. 2026, 10:42</p>
+<p style="margin: 0; font-size: 15px; line-height: 1.5">Jalon 1 approuvé · 2 oct. 2026, 16:05</p>
+</section>
+
+<div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px 0">
+<svg viewBox="0 0 440 160" width="100%" role="img" aria-label="Signoff" style="max-width: 340px">
+<defs><filter id="pa" x="-5%" y="-10%" width="110%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" result="d"></feDisplacementMap><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.8 0 0 0 0.05" result="g"></feColorMatrix><feComposite in="d" in2="g" operator="in"></feComposite></filter></defs>
+<g transform="rotate(-3 220 90) translate(40 0) skewX(8)" filter="url(#pa)">
+<text x="14" y="98" font-family="Caveat" font-weight="600" font-size="112" letter-spacing="-3" fill="#ffffff">Signoff</text>
+<path d="M14 118 C 80 130, 190 132, 290 116 C 322 110, 340 102, 346 92" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M44 134 C 110 143, 200 143, 272 131" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+</g>
+</svg>
+</div>
+
+</aside>
+</div>
+
+
+<footer style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px; font-size: 14px; color: #eaf1ff">
+<a href="/legal">Mentions légales</a><a href="/privacy">Confidentialité</a><a href="/terms">Conditions</a>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { focus: '', file: 0, phase: 'idle', fb: '', wide: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const raw = ['accueil-desktop.png', 'accueil-mobile.png', 'menu-mobile.png', 'cahier-des-charges.pdf'];
+    const n = raw.length;
+    const on = 'background: rgba(255,255,255,0.18); border: 1.5px solid rgba(207,224,255,0.8);';
+    const off = 'background: rgba(255,255,255,0.06); border: 1.5px solid rgba(207,224,255,0.3);';
+    const files = raw.map((name, i) => ({
+      name,
+      tag: '/fichier' + (i + 1),
+      dyn: s.file === i ? on : off,
+      open: () => this.setState({ file: i }),
+      cite: () => this.setState({
+        file: i,
+        fb: s.fb + (s.fb && !/\s$/.test(s.fb) ? ' ' : '') + '/fichier' + (i + 1) + ' '
+      })
+    }));
+    const f = s.focus;
+    const col = (id) => (f === '' ? (id === 'files' ? '1.5fr' : '1fr') : f === id ? '1fr' : '0.13fr');
+    const toggle = (id) => () => this.setState({ focus: s.focus === id ? '' : id });
+    return {
+      files,
+      cols: f === 'desc' ? '0.14fr 1fr' : f === '' ? '1fr 1fr' : '1fr 0.14fr',
+      rows: f === 'files' ? '1fr 0.2fr' : f === 'amount' ? '0.2fr 1fr' : '1fr 1fr',
+      miniDir: f === 'desc' ? 'column' : 'row',
+      miniWM: f === 'desc' ? 'vertical-rl' : 'horizontal-tb',
+      filesMini: f !== '' && f !== 'files',
+      descMini: f !== '' && f !== 'desc',
+      amountMini: f !== '' && f !== 'amount',
+      filesOpen: f === '' || f === 'files',
+      descOpen: f === '' || f === 'desc',
+      amountOpen: f === '' || f === 'amount',
+      filesFull: f === 'files',
+      descFull: f === 'desc',
+      amountFull: f === 'amount',
+      filesToggleLabel: f === 'files' ? 'Réduire les fichiers' : 'Agrandir les fichiers',
+      descToggleLabel: f === 'desc' ? 'Réduire la description' : 'Agrandir la description',
+      amountToggleLabel: f === 'amount' ? 'Réduire le montant' : 'Agrandir le montant',
+      focusFiles: toggle('files'),
+      focusDesc: toggle('desc'),
+      focusAmount: toggle('amount'),
+      currentName: raw[s.file],
+      currentTag: '/fichier' + (s.file + 1),
+      counter: (s.file + 1) + '/' + n,
+      prev: () => this.setState({ file: (s.file + n - 1) % n }),
+      next: () => this.setState({ file: (s.file + 1) % n }),
+      asideBasis: s.phase === 'feedback' && s.wide ? '620px' : '420px',
+      fbRows: s.wide ? 14 : 6,
+      toggleWide: () => this.setState({ wide: !s.wide }),
+      wideLabel: s.wide ? 'Réduire la zone de retour' : 'Agrandir la zone de retour',
+      fbText: s.fb,
+      onFb: (e) => this.setState({ fb: e.target.value }),
+      isIdle: s.phase === 'idle',
+      isNaming: s.phase === 'naming',
+      isFeedback: s.phase === 'feedback',
+      isDone: s.phase === 'done',
+      startApprove: () => this.setState({ phase: 'naming' }),
+      startFeedback: () => this.setState({ phase: 'feedback' }),
+      confirmApprove: () => this.setState({ phase: 'done' }),
+      reset: () => this.setState({ phase: 'idle', wide: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

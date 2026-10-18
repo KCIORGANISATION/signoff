@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Signoff — nouveau jalon (dev)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #cfe0ff;outline-offset:2px}
+a{color:#cfe0ff}
+input::placeholder,textarea::placeholder{color:#b7c6e6}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; box-sizing: border-box; min-height: 1100px; padding: 28px 32px 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #ffffff; background: linear-gradient(135deg, #1c0b33 0%, #3d1a66 38%, #7a2f86 68%, #b8508a 100%); display: flex; flex-direction: column; gap: 24px">
+
+<div aria-hidden="true" style="position: absolute; right: -140px; bottom: -160px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.42) 0%, rgba(255,214,236,0.18) 45%, rgba(255,255,255,0) 70%); pointer-events: none"></div>
+
+<header style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 36px; height: 36px; border-radius: 11px; background: #3ee08f; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07281a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</div>
+<span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">Signoff</span>
+</div>
+<nav aria-label="Fil d'Ariane" style="font-size: 14px; color: #cfe0ff">Projets · Atelier Lumière · Nouveau jalon</nav>
+</header>
+
+<div style="position: relative; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<form style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+
+<section style="padding: 26px 28px; border-radius: 24px; background: rgba(22,9,40,0.6); border: 1px solid rgba(207,224,255,0.28); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Informations</h2>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="titre" style="font-size: 14px; font-weight: 600; color: #cfe0ff">Titre du jalon</label>
+<input id="titre" type="text" placeholder="Page d'accueil — v1" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.1); color: #ffffff; font-family: inherit; font-size: 16px">
+</div>
+</section>
+
+<section style="padding: 26px 28px; border-radius: 24px; background: rgba(22,9,40,0.6); border: 1px solid rgba(207,224,255,0.28); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Description des changements</h2>
+<label for="desc" style="font-size: 14px; font-weight: 600; color: #cfe0ff">Ce que le client va voir, et ce qui n'est pas inclus</label>
+<textarea id="desc" rows="7" placeholder="Nouvelle page d'accueil, menu mobile… Pas inclus : page Tarifs, blog." style="box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.1); color: #ffffff; font-family: inherit; font-size: 16px; line-height: 1.5; resize: vertical"></textarea>
+</section>
+
+<section style="padding: 26px 28px; border-radius: 24px; background: rgba(22,9,40,0.6); border: 1px solid rgba(207,224,255,0.28); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Fichiers</h2>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 180px; padding: 24px; border-radius: 20px; border: 2px dashed rgba(207,224,255,0.55); background: rgba(255,255,255,0.05); text-align: center">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cfe0ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg>
+<p style="margin: 0; font-size: 17px; font-weight: 700">Glissez vos fichiers ici</p>
+<p style="margin: 0; font-size: 14px; color: #cfe0ff">Images, PDF, texte · 10 Mo max par fichier · 10 fichiers par jalon</p>
+<button type="button" style="min-height: 44px; padding: 0 18px; border-radius: 14px; border: 1.5px solid rgba(207,224,255,0.55); background: transparent; color: #ffffff; font-size: 15px; font-weight: 700">Choisir des fichiers</button>
+</div>
+</section>
+
+<section style="padding: 26px 28px; border-radius: 24px; background: rgba(22,9,40,0.6); border: 1px solid rgba(207,224,255,0.28); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800">Paiement et prix</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 1 1 160px; display: flex; flex-direction: column; gap: 6px">
+<label for="montant" style="font-size: 14px; font-weight: 600; color: #cfe0ff">Montant (€)</label>
+<input id="montant" type="text" placeholder="500" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.1); color: #ffffff; font-family: inherit; font-size: 16px">
+</div>
+<div style="flex: 3 1 320px; display: flex; flex-direction: column; gap: 6px">
+<label for="lien" style="font-size: 14px; font-weight: 600; color: #cfe0ff">Lien de paiement (https)</label>
+<input id="lien" type="text" placeholder="https://" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(207,224,255,0.5); background: rgba(255,255,255,0.1); color: #ffffff; font-family: inherit; font-size: 16px">
+</div>
+</div>
+<p style="margin: 0; font-size: 14px; color: #cfe0ff">Visible par le client uniquement après son approbation. Signoff ne traite aucun paiement.</p>
+</section>
+
+</form>
+
+<aside aria-label="Statut du jalon" style="flex: 1 1 300px; max-width: 400px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<div style="padding: 24px; border-radius: 24px; background: rgba(22,9,40,0.62); border: 1px solid rgba(207,224,255,0.3); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 800">Statut</h2>
+<span style="align-self: flex-start; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.5)">Brouillon · pas encore envoyé</span>
+<button type="button" style="min-height: 56px; border-radius: 16px; border: none; background: #3ee08f; color: #07281a; font-size: 17px; font-weight: 800">Envoyer au client</button>
+<button type="button" style="min-height: 52px; border-radius: 16px; border: 1.5px solid rgba(207,224,255,0.55); background: transparent; color: #ffffff; font-size: 16px; font-weight: 700">Voir comme le client</button>
+<button type="button" style="min-height: 44px; border: none; background: transparent; color: #cfe0ff; font-size: 14px; font-weight: 600; text-decoration: underline">Enregistrer le brouillon</button>
+</div>
+<div style="padding: 20px 24px; border-radius: 24px; background: rgba(22,9,40,0.62); border: 1px solid rgba(207,224,255,0.3); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px)">
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #cfe0ff">Une fois approuvé, le jalon est verrouillé. Toute modification se fait dans un nouveau jalon.</p>
+</div>
+</aside>
+
+</div>
+
+<footer style="position: relative; font-size: 14px; color: #eaf1ff">Propulsé par <a href="https://signofflandingpage.netlify.app">Signoff</a></footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

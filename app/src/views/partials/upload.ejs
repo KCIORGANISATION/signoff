@@ -1,0 +1,30 @@
+<%# The files section of a milestone for the developer: list, drop zone, limits. %>
+<div class="stack-sm" data-files-region>
+  <% if (files.length > 0) { %>
+    <%- include('files', { files, baseUrl: `/milestones/${milestone.id}/files`, removable: !locked, milestoneId: milestone.id }) %>
+  <% } else if (locked || !filesEnabled) { %>
+    <p class="empty"><%= t('files.none') %></p>
+  <% } %>
+
+  <% if (locked) { %>
+    <% if (files.length > 0) { %><p class="lock-note"><%- include('icon', { name: 'lock', cls: 'icon-sm' }) %><span><%= t('files.frozen') %></span></p><% } %>
+  <% } else if (!filesEnabled) { %>
+    <%- include('alert', { kind: 'info', text: t('files.disabled') }) %>
+  <% } else { %>
+    <form class="dropzone" method="post" action="/milestones/<%= milestone.id %>/files" enctype="multipart/form-data" data-upload
+          data-error-generic="<%= t('files.error.upload') %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <%- include('icon', { name: 'upload' }) %>
+      <p class="dropzone-title"><%= t('files.drop') %></p>
+      <p class="hint"><%= t('files.rules') %></p>
+      <label class="btn dropzone-button">
+        <%= t('files.choose') %>
+        <input class="sr-only" type="file" name="files" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,.txt,.md,.csv">
+      </label>
+      <noscript><button class="btn btn-small" type="submit"><%= t('files.upload') %></button></noscript>
+      <progress max="100" value="0" hidden aria-label="<%= t('files.progress') %>"></progress>
+      <p class="upload-error alert alert-error" role="alert" hidden></p>
+    </form>
+    <p class="quota"><%= t('files.quota', { used: fmt.bytes(quota.used), total: fmt.bytes(quota.total) }) %></p>
+  <% } %>
+</div>

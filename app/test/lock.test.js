@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { Browser, startServer } from './helpers.js';
+import { Browser, approve, startServer } from './helpers.js';
 
 let server;
 let query;
@@ -11,7 +11,7 @@ before(async () => {
 after(() => server.stop());
 
 function certificateBody(page) {
-  return page.text.match(/<article class="certificate">[\s\S]*<\/article>/)[0];
+  return page.text.match(/<article class="certificate[^"]*">[\s\S]*<\/article>/)[0];
 }
 
 // A developer, a project and a milestone with one deliverable, approved by the client.
@@ -41,8 +41,7 @@ async function approvedMilestone(email) {
   const reviewPath = new URL(sent.text.match(/id="share-url"[^>]*value="([^"]+)"/)[1]).pathname;
 
   const client = new Browser(server.base, { 'x-forwarded-for': '198.51.100.4', 'user-agent': 'LockBrowser/2.0' });
-  await client.get(reviewPath);
-  await client.post(`${reviewPath}/approve`);
+  await approve(client, reviewPath);
 
   return { dev, client, projectPath, milestonePath, milestoneId, deliverableAction, reviewPath };
 }
@@ -55,7 +54,7 @@ test('an approved milestone is locked on the server and its certificate does not
   assert.match(before, /figma\.com\/file\/abc/);
   assert.match(before, /198\.51\.100\.4/);
   assert.match(before, /LockBrowser\/2\.0/);
-  assert.match(before, /Acme/);
+  assert.match(before, /Jane Client/, 'the name the client typed');
 
   const page = await dev.get(milestonePath);
   assert.match(page.text, /This milestone is approved and locked\. Any change goes in a new milestone\./);

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Signoff — accueil client</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a:focus-visible{outline:3px solid #cfe0ff;outline-offset:3px}
+a{color:#cfe0ff}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; box-sizing: border-box; min-height: 900px; padding: 28px 32px 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #ffffff; background: linear-gradient(135deg, #1c0b33 0%, #3d1a66 38%, #7a2f86 68%, #b8508a 100%); display: flex; flex-direction: column; gap: 24px">
+
+<div aria-hidden="true" style="position: absolute; right: -140px; bottom: -160px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.42) 0%, rgba(255,214,236,0.18) 45%, rgba(255,255,255,0) 70%); pointer-events: none"></div>
+
+<header style="position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 36px; height: 36px; border-radius: 11px; background: #3ee08f; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07281a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</div>
+<span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">Signoff</span>
+</div>
+<span style="font-size: 14px; color: #cfe0ff">FR · EN</span>
+</header>
+
+<main style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center">
+<section style="width: 100%; max-width: 560px; box-sizing: border-box; padding: 40px 36px; border-radius: 32px; background: rgba(22,9,40,0.62); border: 1px solid rgba(207,224,255,0.3); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 24px 60px rgba(10,2,24,0.35); display: flex; flex-direction: column; gap: 22px">
+<p style="margin: 0; font-size: 15px; font-weight: 600; color: #cfe0ff">Kostia M. vous demande de valider un jalon</p>
+<h1 style="margin: 0; font-size: 36px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Page d'accueil — v1</h1>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<span style="font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.4)">Atelier Lumière</span>
+<span style="font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.4)">Jalon 2 sur 4</span>
+<span style="font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(207,224,255,0.4)">500 €</span>
+</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #eaf1ff">Vous allez pouvoir consulter les fichiers et la description, puis approuver ou laisser un retour. Votre approbation est enregistrée avec votre nom, la date et l'heure.</p>
+<a href="Main.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 58px; border-radius: 18px; background: #3ee08f; color: #07281a; font-size: 18px; font-weight: 800; text-decoration: none">Voir le jalon</a>
+</section>
+</main>
+
+<footer style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: #eaf1ff">
+<span>Propulsé par <a href="https://signofflandingpage.netlify.app">Signoff</a></span>
+<span style="display: flex; gap: 18px"><a href="/legal">Mentions légales</a><a href="/privacy">Confidentialité</a><a href="/terms">Conditions</a></span>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
