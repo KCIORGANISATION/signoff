@@ -22,6 +22,17 @@
     <section class="card"><p style="white-space: pre-wrap;"><%= milestone.description %></p></section>
   <% } %>
 
+  <% if (milestone.payment_link || milestone.payment_note) { %>
+    <section class="card" id="payment">
+      <div class="card-header"><h2><%= t('milestone.payment') %></h2></div>
+      <% if (milestone.payment_link) { %>
+        <p><a class="url" href="<%= milestone.payment_link %>" target="_blank" rel="noopener noreferrer"><%= milestone.payment_link %></a></p>
+      <% } %>
+      <% if (milestone.payment_note) { %><p class="note" style="margin-top: 8px;"><%= milestone.payment_note %></p><% } %>
+      <p class="hint"><%= t('milestone.payment.hint') %></p>
+    </section>
+  <% } %>
+
   <section class="card" id="share">
     <div class="card-header">
       <h2><%= t('milestone.share') %></h2>

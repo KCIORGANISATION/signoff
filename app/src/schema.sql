@@ -75,3 +75,7 @@ CREATE INDEX IF NOT EXISTS milestones_project_idx ON milestones(project_id);
 CREATE INDEX IF NOT EXISTS deliverables_milestone_idx ON deliverables(milestone_id);
 CREATE INDEX IF NOT EXISTS review_events_milestone_idx ON review_events(milestone_id);
 CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets(user_id);
+
+-- Payment link and transfer instructions, shown to the client only once the milestone is approved.
+ALTER TABLE milestones ADD COLUMN IF NOT EXISTS payment_link TEXT;
+ALTER TABLE milestones ADD COLUMN IF NOT EXISTS payment_note TEXT;

@@ -22,7 +22,7 @@ Pour repartir de zéro, arrête le serveur et supprime le dossier `app/data/`.
 ## Le parcours
 
 1. Le dev crée un **projet** (nom, client, email du client, devise).
-2. Il ajoute des **jalons** (titre, description, montant facultatif).
+2. Il ajoute des **jalons** (titre, description, montant facultatif, lien et instructions de paiement facultatifs).
 3. Il attache des **livrables** : liens (staging, Figma…) et notes texte.
 4. Il clique sur « Envoyer au client » : Signoff envoie le **lien client** par email au client, et l'affiche aussi pour que le dev puisse le copier.
 5. Le client ouvre le lien, sans compte : il voit les livrables et clique sur **J'approuve** ou **Laisser un feedback**.
@@ -31,6 +31,17 @@ Pour repartir de zéro, arrête le serveur et supprime le dossier `app/data/`.
 8. Le dev peut encore modifier le jalon après approbation : le certificat montre toujours ce que le client a réellement approuvé.
 
 Statuts d'un jalon : brouillon, envoyé, vu, feedback, approuvé.
+
+## Lien de paiement
+
+Sur chaque jalon, le dev peut ajouter deux champs facultatifs :
+
+- **Lien de paiement** : l'URL d'un Stripe Payment Link, PayPal, Wise, Payconiq… Seules les adresses `https://` valides de 500 caractères maximum sont acceptées (pas de `http:`, `javascript:`, `data:`, d'espaces, ni de `nom@domaine` avant le domaine).
+- **Instructions de paiement** : texte libre de 500 caractères maximum (IBAN, communication). Toujours affiché comme du texte brut.
+
+Le client ne les voit **qu'après avoir approuvé** : avant, ils ne sont pas du tout dans la page envoyée au navigateur (pas simplement cachés). Après l'approbation, la page du client montre le montant, un bouton « Payer maintenant » qui ouvre le lien dans un nouvel onglet, le domaine de destination (« Vous allez être redirigé vers buy.stripe.com ») et les instructions. Le bouton reste là chaque fois que le client rouvre son lien, jusqu'à son expiration.
+
+Signoff ne traite aucun paiement, n'envoie pas d'email au client à ce sujet et ne suit pas les clics. Si le dev modifie le lien après l'approbation, le client voit le nouveau lien ; le lien de paiement ne fait pas partie de la preuve figée.
 
 ## Organisation du code
 
@@ -46,6 +57,7 @@ app/
     models.js        requêtes partagées (jalons, livrables, preuves)
     i18n.js          textes en anglais et en français
     format.js        affichage des montants et des dates
+    payment.js       vérification du lien et des instructions de paiement
     email.js         emails via Resend (ou affichés dans le terminal)
     auth.js          protège les pages du dev
     routes/
@@ -65,6 +77,7 @@ app/
 
 Six tables : `users`, `projects`, `milestones`, `deliverables`, `review_events`, `password_resets`.
 
+- `milestones.payment_link` et `milestones.payment_note` contiennent le lien et les instructions de paiement (vides par défaut).
 - Chaque jalon a un `token` aléatoire de 32 caractères : c'est lui qui forme le lien client `/r/<token>`.
 - `review_events` est le journal des actions (envoyé, vu, feedback, approuvé). L'app n'y fait que des ajouts, jamais de modification. Une approbation y stocke l'IP, le navigateur et un `snapshot` JSON des livrables.
 
@@ -91,7 +104,7 @@ Tant que `RESEND_API_KEY` est vide, l'email s'affiche simplement dans le termina
 
 ## Variables d'environnement
 
-Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `LANDING_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`.
+Le lien de paiement n'ajoute aucune variable. Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `LANDING_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`.
 
 En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SESSION_SECRET`, `APP_URL`, `DATABASE_URL` ou `INVITE_CODE`, et affiche la liste de ce qui manque.
 
@@ -105,7 +118,7 @@ En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SE
 npm test
 ```
 
-Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
+Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
 
 Pour les lancer contre un vrai Postgres jetable : `TEST_DATABASE_URL=postgres://… npm test`.
 

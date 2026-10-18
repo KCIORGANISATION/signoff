@@ -19,6 +19,18 @@
   <section class="card decision" style="margin-top: 20px;">
     <% if (milestone.status === 'approved') { %>
       <div class="alert alert-success"><%= t('review.approved', { date: fmt.dateTime(milestone.approved_at) }) %></div>
+      <% if (milestone.payment) { %>
+        <div class="payment" id="payment">
+          <h2><%= t('review.payment.title') %></h2>
+          <% if (milestone.amount !== null) { %><p class="amount"><%= fmt.money(milestone.amount, milestone.currency) %></p><% } %>
+          <% if (milestone.payment.link) { %>
+            <a class="btn btn-large" href="<%= milestone.payment.link %>" target="_blank" rel="noopener noreferrer"><%= t('review.payment.pay') %></a>
+            <p class="hint"><%= t('review.payment.redirect', { domain: milestone.payment.domain }) %></p>
+          <% } %>
+          <% if (milestone.payment.note) { %><p class="note"><%= milestone.payment.note %></p><% } %>
+          <p class="hint"><%= t('review.payment.disclaimer', { dev: milestone.dev_name }) %></p>
+        </div>
+      <% } %>
       <a class="btn btn-ghost" href="/r/<%= milestone.token %>/certificate"><%= t('review.certificate') %></a>
     <% } else if (milestone.status === 'feedback') { %>
       <div class="alert alert-info" style="margin: 0;"><%= t('review.feedback.sent', { dev: milestone.dev_name }) %></div>
