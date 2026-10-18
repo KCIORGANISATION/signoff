@@ -142,7 +142,6 @@ const en = {
   'legal.legal': 'Legal notice',
   'legal.privacy': 'Privacy policy',
   'legal.terms': 'Terms of use',
-  'legal.placeholder': 'Content coming soon.',
 
   'email.review.subject': '{dev} is asking you to approve "{title}"',
   'email.review.body': 'Hello {client},\n\n{dev} has finished the milestone "{title}" for the project {project} and is asking for your approval.\n\nReview the deliverables, then approve or leave feedback here (no account needed):\n{link}\n\nSent with Signoff on behalf of {dev}.',
@@ -305,7 +304,6 @@ const fr = {
   'legal.legal': 'Mentions légales',
   'legal.privacy': 'Politique de confidentialité',
   'legal.terms': "Conditions d'utilisation",
-  'legal.placeholder': 'Contenu à venir.',
 
   'email.review.subject': '{dev} vous demande de valider « {title} »',
   'email.review.body': "Bonjour {client},\n\n{dev} a terminé le jalon « {title} » du projet {project} et vous demande votre validation.\n\nConsultez les livrables, puis approuvez ou laissez un feedback ici (sans créer de compte) :\n{link}\n\nEnvoyé avec Signoff de la part de {dev}.",

@@ -18,7 +18,7 @@
   --danger: #b91c1c;
   --radius: 14px;
   --shadow: 0 1px 2px rgba(42, 27, 61, 0.04), 0 4px 16px rgba(42, 27, 61, 0.06);
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -178,7 +178,10 @@ details.add form { margin-top: 12px; padding: 16px; background: var(--surface-2)
 .legal h2 { font-size: 19px; margin: 32px 0 10px; }
 .legal h3 { font-size: 16px; margin: 20px 0 8px; }
 .legal p, .legal li { line-height: 1.65; }
+.legal p { margin: 0 0 12px; }
+.legal ul { margin: 0 0 12px; }
 .legal ul { padding-left: 22px; }
+.legal .table-scroll { overflow-x: auto; }
 .legal table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
 .legal th, .legal td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--border); }
 .legal .placeholder { background: #fff3c4; padding: 0 4px; border-radius: 4px; }

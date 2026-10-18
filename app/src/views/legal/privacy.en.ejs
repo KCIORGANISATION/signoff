@@ -1,2 +1,94 @@
-<h1><%= t('legal.privacy') %></h1>
-<p class="muted"><%= t('legal.placeholder') %></p>
+<h1>Privacy policy</h1>
+<p class="muted">Last updated: 18 October 2026</p>
+
+<p>This policy explains which personal data Signoff processes, why, for how long, with whom, and what your rights are. It applies the General Data Protection Regulation (GDPR, Regulation (EU) 2016/679) and the Belgian Act of 30 July 2018 on the protection of natural persons with regard to the processing of personal data.</p>
+
+<h2>1. Who is responsible?</h2>
+<p>Signoff is published by Kostia Masset-Depasse, <span class="placeholder">[ADRESSE]</span>, Brussels, Belgium, company number <span class="placeholder">[BCE]</span>. Contact for any question about your data: <span class="placeholder">[EMAIL]</span>.</p>
+<p>Signoff acts in two different roles:</p>
+<ul>
+  <li><strong>Controller</strong> for the data of the developers who have a Signoff account ("users").</li>
+  <li><strong>Processor</strong> for the data of users' clients (the people a user sends a milestone to for approval). For this data, the controller is the user who created the project. Signoff processes it only on the user's behalf, under the data processing agreement in the <a href="/terms#dpa">terms of use</a>.</li>
+</ul>
+
+<h2>2. Data collected</h2>
+<h3>User accounts (developers)</h3>
+<ul>
+  <li>Name or business name, email address, password (stored only as an irreversible hash, never in plain text), preferred language.</li>
+  <li>Content created in the app: projects, milestones, amounts, deliverables (links and notes).</li>
+  <li>Password reset requests (only a hash of the emailed link is kept).</li>
+</ul>
+<h3>Users' clients</h3>
+<ul>
+  <li>Client name and email address, entered by the user.</li>
+  <li>Feedback messages written by the client.</li>
+  <li>Proof of approval: exact date and time (UTC), IP address, browser (user agent) and a frozen copy of the deliverables at the moment of approval. The IP address and browser are also recorded when the client opens the link or leaves feedback.</li>
+</ul>
+<h3>Technical data</h3>
+<ul>
+  <li>One session cookie, strictly necessary for the service (login, chosen language, form protection). It is signed, never used to track you, and expires after 30 days. Signoff uses no advertising cookies, no audience measurement and no third-party trackers, so no consent is requested.</li>
+  <li>The host's technical logs (IP address, requested page, date), used for security and troubleshooting.</li>
+</ul>
+
+<h2>3. Why, and on what legal basis?</h2>
+<table>
+  <thead><tr><th>Purpose</th><th>Legal basis (Art. 6 GDPR)</th></tr></thead>
+  <tbody>
+    <tr><td>Create and manage the account and provide the service (projects, milestones, review links, certificates, notification and reset emails)</td><td>Performance of the contract with the user (Art. 6(1)(b))</td></tr>
+    <tr><td>Record the client's proof of approval (date, IP, browser, copy of the deliverables) on behalf of the user</td><td>Processing on behalf of the user, who relies on their legitimate interest in proving their client's agreement (Art. 6(1)(f))</td></tr>
+    <tr><td>Keep the service secure (login attempt limits, logs, backups)</td><td>Legitimate interest in protecting the service and the data (Art. 6(1)(f))</td></tr>
+    <tr><td>Meet accounting and legal obligations, where applicable</td><td>Legal obligation (Art. 6(1)(c))</td></tr>
+  </tbody>
+</table>
+<p>Signoff does not sell your data, does not use it for advertising, and makes no automated decision with legal effects on you.</p>
+
+<h2>4. How long?</h2>
+<ul>
+  <li>Account data and created content (including client data and proofs of approval): for as long as the account exists, then <strong>1 year</strong> after it is closed, so the user can still obtain proof in case of a dispute. It is then deleted.</li>
+  <li>A project or milestone deleted by the user is erased from the database immediately, along with its proofs.</li>
+  <li>Password reset links: valid for 1 hour, kept with the account.</li>
+  <li>Backups: copies of the database kept for 30 days at most, then replaced.</li>
+  <li>Technical logs: according to the host's retention period, limited to a few weeks.</li>
+</ul>
+
+<h2>5. Who can access the data? (sub-processors)</h2>
+<p>Only the publisher of Signoff has access to the data, together with the following providers, strictly to run the service:</p>
+<table>
+  <thead><tr><th>Provider</th><th>Role</th><th>Data location</th></tr></thead>
+  <tbody>
+    <tr><td>Render Services, Inc.</td><td>Application hosting</td><td>European Union (Frankfurt, Germany)</td></tr>
+    <tr><td>Neon</td><td>Database</td><td>European Union (Frankfurt, Germany)</td></tr>
+    <tr><td>Resend</td><td>Sending emails (review link, notifications, password reset)</td><td>United States</td></tr>
+    <tr><td>Cloudflare, Inc. (R2)</td><td>Backup storage</td><td>European Union</td></tr>
+  </tbody>
+</table>
+<p>Some of these providers are companies established in the United States. Where data is transferred to or accessible from outside the European Economic Area, the transfer relies on the EU–US Data Privacy Framework where the provider is certified, or on the standard contractual clauses adopted by the European Commission.</p>
+<p>A user sees the data of their own projects. A user's client only sees the milestone they received the link for.</p>
+
+<h2>6. Security</h2>
+<p>Encrypted connections (HTTPS), passwords and reset links stored as hashes, protection against forged form submissions, login attempt limits, data access restricted to the publisher, daily backups. No measure is infallible: if a data breach creates a risk, the people concerned and the Data Protection Authority will be informed as the GDPR requires.</p>
+
+<h2>7. Your rights</h2>
+<p>You have the following rights over your data:</p>
+<ul>
+  <li><strong>access</strong>: know which data is processed and get a copy;</li>
+  <li><strong>rectification</strong>: have inaccurate data corrected;</li>
+  <li><strong>erasure</strong>: have your data deleted, unless keeping it is necessary to comply with a legal obligation or to establish, exercise or defend legal claims;</li>
+  <li><strong>portability</strong>: receive the data you provided in a structured, machine-readable format;</li>
+  <li><strong>restriction</strong> and <strong>objection</strong> to processing based on legitimate interest.</li>
+</ul>
+<p>To exercise these rights, write to <span class="placeholder">[EMAIL]</span>. You will get an answer within one month. Proof of identity may be requested if there is a doubt.</p>
+<p><strong>Are you the client of a Signoff user?</strong> The controller of your data is the provider who sent you the link. Contact them first. If you write to Signoff, your request will be forwarded to them and Signoff will help them answer it.</p>
+
+<h2>8. Complaints</h2>
+<p>If you believe your rights are not respected, you can lodge a complaint with the Belgian supervisory authority:</p>
+<p>
+  <strong>Data Protection Authority (Autorité de protection des données / Gegevensbeschermingsautoriteit)</strong><br>
+  Rue de la Presse 35, 1000 Brussels, Belgium<br>
+  Phone: +32 (0)2 274 48 00<br>
+  Email: <a href="mailto:contact@apd-gba.be">contact@apd-gba.be</a><br>
+  Website: <a href="https://www.dataprotectionauthority.be" target="_blank" rel="noopener">www.dataprotectionauthority.be</a>
+</p>
+
+<h2>9. Changes</h2>
+<p>This policy may change, in particular when the beta ends. The date of the last update is shown at the top of the page. Users will be notified by email of any significant change.</p>
