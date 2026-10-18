@@ -3,8 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title><%= title ? `${title} · Signoff` : 'Signoff' %></title>
+  <title><%= locals.meta ? meta.title : title ? `${title} · Signoff` : 'Signoff' %></title>
+  <% if (locals.meta) { %>
+  <meta name="description" content="<%= meta.description %>">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Signoff">
+  <meta property="og:title" content="<%= meta.title %>">
+  <meta property="og:description" content="<%= meta.description %>">
+  <meta property="og:url" content="<%= meta.url %>">
+  <meta property="og:locale" content="<%= lang === 'fr' ? 'fr_BE' : 'en_GB' %>">
+  <link rel="canonical" href="<%= meta.url %>">
+  <% } else { %>
   <meta name="robots" content="noindex">
+  <% } %>
   <meta name="theme-color" content="#1c0b33">
   <link rel="preload" href="/fonts/jakarta/plus-jakarta-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/jakarta/plus-jakarta-sans-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -14,7 +25,9 @@
 <body class="<%= locals.bodyClass || '' %>">
 <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
 <header class="site-header">
-  <% if (locals.client || !currentUser) { %>
+  <% if (!locals.client && !currentUser) { %>
+    <a class="brand" href="/" <%- currentPath === '/' ? 'aria-current="page"' : '' %>><span class="brand-mark"><%- include('icon', { name: 'check' }) %></span>Signoff</a>
+  <% } else if (locals.client) { %>
     <span class="brand"><span class="brand-mark"><%- include('icon', { name: 'check' }) %></span>Signoff</span>
   <% } else { %>
     <a class="brand" href="/dashboard"><span class="brand-mark"><%- include('icon', { name: 'check' }) %></span>Signoff</a>
@@ -39,6 +52,7 @@
       <span aria-hidden="true">·</span>
       <a href="/lang/en?back=<%= encodeURIComponent(currentPath) %>" aria-current="<%= lang === 'en' %>" lang="en">EN</a>
     </span>
+    <% if (locals.headerLogin) { %><a class="btn btn-small header-login" href="/login"><%= t('home.login') %></a><% } %>
   </div>
 </header>
 <main id="main" class="page <%= locals.mainClass || '' %>" tabindex="-1">

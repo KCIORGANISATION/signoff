@@ -1,7 +1,7 @@
 </main>
 <footer class="site-footer <%= locals.centered ? 'is-centered' : '' %>">
   <% if (locals.client && !locals.centered) { %>
-    <span class="footer-chip"><span><%= t('review.poweredBy') %> <a href="<%= landingUrl %>" target="_blank" rel="noopener">Signoff</a></span></span>
+    <span class="footer-chip"><span><%= t('review.poweredBy') %> <a href="/" target="_blank" rel="noopener">Signoff</a></span></span>
   <% } %>
   <nav class="footer-chip" aria-label="<%= t('legal.nav') %>">
     <a href="/legal"><%= t('legal.legal') %></a>

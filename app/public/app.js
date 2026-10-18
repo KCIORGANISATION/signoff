@@ -168,12 +168,9 @@ if (filesRegion) bindFiles(filesRegion);
 else bindLightbox(document);
 
 // ---------------------------------------------------------------------------
-// Client milestone page
+// The three-pane board: the client milestone page, and its example on the home page
 // ---------------------------------------------------------------------------
-const review = document.querySelector('[data-review]');
-if (review) {
-  const board = review.querySelector('.board');
-
+function bindBoard(board, onChange = () => {}) {
   // Panes: on a wide screen one pane can be expanded while the others shrink into bands;
   // on a phone they fold open one at a time (title and description open by default).
   const openPane = () => board.dataset.focus || (wide.matches ? '' : 'desc');
@@ -185,6 +182,7 @@ if (review) {
       button.setAttribute('aria-expanded', String(expanded));
       button.setAttribute('aria-label', expanded ? button.dataset.labelCollapse : button.dataset.labelExpand);
     });
+    onChange(board.dataset.focus);
   };
 
   const setFocus = (name) => {
@@ -241,6 +239,16 @@ if (review) {
     if (open !== 'files' && open !== '') setFocus(wide.matches ? '' : 'files');
   };
 
+  return { setFocus, reveal, slides };
+}
+
+// ---------------------------------------------------------------------------
+// Client milestone page
+// ---------------------------------------------------------------------------
+const review = document.querySelector('[data-review]');
+if (review) {
+  const { reveal, slides } = bindBoard(review.querySelector('.board'));
+
   // Decision panel: choose → approve (name + "I confirm") or feedback.
   const decision = review.querySelector('[data-decision]');
   if (decision) {
@@ -294,5 +302,55 @@ if (review) {
       const typed = message.value.slice(0, message.selectionStart).match(/\/(?:fichier|file)(\d{1,3})$/i);
       if (typed && slides[Number(typed[1]) - 1]) reveal(Number(typed[1]) - 1);
     });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Home page: the example of the client page opens its panes one by one,
+// until the visitor touches it. Then it stays as they leave it.
+// ---------------------------------------------------------------------------
+const demo = document.querySelector('[data-demo]');
+if (demo) {
+  const pills = [...demo.querySelectorAll('[data-demo-pick]')];
+  const caption = demo.querySelector('[data-demo-caption]');
+  const board = demo.querySelector('.board');
+
+  const { setFocus } = bindBoard(board, (focus) => {
+    pills.forEach((pill) => pill.setAttribute('aria-pressed', String(pill.dataset.demoPick === focus)));
+    const key = { files: 'captionFiles', desc: 'captionDesc', amount: 'captionAmount' }[focus] || 'captionAll';
+    if (caption.textContent !== caption.dataset[key]) caption.textContent = caption.dataset[key];
+  });
+
+  let timer = null;
+  let visible = false;
+  const stop = () => {
+    clearInterval(timer);
+    timer = null;
+    demo.removeEventListener('pointerdown', stop, true);
+    demo.removeEventListener('keydown', stop, true);
+    observer?.disconnect();
+  };
+
+  pills.forEach((pill) =>
+    pill.addEventListener('click', () => setFocus(board.dataset.focus === pill.dataset.demoPick ? '' : pill.dataset.demoPick)),
+  );
+
+  // Turns run only while the example is on screen, and never for visitors who asked for less motion.
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const observer = calm.matches || !('IntersectionObserver' in window) ? null : new IntersectionObserver((entries) => {
+    visible = entries[0].isIntersecting;
+    if (visible && !timer) {
+      timer = setInterval(() => {
+        if (!visible || document.hidden) return;
+        const order = wide.matches ? ['files', 'desc', 'amount', ''] : ['files', 'desc', 'amount'];
+        const next = order[(order.indexOf(board.dataset.focus) + 1) % order.length];
+        setFocus(next);
+      }, 4000);
+    }
+  }, { threshold: 0.5 });
+  if (observer) {
+    observer.observe(board);
+    demo.addEventListener('pointerdown', stop, true);
+    demo.addEventListener('keydown', stop, true);
   }
 }

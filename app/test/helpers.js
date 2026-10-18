@@ -38,7 +38,8 @@ export async function startServer({ files = 'disk' } = {}) {
 export class Browser {
   constructor(base, headers = {}) {
     this.base = base;
-    this.headers = headers;
+    // The tests read English pages unless they ask for another language.
+    this.headers = { 'accept-language': 'en', ...headers };
     this.cookies = new Map();
     this.csrf = null;
   }

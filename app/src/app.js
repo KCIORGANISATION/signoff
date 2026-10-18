@@ -16,6 +16,7 @@ import legalRoutes from './routes/legal.js';
 import projectRoutes from './routes/projects.js';
 import milestoneRoutes from './routes/milestones.js';
 import reviewRoutes from './routes/review.js';
+import homeRoutes from './routes/home.js';
 import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +30,15 @@ const logoSvg = fs
   .replace(/<!--[\s\S]*?-->/g, '')
   .replace(/<\?xml[^>]*>/, '')
   .trim();
+
+// The logo for a given place on a page: ids made unique, underlines ready to be drawn,
+// or hidden from screen readers when the name is already said next to it.
+function logoMarkup({ id = 'logo', animated = false, decorative = false } = {}) {
+  let svg = logoSvg.replace(/id="([\w-]+)"/g, `id="$1-${id}"`).replace(/url\(#([\w-]+)\)/g, `url(#$1-${id})`);
+  if (animated) svg = svg.replace(/<path /g, '<path pathLength="1" ');
+  if (decorative) svg = svg.replace(/\s(role|aria-label)="[^"]*"/g, '').replace('<svg ', '<svg aria-hidden="true" focusable="false" ');
+  return svg;
+}
 
 export function createApp() {
   const app = express();
@@ -77,7 +87,10 @@ export function createApp() {
 
   // Language, translation and formatting helpers available in every view.
   app.use((req, res, next) => {
-    const lang = languages.includes(req.session.lang) ? req.session.lang : req.acceptsLanguages(...languages) || 'en';
+    // The language the visitor chose, else the one their browser asks for by name, else French.
+    const asked = (req.get('accept-language') || '').trim();
+    const browser = asked && asked !== '*' ? req.acceptsLanguages(...languages) : false;
+    const lang = languages.includes(req.session.lang) ? req.session.lang : browser || 'fr';
     req.lang = lang;
     req.t = translator(lang);
     res.locals.lang = lang;
@@ -85,8 +98,8 @@ export function createApp() {
     res.locals.fmt = formatters(lang);
     res.locals.currentUser = req.session.user ?? null;
     res.locals.currentPath = req.originalUrl;
-    res.locals.landingUrl = config.landingUrl;
     res.locals.logoSvg = logoSvg;
+    res.locals.logo = logoMarkup;
     res.locals.citeTag = (position) => citationTag(lang, position);
     res.locals.describe = describe;
     next();
@@ -105,8 +118,7 @@ export function createApp() {
     res.redirect(back ? req.query.back : '/');
   });
 
-  app.get('/', (req, res) => res.redirect(req.session.user ? '/dashboard' : '/login'));
-
+  app.use(homeRoutes);
   app.use(authRoutes);
   app.use(passwordRoutes);
   app.use(legalRoutes);
