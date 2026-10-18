@@ -19,6 +19,23 @@ Pour tester côté client, ouvre le lien client dans une fenêtre de navigation 
 
 Pour repartir de zéro, arrête le serveur et supprime le dossier `app/data/`.
 
+## La page d'accueil
+
+`/` est la page publique de présentation, pour les visiteurs non connectés (un dev connecté est renvoyé vers son tableau de bord). Elle ne fait aucune requête à la base. `/acces` explique que la bêta est sur invitation, sans formulaire ; elle affiche l'adresse de `CONTACT_EMAIL` seulement si cette variable est définie. La langue par défaut est le français, sauf si le navigateur demande l'anglais ; le bouton FR · EN change la langue.
+
+### Vidéo de présentation
+
+Tant qu'il n'y a pas de vidéo, la page montre un cadre vide (`src/views/partials/intro-video.ejs`). Pour ajouter la vidéo plus tard, sans service externe, sans cookie ni traceur :
+
+1. Mets les fichiers dans `app/public/video/` (ils sont servis par l'app sous `/video/`) :
+   - `presentation-fr.mp4` et `presentation-en.mp4` : la vidéo avec la voix dans chaque langue (H.264 + AAC, 1080p, idéalement moins de 30 Mo chacune ; GitHub refuse les fichiers de plus de 100 Mo) ;
+   - `presentation-poster.jpg` : l'image affichée avant la lecture (1920×1080) ;
+   - `presentation-fr.vtt` et `presentation-en.vtt` : les sous-titres.
+2. Remplace le contenu de `intro-video.ejs` par une balise `<video controls preload="none" playsinline poster="/video/presentation-poster.jpg">`, avec la source `/video/presentation-<%= lang %>.mp4` (la voix suit la langue de la page) et deux `<track kind="subtitles" srclang="fr|en" src="/video/presentation-fr|en.vtt">` (celui de la langue de la page avec `default`).
+3. Pour laisser choisir la voix, ajoute deux boutons FR / EN sous la vidéo qui changent sa source (quelques lignes dans `public/app.js`).
+
+La CSP actuelle accepte déjà une vidéo servie par l'app (`default-src 'self'`).
+
 ## Le parcours
 
 1. Le dev crée un **projet** (nom, client, email du client, devise).
@@ -144,7 +161,7 @@ Tant que `RESEND_API_KEY` est vide, l'email s'affiche simplement dans le termina
 
 ## Variables d'environnement
 
-Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `LANDING_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
+Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `CONTACT_EMAIL` (facultative), `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
 
 En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SESSION_SECRET`, `APP_URL`, `DATABASE_URL` ou `INVITE_CODE`, et affiche la liste de ce qui manque.
 

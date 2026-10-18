@@ -51,7 +51,7 @@ export function load(env) {
     production,
     test: env.NODE_ENV === 'test',
     appUrl: (env.APP_URL || '').replace(/\/$/, ''),
-    landingUrl: env.LANDING_URL || 'https://github.com/KCIORGANISATION/signoff',
+    contactEmail: validEmail(env.CONTACT_EMAIL),
     sessionSecret,
     inviteCode: env.INVITE_CODE || '',
     databaseUrl: env.DATABASE_URL || '',
@@ -76,4 +76,10 @@ export const config = load(process.env);
 export function absoluteUrl(req, pathname) {
   const base = config.appUrl || `${req.protocol}://${req.get('host')}`;
   return `${base}${pathname}`;
+}
+
+// Optional contact address shown on the "Request access" page. Ignored if it does not look like an email.
+function validEmail(value) {
+  const email = (value || '').trim();
+  return /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email) ? email : '';
 }

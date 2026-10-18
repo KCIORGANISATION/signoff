@@ -1,0 +1,229 @@
+<%
+  const panes = { files: t('review.files'), amount: t('review.amount'), desc: t('review.descPanel') };
+  function escapeLabel(text) { return String(text).replace(/&/g, '&amp;').replace(/"/g, '&#34;').replace(/</g, '&lt;'); }
+  const paneButton = (name) => `type="button" class="icon-btn" data-pane-toggle="${name}" aria-controls="demo-vol-${name}" aria-expanded="false" data-label-expand="${escapeLabel(t('review.panel.expand', { panel: panes[name] }))}" data-label-collapse="${escapeLabel(t('review.panel.collapse', { panel: panes[name] }))}" aria-label="${escapeLabel(t('review.panel.expand', { panel: panes[name] }))}"`;
+  const paneIcons = include('partials/icon', { name: 'expand', cls: 'icon-expand' }) + include('partials/icon', { name: 'collapse', cls: 'icon-collapse' }) + include('partials/icon', { name: 'chevronDown', cls: 'icon-chevron' });
+  const demoFiles = [t('home.demo.file1'), t('home.demo.file2'), t('home.demo.file3')];
+%>
+<%- include('partials/head', {
+  title: '',
+  meta: { title: t('home.meta.title'), description: t('home.meta.description'), url: pageUrl },
+  bodyClass: 'home',
+  mainClass: 'page-home',
+  headerLogin: true,
+}) %>
+
+<div class="home-decor" aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+</div>
+
+<%# 1 · Arrival: the logo writes itself, then the promise and the two ways in %>
+<section class="hero">
+  <span class="hero-pill hero-in" style="--d: 0.1s;"><%= t('home.beta') %></span>
+  <div class="hero-logo"><%- logo({ id: 'hero', animated: true }) %></div>
+  <h1 class="hero-in" style="--d: 2.1s;"><%= t('home.title') %></h1>
+  <p class="hero-lead hero-in" style="--d: 2.25s;"><%= t('home.lead') %></p>
+  <div class="cta-row hero-in" style="--d: 2.5s;">
+    <a class="btn btn-primary btn-xl" href="/signup"><%= t('home.invite') %></a>
+    <a class="btn btn-xl" href="/login"><%= t('home.login') %></a>
+  </div>
+  <p class="hero-access hero-in" style="--d: 2.6s;"><%= t('home.noCode') %> <a href="/acces"><%= t('home.requestAccess') %></a></p>
+  <a class="scroll-hint hero-in" style="--d: 2.8s;" href="#video" aria-hidden="true" tabindex="-1">
+    <span><%= t('home.scroll') %></span><%- include('partials/icon', { name: 'chevronDown' }) %>
+  </a>
+</section>
+
+<%# 2 · Presentation video (space kept until the video exists) %>
+<section class="home-section home-video" id="video" aria-labelledby="video-title">
+  <h2 class="home-h2 rv" id="video-title"><%= t('home.video.title') %></h2>
+  <%- include('partials/intro-video') %>
+</section>
+
+<%# 3 · The problem %>
+<section class="home-section" aria-labelledby="problem-title">
+  <h2 class="home-h2 home-h2-left rv" id="problem-title"><%= t('home.problem.title') %></h2>
+  <ol class="problem-cards">
+    <% [1, 2, 3].forEach((n) => { %>
+      <li class="glass problem-card rv">
+        <span class="problem-num" aria-hidden="true">0<%= n %></span>
+        <h3><%= t(`home.problem.${n}.title`) %></h3>
+        <p><%= t(`home.problem.${n}.text`) %></p>
+      </li>
+    <% }) %>
+  </ol>
+</section>
+
+<%# 4 · The product: a live example of the client page, built from the same parts as the real one %>
+<section class="home-section demo" data-demo aria-labelledby="demo-title">
+  <div class="demo-intro rv">
+    <h2 class="home-h2" id="demo-title"><%= t('home.demo.title') %></h2>
+    <p class="home-lead"><%= t('home.demo.lead') %></p>
+  </div>
+  <div class="demo-pills" role="group" aria-label="<%= t('home.demo.pick') %>">
+    <% ['files', 'desc', 'amount'].forEach((name) => { %>
+      <button type="button" data-demo-pick="<%= name %>" aria-pressed="false" aria-controls="demo-vol-<%= name %>"><%= name === 'desc' ? t('review.description') : panes[name] %></button>
+    <% }) %>
+  </div>
+  <p class="demo-caption" data-demo-caption aria-live="polite"
+     data-caption-files="<%= t('home.demo.caption.files') %>"
+     data-caption-desc="<%= t('home.demo.caption.desc') %>"
+     data-caption-amount="<%= t('home.demo.caption.amount') %>"
+     data-caption-all="<%= t('home.demo.caption.all') %>"><%= t('home.demo.caption.all') %></p>
+
+  <div class="review demo-review rv">
+    <div class="glass board" data-focus="" role="region" aria-label="<%= t('home.demo.label') %>">
+
+      <div class="vol vol-files" id="demo-vol-files">
+        <button class="vol-band" type="button" data-pane-open="files" aria-label="<%= t('review.panel.open', { panel: panes.files }) %>">
+          <span class="band-count" data-viewer-counter-copy>1/3</span>
+          <span class="band-label"><%= panes.files %></span>
+        </button>
+        <div class="vol-content">
+          <div class="vol-head">
+            <h3><%= panes.files %></h3>
+            <button <%- paneButton('files') %>><%- paneIcons %></button>
+          </div>
+          <div class="vol-body">
+            <div class="viewer" data-viewer>
+              <button class="icon-btn round" type="button" data-viewer-prev aria-label="<%= t('review.files.prev') %>"><%- include('partials/icon', { name: 'chevronLeft' }) %></button>
+              <div class="viewer-stage">
+                <% demoFiles.forEach((name, i) => { %>
+                  <figure class="slide" data-slide="<%= i %>" <%= i > 0 ? 'hidden' : '' %>>
+                    <div class="slide-media"><div class="shot shot-<%= i + 1 %>" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+                    <figcaption class="slide-caption"><%= citeTag(i + 1) %> · <%= name %></figcaption>
+                  </figure>
+                <% }) %>
+              </div>
+              <button class="icon-btn round" type="button" data-viewer-next aria-label="<%= t('review.files.next') %>"><%- include('partials/icon', { name: 'chevronRight' }) %></button>
+            </div>
+            <span class="viewer-counter" data-viewer-counter>1/3</span>
+            <div class="vol-more thumbs" role="group" aria-label="<%= panes.files %>">
+              <% demoFiles.forEach((name, i) => { %>
+                <button type="button" data-viewer-go="<%= i %>" aria-current="<%= i === 0 %>" aria-label="<%= t('review.files.show', { name }) %>">
+                  <span class="shot shot-<%= i + 1 %> shot-thumb" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                  <span class="file-tag"><%= citeTag(i + 1) %></span>
+                  <span><%= name %></span>
+                </button>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vol vol-desc" id="demo-vol-desc">
+        <button class="vol-band" type="button" data-pane-open="desc" aria-label="<%= t('review.panel.open', { panel: panes.desc }) %>">
+          <span class="band-label"><%= panes.desc %></span>
+        </button>
+        <div class="vol-content">
+          <div class="vol-head desc-head">
+            <div style="min-width: 0;">
+              <h3 class="desc-title"><%= t('home.demo.milestone') %></h3>
+              <p><%= t('home.demo.sent') %></p>
+            </div>
+            <button <%- paneButton('desc') %>><%- paneIcons %></button>
+          </div>
+          <div class="vol-body">
+            <p class="desc-bar"><%= t('review.description') %></p>
+            <div class="desc-body">
+              <p><%= t('home.demo.desc') %></p>
+              <p class="excluded"><strong><%= t('review.excluded') %></strong> <%= t('home.demo.excluded') %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vol vol-amount" id="demo-vol-amount">
+        <button class="vol-band" type="button" data-pane-open="amount" aria-label="<%= t('review.panel.open', { panel: panes.amount }) %>">
+          <span class="band-extra"><%= t('home.demo.amount') %></span>
+          <span class="band-label"><%= panes.amount %></span>
+        </button>
+        <div class="vol-content">
+          <div class="vol-head">
+            <h3><%= panes.amount %></h3>
+            <button <%- paneButton('amount') %>><%- paneIcons %></button>
+          </div>
+          <div class="vol-body">
+            <p class="amount-value"><%= t('home.demo.amount') %></p>
+            <p><%= t('home.demo.payLater') %></p>
+            <div class="vol-more amount-detail">
+              <div class="amount-line"><span><%= t('home.demo.milestone') %></span><strong><%= t('home.demo.amount') %></strong></div>
+              <p class="muted small"><%= t('review.amount.disclaimer') %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# The decision side is a picture of the real one: nothing to click here. %>
+    <div class="review-side demo-side" aria-hidden="true" inert>
+      <div class="glass panel decision">
+        <div class="d-step">
+          <p class="demo-side-title"><%= t('review.decision') %></p>
+          <p><%= t('home.demo.decisionIntro') %></p>
+          <span class="btn btn-primary btn-large btn-block"><%= t('review.approve') %></span>
+          <span class="btn btn-large btn-block"><%= t('review.feedback') %></span>
+        </div>
+      </div>
+      <div class="glass panel panel-tight history">
+        <p class="demo-side-title small-title"><%= t('review.history') %></p>
+        <ul>
+          <li><%= t('home.demo.history1') %></li>
+          <li><%= t('home.demo.history2') %></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# 5 · Four steps %>
+<section class="home-section home-narrow" aria-labelledby="steps-title">
+  <h2 class="home-h2 home-h2-left rv" id="steps-title"><%= t('home.steps.title') %></h2>
+  <ol class="steps">
+    <% [1, 2, 3, 4].forEach((n) => { %>
+      <li class="glass step rv">
+        <span class="step-num" aria-hidden="true"><%= n %></span>
+        <div>
+          <h3><%= t(`home.steps.${n}.title`) %></h3>
+          <p><%= t(`home.steps.${n}.text`) %></p>
+        </div>
+      </li>
+    <% }) %>
+  </ol>
+</section>
+
+<%# 6 · The proof %>
+<section class="home-section proof" aria-labelledby="proof-title">
+  <div class="proof-text rv">
+    <h2 class="home-h2 home-h2-left" id="proof-title"><%= t('home.proof.title') %></h2>
+    <p class="home-lead"><%= t('home.proof.text') %></p>
+    <p class="proof-note"><%= t('home.proof.eidas') %></p>
+  </div>
+  <figure class="glass proof-card rv">
+    <div class="done-head">
+      <span class="done-check"><%- include('partials/icon', { name: 'check' }) %></span>
+      <p class="proof-card-title"><%= t('home.proof.card') %></p>
+    </div>
+    <dl class="proof-facts">
+      <div><dt><%= t('home.proof.milestone') %></dt><dd><%= t('home.demo.milestone') %></dd></div>
+      <div><dt><%= t('home.proof.by') %></dt><dd><%= t('home.proof.byValue') %></dd></div>
+      <div><dt><%= t('home.proof.date') %></dt><dd><%= t('home.proof.dateValue') %></dd></div>
+      <div><dt><%= t('home.proof.file') %></dt><dd><%= t('home.demo.file1') %></dd></div>
+      <div><dt><%= t('home.proof.hash') %></dt><dd class="mono">a3f9…c21e</dd></div>
+    </dl>
+    <figcaption class="proof-example"><%= t('home.proof.example') %></figcaption>
+  </figure>
+</section>
+
+<%# 7 · Last call %>
+<section class="home-section home-final" aria-labelledby="final-title">
+  <div class="final-logo rv"><%- logo({ id: 'final', decorative: true }) %></div>
+  <h2 class="home-h2 rv" id="final-title"><%= t('home.cta.title') %></h2>
+  <p class="home-lead rv"><%= t('home.cta.text') %></p>
+  <div class="cta-row rv">
+    <a class="btn btn-primary btn-xl" href="/signup"><%= t('home.invite') %></a>
+    <a class="btn btn-xl" href="/login"><%= t('home.login') %></a>
+  </div>
+</section>
+
+<%- include('partials/foot', { centered: true }) %>

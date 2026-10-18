@@ -1,0 +1,25 @@
+<%
+  const [before, after] = t('access.contact', { email: '\u0001' }).split('\u0001');
+%>
+<%- include('partials/head', {
+  title: '',
+  meta: { title: `${t('access.title')} · Signoff`, description: t('access.lead'), url: pageUrl },
+  bodyClass: 'home',
+  headerLogin: true,
+}) %>
+<div class="auth">
+  <section class="glass auth-card access-card reveal">
+    <span class="hero-pill"><%= t('home.beta') %></span>
+    <h1><%= t('access.title') %></h1>
+    <p class="lead"><%= t('access.lead') %></p>
+    <p><%= t('access.soon') %></p>
+    <% if (contactEmail) { %>
+      <p><%= before %><a href="mailto:<%= contactEmail %>"><%= contactEmail %></a><%= after %></p>
+    <% } %>
+    <div class="access-actions">
+      <a class="btn btn-primary btn-large btn-block" href="/signup"><%= t('home.invite') %></a>
+      <a class="btn btn-large btn-block" href="/"><%- include('partials/icon', { name: 'arrowLeft' }) %><%= t('access.back') %></a>
+    </div>
+  </section>
+</div>
+<%- include('partials/foot', { centered: true }) %>
