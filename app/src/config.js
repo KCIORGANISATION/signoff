@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 
 // Reads and checks the environment once. In production the app refuses to
 // start when a required variable is missing, rather than running half-configured.
-function load(env) {
+export function load(env) {
   const production = env.NODE_ENV === 'production';
   const errors = [];
 
@@ -25,6 +25,20 @@ function load(env) {
   }
   if (env.RESEND_API_KEY && !env.EMAIL_FROM) errors.push('EMAIL_FROM is required when RESEND_API_KEY is set.');
 
+  // File uploads go to a private R2 bucket. Without its four variables the app still
+  // starts: uploads are stored on disk in development and turned off in production.
+  const r2Names = ['FILES_R2_ACCESS_KEY_ID', 'FILES_R2_SECRET_ACCESS_KEY', 'FILES_R2_BUCKET', 'FILES_R2_ENDPOINT'];
+  const r2Missing = r2Names.filter((name) => !env[name]);
+  let filesStorage = 'r2';
+  if (r2Missing.length > 0) {
+    filesStorage = production ? 'disabled' : 'disk';
+    if (r2Missing.length < r2Names.length) {
+      console.warn(`File uploads: missing ${r2Missing.join(', ')}; uploads are ${production ? 'turned off' : 'stored on disk'}.`);
+    } else if (production) {
+      console.warn('FILES_R2_* variables are not set: file uploads are turned off.');
+    }
+  }
+
   if (errors.length > 0) {
     throw new Error(`Invalid configuration:\n- ${errors.join('\n- ')}`);
   }
@@ -44,6 +58,15 @@ function load(env) {
     resendApiKey: env.RESEND_API_KEY || '',
     emailFrom: env.EMAIL_FROM || '',
     trustProxy: Number.isInteger(trustProxy) && trustProxy >= 0 ? trustProxy : 1,
+    files: {
+      storage: filesStorage,
+      r2: {
+        accessKeyId: env.FILES_R2_ACCESS_KEY_ID || '',
+        secretAccessKey: env.FILES_R2_SECRET_ACCESS_KEY || '',
+        bucket: env.FILES_R2_BUCKET || '',
+        endpoint: env.FILES_R2_ENDPOINT || '',
+      },
+    },
   };
 }
 

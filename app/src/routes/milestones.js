@@ -4,6 +4,8 @@ import { requireAuth } from '../auth.js';
 import { absoluteUrl } from '../config.js';
 import { emailReviewRequest } from '../email.js';
 import { parsePaymentLink, parsePaymentNote } from '../payment.js';
+import { ACCOUNT_QUOTA_BYTES, listFiles, storageKeys, usedBytes } from '../files.js';
+import { storage } from '../storage.js';
 import {
   addEvent,
   certificateData,
@@ -67,10 +69,12 @@ function reviewLink(req, milestone) {
 }
 
 async function renderMilestone(req, res, milestone, formError = null, status = 200) {
-  const [deliverables, events, approval] = await Promise.all([
+  const [deliverables, events, approval, files, used] = await Promise.all([
     listDeliverables(milestone.id),
     listEvents(milestone.id),
     latestApproval(milestone.id),
+    listFiles(milestone.id),
+    usedBytes(req.session.user.id),
   ]);
   const editedAfterApproval =
     milestone.approved_at !== null && new Date(milestone.updated_at) > new Date(milestone.approved_at);
@@ -80,6 +84,9 @@ async function renderMilestone(req, res, milestone, formError = null, status = 2
     deliverables,
     events,
     approval,
+    files,
+    filesEnabled: storage.enabled,
+    quota: { used, total: ACCOUNT_QUOTA_BYTES },
     editedAfterApproval,
     locked: isLocked(milestone),
     expired: isExpired(milestone),
@@ -187,7 +194,9 @@ router.post('/milestones/:id/delete', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
 
+  const keys = await storageKeys('SELECT storage_key FROM files WHERE milestone_id = $1', [milestone.id]);
   await query('DELETE FROM milestones WHERE id = $1', [milestone.id]);
+  await storage.removeQuietly(keys);
   res.redirect(`/projects/${milestone.project_id}`);
 });
 

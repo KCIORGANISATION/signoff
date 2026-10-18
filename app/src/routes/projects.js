@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { query, queryOne } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CURRENCIES, findProjectForUser } from '../models.js';
+import { storageKeys } from '../files.js';
+import { storage } from '../storage.js';
 
 const router = Router();
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -111,7 +113,12 @@ router.post('/projects/:id/delete', requireAuth, async (req, res) => {
   const project = await findProjectForUser(req.session.user.id, req.params.id);
   if (!project) return res.status(404).render('error', { message: req.t('error.notFound') });
 
+  const keys = await storageKeys(
+    'SELECT f.storage_key FROM files f JOIN milestones m ON m.id = f.milestone_id WHERE m.project_id = $1',
+    [project.id],
+  );
   await query('DELETE FROM projects WHERE id = $1', [project.id]);
+  await storage.removeQuietly(keys);
   res.redirect('/dashboard');
 });
 

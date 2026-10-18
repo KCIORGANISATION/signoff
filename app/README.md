@@ -23,7 +23,7 @@ Pour repartir de zéro, arrête le serveur et supprime le dossier `app/data/`.
 
 1. Le dev crée un **projet** (nom, client, email du client, devise).
 2. Il ajoute des **jalons** (titre, description, montant facultatif, lien et instructions de paiement facultatifs).
-3. Il attache des **livrables** : liens (staging, Figma…) et notes texte.
+3. Il attache des **livrables** : liens (staging, Figma…), notes texte et **fichiers** (captures, PDF, maquettes).
 4. Il clique sur « Envoyer au client » : Signoff envoie le **lien client** par email au client, et l'affiche aussi pour que le dev puisse le copier.
 5. Le client ouvre le lien, sans compte : il voit les livrables et clique sur **J'approuve** ou **Laisser un feedback**.
 6. Feedback : le dev corrige et clique sur « Renvoyer » : le client reçoit à nouveau le même lien.
@@ -41,6 +41,32 @@ Le verrouillage est appliqué deux fois : par l'app (une requête directe sur un
 - tout ajout, modification ou suppression de livrable sur un jalon approuvé.
 
 Statuts d'un jalon : brouillon, envoyé, vu, feedback, approuvé.
+
+## Fichiers
+
+Le dev peut joindre des fichiers à un jalon : glisser-déposer ou bouton « Choisir des fichiers », plusieurs à la fois, avec une barre de progression. Le client voit les images en miniature (clic pour agrandir) et peut télécharger les PDF et les textes.
+
+- **Types acceptés** : PNG, JPG, WebP, GIF, PDF et texte brut (`.txt`, `.md`, `.csv`, `.log`). Le type est reconnu d'après le **contenu réel** du fichier (ses premiers octets), jamais d'après son nom ni le type envoyé par le navigateur. Le SVG, le HTML, les exécutables et les archives sont refusés. Le nom d'affichage est nettoyé et son extension corrigée pour correspondre au contenu.
+- **Limites** : 10 Mo par fichier, 10 fichiers par jalon, 200 Mo par compte pendant la bêta, 30 envois par 15 minutes et par IP.
+- **Accès** : aucun fichier n'est public. L'app les sert elle-même, uniquement au dev propriétaire du jalon ou à quelqu'un qui a le lien client valide de CE jalon. Les images s'ouvrent dans la page ; les PDF et les textes se téléchargent. Chaque réponse porte `X-Content-Type-Options: nosniff` et une CSP qui interdit tout script.
+- **Stockage** : chaque fichier est rangé sous une clé aléatoire. Le nom d'origine (nettoyé) ne sert qu'à l'affichage.
+- **Preuve** : Signoff calcule l'empreinte SHA-256 de chaque fichier à l'envoi. Le certificat liste les fichiers présents au moment de l'approbation, avec leur nom et leur empreinte. Une fois le jalon approuvé, ses fichiers sont figés : impossible de les supprimer ou d'en ajouter, ni dans l'interface, ni par une requête directe, ni dans la base (trigger).
+- **Suppression** : supprimer un jalon ou un projet supprime aussi ses fichiers du stockage. L'app n'a pas encore de suppression de compte : quand elle existera, elle devra faire de même.
+
+### Où vont les fichiers
+
+- **En production** : dans un bucket Cloudflare R2 privé, distinct de celui des sauvegardes (jamais sur le disque de Render, qui est effacé à chaque déploiement).
+- **Sans les variables `FILES_R2_*` en production** : l'app démarre normalement, la zone d'envoi est remplacée par un message (« L'envoi de fichiers n'est pas encore disponible sur ce serveur »), et un avertissement apparaît dans les logs.
+- **En local sans ces variables** : dans le dossier `app/uploads/`, ignoré par git. Pour le développement uniquement.
+
+### Mise en place du bucket (une seule fois)
+
+1. Cloudflare > **R2 Object Storage** > **Create bucket**. Nom : `signoff-files`. Dans *Location*, choisis **Specify jurisdiction** > **European Union (EU)**. Laisse l'accès public désactivé. Crée.
+2. R2 > **Manage R2 API Tokens** (ou *API Tokens*) > **Create API token**. Nom : `signoff-files-app`. Permissions : **Object Read & Write**. *Specify bucket(s)* : uniquement `signoff-files`. Crée, puis copie l'**Access Key ID**, la **Secret Access Key** et l'endpoint **pour la juridiction UE** (`https://<account-id>.eu.r2.cloudflarestorage.com`). La clé secrète ne s'affiche qu'une fois.
+3. Render > le service web > **Environment** : ajoute `FILES_R2_ACCESS_KEY_ID`, `FILES_R2_SECRET_ACCESS_KEY`, `FILES_R2_BUCKET` (`signoff-files`) et `FILES_R2_ENDPOINT`. Enregistre : Render redéploie.
+4. Vérifie : dans les logs du déploiement, l'avertissement « FILES_R2_* variables are not set » ne doit plus apparaître. Envoie un fichier sur un jalon de test : il doit apparaître dans le bucket sous `files/…`.
+
+**Attention** : ce bucket n'est **pas** couvert par la sauvegarde nocturne, qui ne copie que la base de données. Une sauvegarde des fichiers reste à faire.
 
 ## Lien de paiement
 
@@ -68,6 +94,8 @@ app/
     i18n.js          textes en anglais et en français
     format.js        affichage des montants et des dates
     payment.js       vérification du lien et des instructions de paiement
+    files.js         fichiers joints : type réel, nom, limites, envoi au navigateur
+    storage.js       stockage des fichiers (R2, dossier local en développement, ou désactivé)
     email.js         emails via Resend (ou affichés dans le terminal)
     auth.js          protège les pages du dev
     routes/
@@ -76,6 +104,7 @@ app/
       legal.js       mentions légales, confidentialité, conditions
       projects.js    tableau de bord et projets
       milestones.js  jalons, livrables, lien client, certificat côté dev
+      files.js       envoi, suppression et téléchargement des fichiers côté dev
       review.js      pages client : validation, feedback, certificat
     views/           templates EJS
   public/            style.css et app.js (copier le lien, confirmations, impression)
@@ -85,9 +114,10 @@ app/
 
 ## Base de données
 
-Six tables : `users`, `projects`, `milestones`, `deliverables`, `review_events`, `password_resets`.
+Sept tables : `users`, `projects`, `milestones`, `deliverables`, `files`, `review_events`, `password_resets`.
 
 - `milestones.payment_link` et `milestones.payment_note` contiennent le lien et les instructions de paiement (vides par défaut).
+- `files` décrit chaque fichier joint (nom nettoyé, type, taille, empreinte SHA-256, clé de stockage aléatoire). Le contenu est dans R2, pas dans la base.
 - Chaque jalon a un `token` aléatoire de 32 caractères : c'est lui qui forme le lien client `/r/<token>`.
 - `review_events` est le journal des actions (envoyé, vu, feedback, approuvé). L'app n'y fait que des ajouts, jamais de modification. Une approbation y stocke l'IP, le navigateur et un `snapshot` JSON des livrables.
 
@@ -114,7 +144,7 @@ Tant que `RESEND_API_KEY` est vide, l'email s'affiche simplement dans le termina
 
 ## Variables d'environnement
 
-Le lien de paiement n'ajoute aucune variable. Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `LANDING_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`.
+Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `LANDING_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
 
 En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SESSION_SECRET`, `APP_URL`, `DATABASE_URL` ou `INVITE_CODE`, et affiche la liste de ce qui manque.
 
@@ -128,7 +158,7 @@ En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SE
 npm test
 ```
 
-Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi le verrouillage des jalons approuvés (édition refusée côté serveur et par la base, certificat inchangé après une tentative, paiement toujours modifiable, jalon de suite), le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
+Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi les fichiers (type refusé selon le contenu réel, taille, nombre, quota, CSRF, accès refusé à un autre dev et à un mauvais lien client, en-têtes, fichiers figés après approbation, empreintes dans le certificat, suppression du stockage, app sans stockage configuré), le verrouillage des jalons approuvés (édition refusée côté serveur et par la base, certificat inchangé après une tentative, paiement toujours modifiable, jalon de suite), le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales et les en-têtes de sécurité.
 
 Pour les lancer contre un vrai Postgres jetable : `TEST_DATABASE_URL=postgres://… npm test`.
 
@@ -184,6 +214,7 @@ En cas de vrai sinistre, la même commande peut restaurer dans une nouvelle base
 
 ## Pas encore dans cette version
 
-- Fichiers et captures comme livrables : prévu en v1.1.
+- Sauvegarde du bucket de fichiers.
+- Suppression de compte (elle devra aussi supprimer les fichiers du stockage).
 - Logo du dev sur la page client : plus tard.
 - Mise en ligne (comptes Render, Neon, Resend, domaine) : à faire de ton côté.

@@ -130,6 +130,38 @@
     <% } %>
   </section>
 
+  <section class="card" id="files">
+    <div class="card-header">
+      <h2><%= t('files.title') %></h2>
+      <% if (filesEnabled) { %><span class="meta"><%= t('files.quota', { used: fmt.bytes(quota.used), total: fmt.bytes(quota.total) }) %></span><% } %>
+    </div>
+    <% if (files.length > 0) { %>
+      <%- include('../partials/files', { files, baseUrl: `/milestones/${milestone.id}/files`, removable: !locked, milestoneId: milestone.id }) %>
+    <% } else if (locked || !filesEnabled) { %>
+      <p class="empty"><%= t('files.none') %></p>
+    <% } %>
+
+    <% if (locked) { %>
+      <% if (files.length > 0) { %><p class="hint" style="margin-top: 12px;"><%= t('files.frozen') %></p><% } %>
+    <% } else if (!filesEnabled) { %>
+      <div class="alert alert-info" role="status" style="margin: 12px 0 0;"><%= t('files.disabled') %></div>
+    <% } else { %>
+      <form class="dropzone" method="post" action="/milestones/<%= milestone.id %>/files" enctype="multipart/form-data" data-upload
+            data-error-generic="<%= t('files.error.upload') %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <p class="dropzone-title"><%= t('files.drop') %></p>
+        <p class="hint"><%= t('files.rules') %></p>
+        <label class="btn btn-ghost btn-small dropzone-button">
+          <%= t('files.choose') %>
+          <input class="sr-only" type="file" name="files" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,.txt,.md,.csv">
+        </label>
+        <noscript><button class="btn btn-small" type="submit"><%= t('files.upload') %></button></noscript>
+        <progress max="100" value="0" hidden aria-label="<%= t('files.progress') %>"></progress>
+        <p class="upload-error alert alert-error" role="alert" hidden></p>
+      </form>
+    <% } %>
+  </section>
+
   <section class="card">
     <div class="card-header"><h2><%= t('milestone.history') %></h2></div>
     <% if (events.length === 0) { %>

@@ -13,6 +13,8 @@ import {
   listDeliverables,
 } from '../models.js';
 import { paymentDomain } from '../payment.js';
+import { findFile, listFiles, sendFile } from '../files.js';
+import { storage } from '../storage.js';
 
 // Client-facing pages. No account: the secret token in the URL is the access.
 const router = Router();
@@ -65,8 +67,8 @@ router.get('/r/:token', async (req, res) => {
     milestone.status = 'viewed';
   }
 
-  const deliverables = await listDeliverables(milestone.id);
-  res.render('review/show', { milestone, deliverables, error: null });
+  const [deliverables, files] = await Promise.all([listDeliverables(milestone.id), listFiles(milestone.id)]);
+  res.render('review/show', { milestone, deliverables, files, error: null });
 });
 
 router.post('/r/:token/approve', async (req, res) => {
@@ -87,11 +89,11 @@ router.post('/r/:token/approve', async (req, res) => {
   if (updated.length === 0) return res.redirect(`/r/${req.params.token}`);
 
   const approved = await findMilestoneByToken(req.params.token);
-  const deliverables = await listDeliverables(milestone.id);
+  const [deliverables, files] = await Promise.all([listDeliverables(milestone.id), listFiles(milestone.id)]);
   await addEvent(milestone.id, 'approved', {
     ...clientDetails(req),
     clientName: approved.client_name,
-    snapshot: buildSnapshot(approved, deliverables),
+    snapshot: buildSnapshot(approved, deliverables, files),
   });
 
   await emailApproved(developerEmail(req, milestone));
@@ -106,8 +108,8 @@ router.post('/r/:token/feedback', async (req, res) => {
 
   const message = (req.body.message ?? '').trim();
   if (!message) {
-    const deliverables = await listDeliverables(milestone.id);
-    return res.status(400).render('review/show', { milestone, deliverables, error: req.t('review.feedback.error') });
+    const [deliverables, files] = await Promise.all([listDeliverables(milestone.id), listFiles(milestone.id)]);
+    return res.status(400).render('review/show', { milestone, deliverables, files, error: req.t('review.feedback.error') });
   }
 
   const updated = await query(
@@ -123,6 +125,16 @@ router.post('/r/:token/feedback', async (req, res) => {
   await emailFeedback({ ...developerEmail(req, milestone), message });
 
   res.redirect(`/r/${req.params.token}`);
+});
+
+// A file of this milestone, for whoever holds its valid client link.
+router.get('/r/:token/files/:fileId', async (req, res) => {
+  const milestone = await loadMilestone(req, res);
+  if (!milestone) return;
+  const file = await findFile(milestone.id, req.params.fileId);
+  if (!file) return res.status(404).render('error', { message: req.t('error.notFound') });
+  if (!storage.enabled) return res.status(503).render('error', { message: req.t('files.unavailable') });
+  await sendFile(res, file);
 });
 
 router.get('/r/:token/certificate', async (req, res) => {

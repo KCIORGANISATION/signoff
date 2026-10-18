@@ -132,3 +132,22 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE TRIGGER deliverables_locked
   BEFORE INSERT OR UPDATE OR DELETE ON deliverables
   FOR EACH ROW EXECUTE FUNCTION signoff_deliverables_locked();
+
+-- Files attached to a milestone. The content lives in storage (Cloudflare R2, or a local
+-- folder in development) under a random key; only the cleaned name is kept for display.
+CREATE TABLE IF NOT EXISTS files (
+  id           SERIAL PRIMARY KEY,
+  milestone_id INTEGER NOT NULL REFERENCES milestones(id) ON DELETE CASCADE,
+  storage_key  TEXT NOT NULL UNIQUE,
+  name         TEXT NOT NULL,
+  mime         TEXT NOT NULL,
+  size         BIGINT NOT NULL,
+  sha256       TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS files_milestone_idx ON files(milestone_id);
+
+-- Files of an approved milestone are frozen, like its deliverables.
+CREATE OR REPLACE TRIGGER files_locked
+  BEFORE INSERT OR UPDATE OR DELETE ON files
+  FOR EACH ROW EXECUTE FUNCTION signoff_deliverables_locked();

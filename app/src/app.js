@@ -14,6 +14,7 @@ import legalRoutes from './routes/legal.js';
 import projectRoutes from './routes/projects.js';
 import milestoneRoutes from './routes/milestones.js';
 import reviewRoutes from './routes/review.js';
+import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const modules = path.join(here, '..', 'node_modules');
@@ -76,6 +77,8 @@ export function createApp() {
     next();
   });
 
+  // File uploads are multipart: their form, including the CSRF token, is read here first.
+  app.post(UPLOAD_PATH, uploadParser);
   app.use(csrfProtection);
 
   app.get('/lang/:code', async (req, res) => {
@@ -93,6 +96,7 @@ export function createApp() {
   app.use(passwordRoutes);
   app.use(legalRoutes);
   app.use(projectRoutes);
+  app.use(fileRoutes);
   app.use(milestoneRoutes);
   app.use(reviewRoutes);
 

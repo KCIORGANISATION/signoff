@@ -8,20 +8,29 @@ process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? '';
 process.env.RESEND_API_KEY = '';
 process.env.TRUST_PROXY = '1';
 
+const fs = await import('node:fs');
+const os = await import('node:os');
+const path = await import('node:path');
 const { migrate, close } = await import('../src/db.js');
+const { useStorage } = await import('../src/storage.js');
 const { createApp } = await import('../src/app.js');
 export const { testOutbox } = await import('../src/email.js');
 
-export async function startServer() {
+// Uploaded files go to a temporary folder, or nowhere with { files: 'disabled' }.
+export async function startServer({ files = 'disk' } = {}) {
+  const uploadDir = fs.mkdtempSync(path.join(os.tmpdir(), 'signoff-test-'));
+  useStorage(files, { dir: uploadDir });
   await migrate();
   const server = createApp().listen(0);
   await new Promise((resolve) => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   return {
     base,
+    uploadDir,
     async stop() {
       await new Promise((resolve) => server.close(resolve));
       await close();
+      fs.rmSync(uploadDir, { recursive: true, force: true });
     },
   };
 }
@@ -52,6 +61,24 @@ export class Browser {
     const token = text.match(/name="_csrf" value="([^"]+)"/);
     if (token) this.csrf = token[1];
     return { status: response.status, location: response.headers.get('location'), headers: response.headers, text };
+  }
+
+  // Sends files the way the drop zone does: multipart, with the CSRF token as a form field.
+  async upload(path, files, { json = true, csrf = this.csrf ?? '' } = {}) {
+    const form = new FormData();
+    form.append('_csrf', csrf);
+    for (const file of files) form.append('files', new Blob([file.content], { type: file.type ?? 'application/octet-stream' }), file.name);
+    const headers = { ...this.headers, cookie: [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ') };
+    if (json) headers.accept = 'application/json';
+    const response = await fetch(this.base + path, { method: 'POST', headers, body: form, redirect: 'manual' });
+    const text = await response.text();
+    return { status: response.status, location: response.headers.get('location'), headers: response.headers, text };
+  }
+
+  async download(path) {
+    const headers = { ...this.headers, cookie: [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ') };
+    const response = await fetch(this.base + path, { headers, redirect: 'manual' });
+    return { status: response.status, headers: response.headers, body: Buffer.from(await response.arrayBuffer()) };
   }
 
   get(path) {
