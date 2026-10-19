@@ -1,0 +1,113 @@
+<%- include('partials/head', { title: t('nav.stats') }) %>
+<%
+  const projectTones = { active: 'sent', completed: 'approved', abandoned: 'draft' };
+  const dash = '–';
+  const s = stats;
+%>
+<div class="page-title reveal">
+  <div>
+    <h1><%= t('nav.stats') %></h1>
+    <p><%= t('stats.intro') %></p>
+  </div>
+</div>
+
+<nav class="filter-pills reveal" aria-label="<%= t('stats.period') %>">
+  <% periods.forEach((p) => { %>
+    <a href="/stats?period=<%= p %>" <%- period === p ? 'aria-current="page"' : '' %>><%= t(`stats.period.${p}`) %></a>
+  <% }) %>
+</nav>
+
+<% if (s.empty) { %>
+  <section class="glass panel panel-roomy reveal" style="--i: 1;">
+    <div class="empty-state">
+      <span class="empty-icon"><%- include('partials/icon', { name: 'chart', cls: 'icon-lg' }) %></span>
+      <h2><%= t('stats.empty.title') %></h2>
+      <p><%= t('stats.empty') %></p>
+      <a class="btn btn-light btn-large" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('onboard.step.project.action') %></a>
+    </div>
+  </section>
+<% } else { %>
+<div class="stack-lg">
+  <section class="glass panel panel-roomy reveal" style="--i: 1;" aria-labelledby="stats-projects">
+    <h2 id="stats-projects"><%= t('stats.projects') %></h2>
+    <p class="hint"><%= t('stats.projects.scope') %></p>
+    <% if (s.projects.total === 0) { %>
+      <p class="chart-empty"><%= t('stats.projects.none') %></p>
+    <% } else { %>
+      <dl class="tiles">
+        <% ['active', 'completed', 'abandoned'].forEach((st) => { %>
+          <div class="tile"><dt><%= t(`projectStatus.${st}`) %></dt><dd><%= s.projects.byStatus[st] %></dd></div>
+        <% }) %>
+        <div class="tile"><dt><%= t('stats.abandonRate') %></dt><dd><%= fmt.percent(s.projects.abandonRate) %></dd></div>
+      </dl>
+      <%- include('partials/bar-chart', { title: t('home.chart.projects'), rows: ['active', 'completed', 'abandoned'].map((st) => ({ label: t(`projectStatus.${st}`), value: s.projects.byStatus[st], tone: projectTones[st] })), header: [t('chart.state'), t('chart.count')] }) %>
+      <% if (s.projects.byStatus.abandoned > 0) { %>
+        <h3 class="panel-title-sm"><%= t('stats.reasons') %></h3>
+        <%- include('partials/bar-chart', { title: t('stats.reasons'), rows: Object.entries(s.projects.reasons).map(([r, n]) => ({ label: t(`project.reason.${r}`), value: n, tone: 'draft' })), header: [t('stats.reason'), t('chart.count')] }) %>
+      <% } %>
+    <% } %>
+  </section>
+
+  <section class="glass panel panel-roomy reveal" style="--i: 2;" aria-labelledby="stats-milestones">
+    <h2 id="stats-milestones"><%= t('stats.milestones') %></h2>
+    <p class="hint"><%= t('stats.milestones.scope') %></p>
+    <dl class="tiles">
+      <div class="tile"><dt><%= t('stats.milestones.total') %></dt><dd><%= s.milestones.total %></dd></div>
+      <div class="tile"><dt><%= t('stats.milestones.approved') %></dt><dd><%= s.milestones.approved %></dd></div>
+      <div class="tile"><dt><%= t('stats.milestones.waiting') %></dt><dd><%= s.milestones.waiting %></dd></div>
+      <div class="tile"><dt><%= t('stats.milestones.feedback') %></dt><dd><%= s.milestones.feedback %></dd></div>
+      <div class="tile"><dt><%= t('stats.progress') %></dt><dd><%= s.milestones.averageProgress === null ? dash : fmt.percent(s.milestones.averageProgress) %></dd><p class="tile-note"><%= t('stats.progress.note') %></p></div>
+    </dl>
+  </section>
+
+  <section class="glass panel panel-roomy reveal" style="--i: 3;" aria-labelledby="stats-amounts">
+    <h2 id="stats-amounts"><%= t('stats.amounts') %></h2>
+    <p class="hint"><%= t('stats.amounts.note') %></p>
+    <% if (s.amounts.length === 0) { %>
+      <p class="chart-empty"><%= t('stats.amounts.none') %></p>
+    <% } else { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only"><%= t('stats.amounts') %></caption>
+          <thead><tr><th scope="col"><%= t('stats.currency') %></th><th scope="col"><%= t('stats.amounts.approved') %></th><th scope="col"><%= t('stats.amounts.pending') %></th><th scope="col"><%= t('stats.amounts.cancelled') %></th></tr></thead>
+          <tbody>
+            <% s.amounts.forEach((row) => { %>
+              <tr><th scope="row"><%= row.currency %></th><td><%= fmt.cents(row.approved, row.currency) %></td><td><%= fmt.cents(row.pending, row.currency) %></td><td><%= fmt.cents(row.cancelled, row.currency) %></td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% if (s.amounts.length > 1) { %><p class="hint"><%= t('home.chart.amounts.currencies') %></p><% } %>
+    <% } %>
+  </section>
+
+  <section class="glass panel panel-roomy reveal" style="--i: 4;" aria-labelledby="stats-speed">
+    <h2 id="stats-speed"><%= t('stats.speed') %></h2>
+    <p class="hint"><%= t('stats.speed.scope', { count: s.speed.approvedCount }) %></p>
+    <dl class="tiles">
+      <div class="tile"><dt><%= t('stats.speed.approval') %></dt><dd><%= s.speed.approvalMs === null ? dash : fmt.duration(s.speed.approvalMs) %></dd><p class="tile-note"><%= t('stats.speed.approval.note') %></p></div>
+      <div class="tile"><dt><%= t('stats.speed.rounds') %></dt><dd><%= s.speed.feedbackRounds === null ? dash : fmt.decimal(s.speed.feedbackRounds) %></dd><p class="tile-note"><%= t('stats.speed.rounds.note') %></p></div>
+    </dl>
+  </section>
+
+  <section class="glass panel panel-roomy reveal" style="--i: 5;" aria-labelledby="stats-clients">
+    <h2 id="stats-clients"><%= t('stats.clients') %></h2>
+    <% if (s.clients.length === 0) { %>
+      <p class="chart-empty"><%= t('stats.clients.none') %></p>
+    <% } else { %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only"><%= t('stats.clients') %></caption>
+          <thead><tr><th scope="col"><%= t('stats.client') %></th><th scope="col"><%= t('stats.clients.projects') %></th><th scope="col"><%= t('stats.clients.response') %></th><th scope="col"><%= t('stats.clients.feedback') %></th></tr></thead>
+          <tbody>
+            <% s.clients.forEach((c) => { %>
+              <tr><th scope="row"><%= c.name %><span class="row-meta"><%= c.email %></span></th><td><%= c.projects %></td><td><%= c.responseMs === null ? dash : fmt.duration(c.responseMs) %></td><td><%= c.feedback %></td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+</div>
+<% } %>
+<%- include('partials/foot') %>

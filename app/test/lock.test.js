@@ -18,7 +18,7 @@ function certificateBody(page) {
 async function approvedMilestone(email) {
   const dev = new Browser(server.base);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'Lock Studio', email, password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Lock Studio', email, password: 'correct horse battery' });
   await dev.get('/projects/new');
   const project = await dev.post('/projects', { name: 'Brand', client_name: 'Acme', client_email: 'acme@example.com', currency: 'EUR' });
   const projectPath = project.location;

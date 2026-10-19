@@ -13,10 +13,20 @@
           <p class="hint" id="invite_code-hint" style="margin-top: 2px;"><%= t('auth.invite.hint') %></p>
         </div>
       <% } %>
+      <div class="fields-row" style="margin-top: 16px;">
+        <div class="field">
+          <label for="first_name"><%= t('profile.firstName') %></label>
+          <input id="first_name" name="first_name" type="text" autocomplete="given-name" required maxlength="80" value="<%= values.first_name ?? '' %>">
+        </div>
+        <div class="field">
+          <label for="last_name"><%= t('profile.lastName') %></label>
+          <input id="last_name" name="last_name" type="text" autocomplete="family-name" required maxlength="80" value="<%= values.last_name ?? '' %>">
+        </div>
+      </div>
       <div class="field">
-        <label for="name"><%= t('auth.name') %></label>
-        <input id="name" name="name" type="text" autocomplete="organization" required value="<%= values.name ?? '' %>" aria-describedby="name-hint">
-        <p class="hint" id="name-hint" style="margin-top: 2px;"><%= t('auth.name.hint') %></p>
+        <label for="name"><%= t('profile.business') %></label>
+        <input id="name" name="name" type="text" autocomplete="organization" maxlength="120" value="<%= values.name ?? '' %>" aria-describedby="name-hint">
+        <p class="hint" id="name-hint" style="margin-top: 2px;"><%= t('profile.business.hint') %></p>
       </div>
       <div class="field">
         <label for="email"><%= t('auth.email') %></label>

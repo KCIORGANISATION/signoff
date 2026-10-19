@@ -15,7 +15,7 @@ after(() => server.stop());
 async function signUp(email) {
   const dev = new Browser(server.base);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'Payment Studio', email, password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Payment Studio', email, password: 'correct horse battery' });
   await dev.get('/projects/new');
   const project = await dev.post('/projects', { name: 'Shop', client_name: 'Acme', client_email: 'acme@example.com', currency: 'EUR' });
   return { dev, projectPath: project.location };

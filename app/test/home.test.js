@@ -50,7 +50,7 @@ test('the home page is in French by default, and follows the language the visito
 test('a logged-in developer going to / lands on their dashboard', async () => {
   const dev = new Browser(server.base);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'Home Studio', email: 'home@example.com', password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Home Studio', email: 'home@example.com', password: 'correct horse battery' });
   const home = await dev.get('/');
   assert.equal(home.status, 302);
   assert.equal(home.location, '/dashboard');
@@ -76,7 +76,7 @@ test('/acces explains the invitation-only beta, collects nothing, and shows the 
 test('"Powered by Signoff" on client pages points to the app home page', async () => {
   const dev = new Browser(server.base);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'Powered Studio', email: 'powered@example.com', password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Powered Studio', email: 'powered@example.com', password: 'correct horse battery' });
   await dev.get('/projects/new');
   const project = await dev.post('/projects', { name: 'Site', client_name: 'Acme', client_email: 'powered-client@example.com', currency: 'EUR' });
   await dev.get(`${project.location}/milestones/new`);

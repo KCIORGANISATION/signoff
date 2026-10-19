@@ -13,7 +13,7 @@ test('without file storage the app works and the upload zone is replaced by a me
   const dev = new Browser(server.base);
   assert.equal((await dev.get('/health')).status, 200);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'No Files', email: 'nofiles@example.com', password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'No Files', email: 'nofiles@example.com', password: 'correct horse battery' });
   await dev.get('/projects/new');
   const project = await dev.post('/projects', { name: 'Site', client_name: 'Acme', client_email: 'acme@example.com', currency: 'EUR' });
   await dev.get(`${project.location}/milestones/new`);

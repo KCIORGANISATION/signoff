@@ -1,0 +1,27 @@
+<%# The two optional questions: activity and what the developer mostly delivers. %>
+<fieldset class="choices">
+  <legend><%= t('profile.activity') %></legend>
+  <div class="choice-grid">
+    <% activities.forEach((a) => { %>
+      <label class="choice">
+        <input type="radio" name="activity" value="<%= a %>" <%= values.activity === a ? 'checked' : '' %>>
+        <span><%= t(`activity.${a}`) %></span>
+      </label>
+    <% }) %>
+  </div>
+  <div class="field" data-show-when="activity=other">
+    <label for="activity_other"><%= t('profile.activityOther') %></label>
+    <input id="activity_other" name="activity_other" type="text" maxlength="60" placeholder="<%= t('profile.activityOther.placeholder') %>" value="<%= values.activity_other ?? '' %>">
+  </div>
+</fieldset>
+<fieldset class="choices">
+  <legend><%= t('profile.delivers') %></legend>
+  <div class="choice-grid">
+    <% deliveries.forEach((d) => { %>
+      <label class="choice">
+        <input type="radio" name="delivers" value="<%= d %>" <%= values.delivers === d ? 'checked' : '' %>>
+        <span><%= t(`delivers.${d}`) %></span>
+      </label>
+    <% }) %>
+  </div>
+</fieldset>

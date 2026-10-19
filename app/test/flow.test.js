@@ -13,13 +13,13 @@ test('full flow: sign up, project, milestone, client link, approval, timestamped
 
   await dev.get('/signup');
   const signup = await dev.post('/signup', {
-    invite_code: 'beta-2026',
+    invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin',
     name: 'Studio Test',
     email: 'dev@example.com',
     password: 'correct horse battery',
   });
   assert.equal(signup.status, 302);
-  assert.equal(signup.location, '/dashboard');
+  assert.equal(signup.location, '/welcome');
 
   await dev.get('/projects/new');
   const project = await dev.post('/projects', {
@@ -97,7 +97,7 @@ test('sign-up needs the invitation code', async () => {
   const visitor = new Browser(server.base);
   await visitor.get('/signup');
   const response = await visitor.post('/signup', {
-    invite_code: 'wrong',
+    invite_code: 'wrong', first_name: 'Camille', last_name: 'Martin',
     name: 'Someone',
     email: 'someone@example.com',
     password: 'long enough password',
@@ -117,7 +117,7 @@ test('password reset: emailed link, new password, link used once', async () => {
   const visitor = new Browser(server.base);
   await visitor.get('/signup');
   await visitor.post('/signup', {
-    invite_code: 'beta-2026',
+    invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin',
     name: 'Forgetful',
     email: 'forgetful@example.com',
     password: 'first password',

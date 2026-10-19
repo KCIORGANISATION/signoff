@@ -18,6 +18,8 @@ import milestoneRoutes from './routes/milestones.js';
 import reviewRoutes from './routes/review.js';
 import homeRoutes from './routes/home.js';
 import dashboardRoutes from './routes/dashboard.js';
+import profileRoutes, { requireNames } from './routes/profile.js';
+import statsRoutes from './routes/stats.js';
 import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -119,11 +121,14 @@ export function createApp() {
     res.redirect(back ? req.query.back : '/');
   });
 
+  app.use(requireNames);
   app.use(homeRoutes);
   app.use(authRoutes);
   app.use(passwordRoutes);
   app.use(legalRoutes);
   app.use(dashboardRoutes);
+  app.use(profileRoutes);
+  app.use(statsRoutes);
   app.use(projectRoutes);
   app.use(fileRoutes);
   app.use(milestoneRoutes);

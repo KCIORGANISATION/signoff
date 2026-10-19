@@ -201,3 +201,14 @@ CREATE TABLE IF NOT EXISTS project_notes (
   body       TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- First and last name of the developer, for the greeting. Accounts created before this
+-- change have none: the app asks for them on the next visit.
+-- activity: web_dev, video, design, illustration, writing, photography, other (with activity_other)
+-- delivers: files, links, both. Both answers are optional (the sign-up questionnaire can be skipped).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS activity TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS activity_other TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS delivers TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS questionnaire_at TIMESTAMPTZ;
