@@ -1,0 +1,32 @@
+<%- include('../partials/head', { title: t('profile.title') }) %>
+<div class="page-medium" style="margin: 0 auto;">
+  <section class="glass panel panel-roomy reveal" aria-labelledby="profile-title">
+    <h1 id="profile-title" class="form-title"><%= t('profile.title') %></h1>
+    <% if (saved) { %><%- include('../partials/alert', { kind: 'success', text: t('profile.saved') }) %><% } %>
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <form method="post" action="/profile" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="fields-row">
+        <div class="field">
+          <label for="first_name"><%= t('profile.firstName') %></label>
+          <input id="first_name" name="first_name" type="text" autocomplete="given-name" required maxlength="80" value="<%= values.first_name ?? '' %>">
+        </div>
+        <div class="field">
+          <label for="last_name"><%= t('profile.lastName') %></label>
+          <input id="last_name" name="last_name" type="text" autocomplete="family-name" required maxlength="80" value="<%= values.last_name ?? '' %>">
+        </div>
+      </div>
+      <div class="field">
+        <label for="name"><%= t('profile.business') %></label>
+        <input id="name" name="name" type="text" autocomplete="organization" maxlength="120" value="<%= values.name ?? '' %>" aria-describedby="name-hint">
+        <p class="hint" id="name-hint"><%= t('profile.business.hint') %></p>
+      </div>
+      <%- include('../partials/questionnaire', { activities, deliveries, values }) %>
+      <div class="form-actions">
+        <button class="btn btn-light btn-large" type="submit" data-loading><%= t('profile.save') %></button>
+        <a class="btn btn-large" href="/dashboard"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </section>
+</div>
+<%- include('../partials/foot') %>

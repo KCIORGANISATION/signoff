@@ -1,0 +1,31 @@
+<%- include('../partials/head', { title: t('welcomeForm.title') }) %>
+<div class="page-medium" style="margin: 0 auto;">
+  <section class="glass panel panel-roomy reveal" aria-labelledby="welcome-title">
+    <h1 id="welcome-title" class="form-title"><%= t(needNames ? 'welcomeForm.titleNames' : 'welcomeForm.title') %></h1>
+    <p class="muted"><%= t(needNames ? 'welcomeForm.leadNames' : 'welcomeForm.lead') %></p>
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <form method="post" action="/welcome" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (needNames) { %>
+        <div class="fields-row">
+          <div class="field">
+            <label for="first_name"><%= t('profile.firstName') %></label>
+            <input id="first_name" name="first_name" type="text" autocomplete="given-name" required maxlength="80" value="<%= values.first_name ?? '' %>">
+          </div>
+          <div class="field">
+            <label for="last_name"><%= t('profile.lastName') %></label>
+            <input id="last_name" name="last_name" type="text" autocomplete="family-name" required maxlength="80" value="<%= values.last_name ?? '' %>">
+          </div>
+        </div>
+        <p class="hint"><%= t('welcomeForm.optional') %></p>
+      <% } %>
+      <%- include('../partials/questionnaire', { activities, deliveries, values }) %>
+      <p class="hint"><%= t('welcomeForm.why') %></p>
+      <div class="form-actions">
+        <button class="btn btn-light btn-large" type="submit" name="intent" value="save" data-loading><%= t('welcomeForm.continue') %><%- include('../partials/icon', { name: 'arrowRight' }) %></button>
+        <button class="btn btn-large" type="submit" name="intent" value="skip" formnovalidate><%= t('welcomeForm.skip') %></button>
+      </div>
+    </form>
+  </section>
+</div>
+<%- include('../partials/foot') %>

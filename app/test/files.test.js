@@ -28,7 +28,7 @@ async function devWithMilestone(title = 'Mockups') {
   accounts += 1;
   const dev = new Browser(server.base);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'Files Studio', email: `files-${accounts}@example.com`, password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Files Studio', email: `files-${accounts}@example.com`, password: 'correct horse battery' });
   await dev.get('/projects/new');
   const project = await dev.post('/projects', { name: 'App', client_name: 'Acme', client_email: 'acme@example.com', currency: 'EUR' });
   await dev.get(`${project.location}/milestones/new`);

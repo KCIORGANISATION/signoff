@@ -3970,8 +3970,23 @@ html:not(.js) .demo-caption {
   white-space: nowrap;
 }
 
+.header-nav .account-name {
+  gap: var(--space-2);
+  color: var(--text);
+}
+
+.account-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 560px) {
-  .account-name {
+  .header-nav .account-name {
+    min-width: var(--tap);
+    justify-content: center;
+  }
+
+  .account-name span {
     display: none;
   }
 }
@@ -4090,7 +4105,7 @@ html:not(.js) .demo-caption {
 }
 
 .onboard-title {
-  font-size: 44px;
+  font-size: var(--text-3xl);
   line-height: 1.1;
 }
 
@@ -4149,7 +4164,7 @@ html:not(.js) .demo-caption {
   padding-top: 8px;
 }
 
-.check-body h2 {
+.check-body h3 {
   font-size: var(--text-lg);
 }
 
@@ -4164,7 +4179,7 @@ html:not(.js) .demo-caption {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.check-step.is-current .check-body h2 {
+.check-step.is-current .check-body h3 {
   font-size: var(--text-2xl);
 }
 
@@ -4184,7 +4199,7 @@ html:not(.js) .demo-caption {
   stroke-width: 3;
 }
 
-.check-step.is-done h2 {
+.check-step.is-done h3 {
   color: var(--text-2);
 }
 
@@ -4203,7 +4218,7 @@ html:not(.js) .demo-caption {
   }
 
   .onboard-title {
-    font-size: 32px;
+    font-size: 26px;
   }
 
   .check-step {
@@ -5004,6 +5019,275 @@ html:not(.js) .demo-caption {
   }
 }
 
+/* --- Home: greeting, overview chart --- */
+.page-title h1.hello {
+  font-size: 48px;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.hello-activity {
+  margin-top: var(--space-2);
+  color: var(--text-2);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: var(--space-2);
+}
+
+.js [data-show-when][hidden] {
+  display: none;
+}
+
+.chart-pills {
+  margin-bottom: 0;
+}
+
+.filter-pills a[aria-current='true'] {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--bg-1);
+}
+
+[data-chart-panel] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-4);
+}
+
+[data-chart-panel][hidden] {
+  display: none;
+}
+
+/* A horizontal bar chart: label, bar, value. Bars grow from the left on entry. */
+.chart {
+  position: relative;
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--glass-inner);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.chart-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 200px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 28px;
+}
+
+.chart-label {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-bar {
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.chart-track {
+  fill: rgba(255, 255, 255, 0.07);
+}
+
+.chart-fill {
+  fill: var(--st-draft);
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.chart-fill.tone-sent { fill: var(--st-sent); }
+.chart-fill.tone-viewed { fill: var(--st-viewed); }
+.chart-fill.tone-feedback { fill: var(--st-feedback); }
+.chart-fill.tone-approved { fill: var(--st-approved); }
+.chart-fill.tone-draft,
+.chart-fill.tone-not_done,
+.chart-fill.tone-cancelled { fill: var(--st-draft); opacity: 0.7; }
+.chart-fill.tone-amount { fill: var(--st-viewed); }
+
+.chart-value {
+  min-width: 2ch;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* The example shown before there is any data: greyed, and labelled as such. */
+.chart.is-example {
+  filter: grayscale(1);
+  opacity: 0.55;
+  border-style: dashed;
+  padding-top: var(--space-10);
+}
+
+.chart-example {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-4);
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chart-empty {
+  color: var(--text-body);
+  font-weight: 600;
+}
+
+/* --- Statistics tab --- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+@media (max-width: 720px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--glass-inner);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.tile dt {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.tile dd {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.tile-note {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+/* Wide tables scroll inside their own box on a phone, never the page. */
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: var(--space-4) 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border-soft);
+  vertical-align: top;
+}
+
+.data-table thead th {
+  color: var(--text-2);
+  font-weight: 700;
+  background: var(--glass-inner);
+  white-space: nowrap;
+}
+
+.data-table tbody th {
+  min-width: 160px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.data-table td {
+  color: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.data-table tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.data-table .row-meta {
+  display: block;
+  color: var(--text-3);
+  font-weight: 400;
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .page-title h1.hello {
+    font-size: 34px;
+  }
+
+  .chart {
+    padding: var(--space-3);
+  }
+
+  .chart.is-example {
+    padding-top: var(--space-10);
+  }
+
+  .chart-row {
+    grid-template-columns: minmax(70px, 34%) minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+
+  .tile dd {
+    font-size: var(--text-2xl);
+  }
+}
+
 /* ==========================================================================
    Motion
    ========================================================================== */
@@ -5063,6 +5347,11 @@ html:not(.js) .demo-caption {
 .reveal {
   animation: fade-up var(--dur-slow) var(--ease) both;
   animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+.chart-fill {
+  animation: grow var(--dur-slow) var(--ease) both;
+  animation-delay: calc(150ms + var(--i, 0) * 50ms);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -16,7 +16,7 @@ async function signUp(email, name = 'Studio Démo') {
   signups += 1;
   const dev = new Browser(server.base, { 'x-forwarded-for': `192.0.2.${signups}` });
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name, email, password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name, email, password: 'correct horse battery' });
   return dev;
 }
 

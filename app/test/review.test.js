@@ -20,7 +20,7 @@ async function devWithMilestone(fields = {}) {
   accounts += 1;
   const dev = new Browser(server.base);
   await dev.get('/signup');
-  await dev.post('/signup', { invite_code: 'beta-2026', name: 'Review Studio', email: `review-${accounts}@example.com`, password: 'correct horse battery' });
+  await dev.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Review Studio', email: `review-${accounts}@example.com`, password: 'correct horse battery' });
   await dev.get('/projects/new');
   const project = await dev.post('/projects', { name: 'Atelier', client_name: 'Acme', client_email: `client-${accounts}@example.com`, currency: 'EUR' });
   await dev.get(`${project.location}/milestones/new`);
@@ -160,7 +160,7 @@ test('"view as client" shows the client page without sending, recording or revea
 
   const stranger = new Browser(server.base);
   await stranger.get('/signup');
-  await stranger.post('/signup', { invite_code: 'beta-2026', name: 'Other', email: 'review-stranger@example.com', password: 'correct horse battery' });
+  await stranger.post('/signup', { invite_code: 'beta-2026', first_name: 'Camille', last_name: 'Martin', name: 'Other', email: 'review-stranger@example.com', password: 'correct horse battery' });
   assert.equal((await stranger.get(`${milestonePath}/preview`)).status, 404);
   assert.equal((await new Browser(server.base).get(`${milestonePath}/preview`)).status, 302, 'login required');
 });

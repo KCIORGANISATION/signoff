@@ -29,6 +29,28 @@ export function formatters(lang) {
       }
       return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(size / 1024 / 1024)} ${lang === 'fr' ? 'Mo' : 'MB'}`;
     },
+    // A month key "2026-10" as "oct. 2026" / "Oct 2026".
+    month(key) {
+      const [year, month] = key.split('-').map(Number);
+      return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, 1)));
+    },
+    // Amounts the statistics add up in cents.
+    cents(value, currency) {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value / 100);
+    },
+    percent(ratio) {
+      return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(ratio);
+    },
+    decimal(value) {
+      return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
+    },
+    // A delay: "5 h" under two days, else "3,5 jours" / "3.5 days".
+    duration(ms) {
+      const hours = ms / 3600000;
+      const number = (n) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(n);
+      if (hours < 48) return `${number(Math.max(hours, 0.1))} h`;
+      return `${number(hours / 24)} ${lang === 'fr' ? 'jours' : 'days'}`;
+    },
     // Exact timestamp for the certificate, e.g. 2026-10-18 15:09:22 UTC
     isoUtc(value) {
       if (!value) return '';

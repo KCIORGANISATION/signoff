@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { config } from '../config.js';
 import { queryOne } from '../db.js';
+import { BUSINESS_NAME_MAX_LENGTH, hasNames, readNames } from '../profile.js';
 
 const router = Router();
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,7 +30,7 @@ function validInviteCode(code) {
 }
 
 export function logIn(req, user) {
-  req.session.user = { id: user.id, name: user.name, email: user.email };
+  req.session.user = { id: user.id, name: user.name, email: user.email, named: hasNames(user) };
   req.session.lang = user.lang;
 }
 
@@ -43,26 +44,31 @@ router.get('/signup', (req, res) => {
 });
 
 router.post('/signup', limiter('auth/signup'), async (req, res) => {
-  const name = (req.body.name ?? '').trim();
+  const businessName = (req.body.name ?? '').trim().replace(/\s+/g, ' ');
+  const names = readNames(req.body);
   const email = (req.body.email ?? '').trim().toLowerCase();
   const password = req.body.password ?? '';
 
   const fail = (key) =>
-    res.status(400).render('auth/signup', { error: req.t(key), values: { name, email } });
+    res.status(400).render('auth/signup', { error: req.t(key), values: { ...names.values, name: businessName, email } });
 
   if (!validInviteCode(req.body.invite_code)) return fail('auth.error.invite');
-  if (!name || !EMAIL_PATTERN.test(email) || password.length < 8) return fail('auth.error.fields');
+  if (names.error === 'profile.error.names' || !EMAIL_PATTERN.test(email) || password.length < 8) return fail('auth.error.fields');
+  if (names.error || businessName.length > BUSINESS_NAME_MAX_LENGTH) return fail('profile.error.length');
+  // The name clients see: the business name if given, else the person's name.
+  const name = businessName || `${names.values.first_name} ${names.values.last_name}`;
 
   const existing = await queryOne('SELECT id FROM users WHERE email = $1', [email]);
   if (existing) return fail('auth.error.taken');
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await queryOne(
-    'INSERT INTO users (name, email, password_hash, lang) VALUES ($1, $2, $3, $4) RETURNING *',
-    [name, email, passwordHash, req.lang],
+    `INSERT INTO users (name, first_name, last_name, email, password_hash, lang)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [name, names.values.first_name, names.values.last_name, email, passwordHash, req.lang],
   );
   logIn(req, user);
-  res.redirect('/dashboard');
+  res.redirect('/welcome');
 });
 
 router.get('/login', (req, res) => {

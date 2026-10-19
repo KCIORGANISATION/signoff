@@ -512,3 +512,40 @@ document.querySelectorAll('form[data-steps]').forEach((form) => {
   const firstInvalid = steps.findIndex((step) => [...step.querySelectorAll('input, textarea, select')].some((field) => !field.checkValidity()));
   show(firstInvalid === -1 ? 0 : firstInvalid, firstInvalid !== -1);
 });
+
+// ---------------------------------------------------------------------------
+// Home charts: the pills switch the chart in place. Without JavaScript each pill
+// is a link that reloads the page with ?chart=.
+// ---------------------------------------------------------------------------
+document.querySelectorAll('[data-charts]').forEach((root) => {
+  const picks = [...root.querySelectorAll('[data-chart-pick]')];
+  const panels = [...root.querySelectorAll('[data-chart-panel]')];
+  picks.forEach((pick) => {
+    pick.addEventListener('click', (event) => {
+      event.preventDefault();
+      const name = pick.dataset.chartPick;
+      picks.forEach((p) => (p === pick ? p.setAttribute('aria-current', 'true') : p.removeAttribute('aria-current')));
+      panels.forEach((panel) => (panel.hidden = panel.dataset.chartPanel !== name));
+      const url = new URL(window.location.href);
+      url.searchParams.set('chart', name);
+      history.replaceState(null, '', url.pathname + url.search);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A field shown only for one answer: <div data-show-when="activity=other">.
+// Without JavaScript it is always shown.
+// ---------------------------------------------------------------------------
+document.querySelectorAll('[data-show-when]').forEach((block) => {
+  const [name, value] = block.dataset.showWhen.split('=');
+  const form = block.closest('form');
+  const update = () => {
+    block.hidden = form.querySelector(`input[name="${name}"]:checked`)?.value !== value;
+  };
+  form.querySelectorAll(`input[name="${name}"]`).forEach((input) => input.addEventListener('change', update));
+  update();
+});
+
+// On a phone the tab row scrolls sideways: keep the current tab in view.
+document.querySelector('.app-tabs [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });

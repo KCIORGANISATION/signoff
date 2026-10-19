@@ -1,9 +1,32 @@
 <%- include('partials/head', { title: t('nav.home') }) %>
+<%
+  const example = {
+    projects: { active: 3, completed: 2, abandoned: 1 },
+    milestones: { draft: 2, sent: 3, feedback: 1, approved: 6 },
+    amounts: [0, 0, 0, 0, 0, 0, 120000, 80000, 150000, 60000, 180000, 90000],
+  };
+  const projectTones = { active: 'sent', completed: 'approved', abandoned: 'draft' };
+  const projectRows = (counts) => Object.entries(counts).map(([s, n]) => ({ label: t(`projectStatus.${s}`), value: n, tone: projectTones[s] }));
+  const milestoneRows = (counts) => Object.entries(counts).map(([s, n]) => ({ label: t(`status.${s}`), value: n, tone: s }));
+  const amountRows = (months, values, currency) => months.map((key, i) => ({ label: fmt.month(key), value: values[i], display: values[i] ? fmt.cents(values[i], currency) : '–', tone: 'amount' }));
+%>
+<div class="page-title reveal">
+  <div>
+    <h1 class="hello"><%= t('dashboard.hello', { name: `${user.first_name} ${user.last_name}` }) %></h1>
+    <% if (activity) { %>
+      <p class="hello-activity"><%= activity %></p>
+    <% } else { %>
+      <p><a href="/profile"><%= t('dashboard.addActivity') %></a></p>
+    <% } %>
+  </div>
+  <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+</div>
+
+<div class="stack-lg">
 <% if (!guide.complete) { %>
   <% const current = guide.steps[guide.currentIndex]; %>
-  <section class="glass onboard reveal" aria-labelledby="onboard-title">
-    <p class="eyebrow"><%= t('dashboard.hello', { name: currentUser.name }) %></p>
-    <h1 id="onboard-title" class="onboard-title"><%= t(`onboard.title.${current.key}`) %></h1>
+  <section class="glass onboard reveal" style="--i: 1;" aria-labelledby="onboard-title">
+    <h2 id="onboard-title" class="onboard-title"><%= t(`onboard.title.${current.key}`) %></h2>
     <p class="onboard-lead"><%= t('onboard.lead') %></p>
 
     <div class="onboard-progress">
@@ -16,7 +39,7 @@
         <li class="check-step is-<%= state %>" <%- state === 'current' ? 'aria-current="step"' : '' %>>
           <span class="check-num" aria-hidden="true"><% if (step.done) { %><%- include('partials/icon', { name: 'check' }) %><% } else { %><%= i + 1 %><% } %></span>
           <div class="check-body">
-            <h2><%= t(`onboard.step.${step.key}`) %><% if (step.done) { %><span class="sr-only"> · <%= t('onboard.done') %></span><% } %></h2>
+            <h3><%= t(`onboard.step.${step.key}`) %><% if (step.done) { %><span class="sr-only"> · <%= t('onboard.done') %></span><% } %></h3>
             <% if (state === 'current') { %>
               <p><%= t(`onboard.step.${step.key}.text`) %></p>
               <% if (step.href) { %>
@@ -30,16 +53,57 @@
       <% }) %>
     </ol>
   </section>
-<% } else { %>
-  <div class="page-title reveal">
-    <div>
-      <h1><%= t('dashboard.hello', { name: currentUser.name }) %></h1>
-      <p><%= t('dashboard.intro') %></p>
-    </div>
-    <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+<% } %>
+
+<section class="glass panel panel-roomy reveal" style="--i: 2;" aria-labelledby="overview-title" data-charts>
+  <div class="panel-head">
+    <h2 id="overview-title"><%= t('home.chart.title') %></h2>
+    <nav class="filter-pills chart-pills" aria-label="<%= t('home.chart.pick') %>">
+      <% charts.forEach((c) => { %>
+        <a href="/dashboard?chart=<%= c %>#overview-title" data-chart-pick="<%= c %>" <%- chart === c ? 'aria-current="true"' : '' %>><%= t(`home.chart.${c}`) %></a>
+      <% }) %>
+    </nav>
   </div>
 
-  <section class="glass panel panel-roomy reveal" style="--i: 1;" aria-labelledby="next-title">
+  <div data-chart-panel="projects" <%= chart === 'projects' ? '' : 'hidden' %>>
+    <h3 class="panel-title-sm"><%= t('home.chart.projects') %></h3>
+    <% if (home.projects) { %>
+      <%- include('partials/bar-chart', { title: t('home.chart.projects'), rows: projectRows(home.projects), header: [t('chart.state'), t('chart.count')] }) %>
+    <% } else { %>
+      <p class="chart-empty"><%= t('home.chart.projects.empty') %></p>
+      <%- include('partials/bar-chart', { title: t('home.chart.projects'), rows: projectRows(example.projects), header: [t('chart.state'), t('chart.count')], example: true }) %>
+    <% } %>
+  </div>
+
+  <div data-chart-panel="amounts" <%= chart === 'amounts' ? '' : 'hidden' %>>
+    <% if (home.amounts) { %>
+      <% home.amounts.currencies.forEach((c) => { %>
+        <h3 class="panel-title-sm"><%= t('home.chart.amounts') %> · <%= c.currency %></h3>
+        <%- include('partials/bar-chart', { title: `${t('home.chart.amounts')} · ${c.currency}`, rows: amountRows(home.amounts.months, home.amounts.months.map((k) => c.months[k]), c.currency), header: [t('chart.month'), t('chart.amount')] }) %>
+      <% }) %>
+      <% if (home.amounts.currencies.length > 1) { %><p class="hint"><%= t('home.chart.amounts.currencies') %></p><% } %>
+    <% } else { %>
+      <h3 class="panel-title-sm"><%= t('home.chart.amounts') %></h3>
+      <p class="chart-empty"><%= t('home.chart.amounts.empty') %></p>
+      <%- include('partials/bar-chart', { title: t('home.chart.amounts'), rows: example.amounts.map((v, i) => ({ label: t('chart.monthN', { n: i + 1 }), value: v, display: v ? fmt.cents(v, 'EUR') : '–', tone: 'amount' })), header: [t('chart.month'), t('chart.amount')], example: true }) %>
+    <% } %>
+    <p class="hint"><%= t('home.chart.amounts.note') %></p>
+  </div>
+
+  <div data-chart-panel="milestones" <%= chart === 'milestones' ? '' : 'hidden' %>>
+    <h3 class="panel-title-sm"><%= t('home.chart.milestones') %></h3>
+    <% if (home.milestones) { %>
+      <%- include('partials/bar-chart', { title: t('home.chart.milestones'), rows: milestoneRows(home.milestones), header: [t('chart.status'), t('chart.count')] }) %>
+    <% } else { %>
+      <p class="chart-empty"><%= t('home.chart.milestones.empty') %></p>
+      <%- include('partials/bar-chart', { title: t('home.chart.milestones'), rows: milestoneRows(example.milestones), header: [t('chart.status'), t('chart.count')], example: true }) %>
+    <% } %>
+  </div>
+  <a class="small" href="/stats"><%= t('home.chart.more') %></a>
+</section>
+
+<% if (guide.complete) { %>
+  <section class="glass panel panel-roomy reveal" style="--i: 3;" aria-labelledby="next-title">
     <div class="panel-head">
       <h2 id="next-title"><%= t('dashboard.next') %></h2>
       <% if (activeCount > 0) { %><a class="small" href="/projects"><%= t('dashboard.activeProjects', { count: activeCount }) %></a><% } %>
@@ -68,4 +132,5 @@
     <% } %>
   </section>
 <% } %>
+</div>
 <%- include('partials/foot') %>
