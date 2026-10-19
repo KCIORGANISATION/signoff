@@ -1,41 +1,72 @@
-<%- include('../partials/head', { title: project ? t('project.edit') : t('project.new'), crumbs: project ? [{ label: t('nav.projects'), href: '/dashboard' }, { label: project.name, href: `/projects/${project.id}` }, { label: t('project.edit') }] : [{ label: t('nav.projects'), href: '/dashboard' }, { label: t('project.new') }] }) %>
+<%- include('../partials/head', { title: project ? t('project.edit') : t('project.new'), crumbs: project ? [{ label: t('nav.projects'), href: '/projects' }, { label: project.name, href: `/projects/${project.id}` }, { label: t('project.edit') }] : [{ label: t('nav.projects'), href: '/projects' }, { label: t('project.new') }] }) %>
+<% const steps = [
+  { key: 'project', fields: ['name', 'description'] },
+  { key: 'client', fields: ['client_name', 'client_email'] },
+  { key: 'money', fields: ['currency'] },
+]; %>
 <div class="page-medium" style="margin: 0 auto;">
-  <section class="glass panel reveal">
-    <h1 style="font-size: 28px;"><%= project ? t('project.edit') : t('project.new') %></h1>
+  <section class="glass panel panel-roomy reveal">
+    <h1 class="form-title"><%= project ? t('project.edit') : t('project.new.title') %></h1>
+    <% if (!project) { %><p class="muted"><%= t('project.new.lead') %></p><% } %>
     <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
-    <form method="post" action="<%= project ? `/projects/${project.id}` : '/projects' %>">
+
+    <form method="post" action="<%= project ? `/projects/${project.id}` : '/projects' %>" <%- project ? '' : 'data-steps' %>>
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <div class="field">
-        <label for="name"><%= t('project.name') %></label>
-        <input id="name" name="name" type="text" required value="<%= values.name ?? '' %>">
-      </div>
-      <div class="fields-row" style="margin-top: 16px;">
+
+      <% if (!project) { %>
+        <ol class="step-dots" aria-hidden="true">
+          <% steps.forEach((s, i) => { %><li data-step-dot="<%= i %>"><span><%= i + 1 %></span><%= t(`project.step.${s.key}`) %></li><% }) %>
+        </ol>
+      <% } %>
+
+      <fieldset class="form-step" data-step="0">
+        <legend><span class="step-count"><%= t('project.step.count', { step: 1, total: steps.length }) %></span><%= t('project.step.project') %></legend>
+        <div class="field">
+          <label for="name"><%= t('project.name') %></label>
+          <input id="name" name="name" type="text" required maxlength="<%= limits.name %>" aria-describedby="name-hint" placeholder="<%= t('project.name.placeholder') %>" value="<%= values.name ?? '' %>">
+          <p class="hint" id="name-hint"><%= t('project.name.hint') %></p>
+        </div>
+        <div class="field">
+          <label for="description"><%= t('project.description') %></label>
+          <textarea id="description" name="description" maxlength="<%= limits.description %>" rows="5" aria-describedby="description-hint" placeholder="<%= t('project.description.placeholder') %>"><%= values.description ?? '' %></textarea>
+          <p class="hint" id="description-hint"><%= t('project.description.hint') %></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-step" data-step="1">
+        <legend><span class="step-count"><%= t('project.step.count', { step: 2, total: steps.length }) %></span><%= t('project.step.client') %></legend>
         <div class="field">
           <label for="client_name"><%= t('project.clientName') %></label>
-          <input id="client_name" name="client_name" type="text" required value="<%= values.client_name ?? '' %>">
+          <input id="client_name" name="client_name" type="text" required maxlength="<%= limits.client_name %>" aria-describedby="client-name-hint" value="<%= values.client_name ?? '' %>">
+          <p class="hint" id="client-name-hint"><%= t('project.clientName.hint') %></p>
         </div>
         <div class="field">
           <label for="client_email"><%= t('project.clientEmail') %></label>
-          <input id="client_email" name="client_email" type="email" required value="<%= values.client_email ?? '' %>">
+          <input id="client_email" name="client_email" type="email" required maxlength="<%= limits.client_email %>" aria-describedby="client-email-hint" value="<%= values.client_email ?? '' %>">
+          <p class="hint" id="client-email-hint"><%= t('project.clientEmail.hint') %></p>
         </div>
-      </div>
-      <div class="field" style="max-width: 220px; margin-top: 16px;">
-        <label for="currency"><%= t('project.currency') %></label>
-        <select id="currency" name="currency">
-          <% currencies.forEach((c) => { %><option value="<%= c %>" <%= values.currency === c ? 'selected' : '' %>><%= c %></option><% }) %>
-        </select>
-      </div>
+      </fieldset>
+
+      <fieldset class="form-step" data-step="2">
+        <legend><span class="step-count"><%= t('project.step.count', { step: 3, total: steps.length }) %></span><%= t('project.step.money') %></legend>
+        <div class="field" style="max-width: 260px;">
+          <label for="currency"><%= t('project.currency') %></label>
+          <select id="currency" name="currency" aria-describedby="currency-hint">
+            <% currencies.forEach((c) => { %><option value="<%= c %>" <%= values.currency === c ? 'selected' : '' %>><%= c %></option><% }) %>
+          </select>
+        </div>
+        <p class="hint" id="currency-hint"><%= t('project.currency.hint') %></p>
+      </fieldset>
+
       <div class="form-actions">
-        <button class="btn btn-light" type="submit" data-loading><%= t('project.save') %></button>
-        <a class="btn" href="<%= project ? `/projects/${project.id}` : '/dashboard' %>"><%= t('common.cancel') %></a>
+        <% if (!project) { %>
+          <button class="btn btn-large" type="button" data-step-back hidden><%- include('../partials/icon', { name: 'arrowLeft' }) %><%= t('common.back') %></button>
+          <button class="btn btn-light btn-large" type="button" data-step-next hidden><%= t('project.step.next') %><%- include('../partials/icon', { name: 'arrowRight' }) %></button>
+        <% } %>
+        <button class="btn btn-light btn-large" type="submit" data-loading data-step-submit><%= project ? t('project.save') : t('project.create') %></button>
+        <a class="btn btn-large" href="<%= project ? `/projects/${project.id}` : '/projects' %>"><%= t('common.cancel') %></a>
       </div>
     </form>
   </section>
-  <% if (project) { %>
-    <form method="post" action="/projects/<%= project.id %>/delete" data-confirm="<%= t('project.delete.confirm') %>" style="margin-top: 20px;">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button class="btn btn-danger btn-small" type="submit"><%- include('../partials/icon', { name: 'trash', cls: 'icon-sm' }) %><%= t('project.delete') %></button>
-    </form>
-  <% } %>
 </div>
 <%- include('../partials/foot') %>

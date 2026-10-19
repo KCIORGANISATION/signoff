@@ -1,0 +1,86 @@
+<%- include('../partials/head', { title: t('nav.projects') }) %>
+<div class="page-title reveal">
+  <div>
+    <h1><%= t('nav.projects') %></h1>
+    <p><%= t('projects.intro') %></p>
+  </div>
+  <a class="btn btn-light btn-large" href="/projects/new"><%- include('../partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+</div>
+
+<% if (counts.all > 0) { %>
+  <nav class="filter-pills reveal" aria-label="<%= t('projects.filter') %>">
+    <% filters.forEach((f) => { %>
+      <a href="/projects?filter=<%= f %>" <%- filter === f ? 'aria-current="page"' : '' %>><%= t(`projects.filter.${f}`) %> <span class="count"><%= counts[f] %></span></a>
+    <% }) %>
+  </nav>
+<% } %>
+
+<% if (counts.all === 0) { %>
+  <section class="glass panel panel-roomy reveal" style="--i: 1;">
+    <div class="empty-state">
+      <span class="empty-icon"><%- include('../partials/icon', { name: 'folder', cls: 'icon-lg' }) %></span>
+      <h2><%= t('dashboard.empty.title') %></h2>
+      <p><%= t('projects.empty') %></p>
+      <a class="btn btn-light btn-large" href="/projects/new"><%- include('../partials/icon', { name: 'plus' }) %><%= t('dashboard.empty.title') %></a>
+    </div>
+  </section>
+<% } else if (projects.length === 0) { %>
+  <section class="glass panel panel-roomy reveal" style="--i: 1;">
+    <div class="empty-state">
+      <span class="empty-icon"><%- include('../partials/icon', { name: 'search', cls: 'icon-lg' }) %></span>
+      <h2><%= t(`projects.empty.${filter}`) %></h2>
+      <a href="/projects?filter=all"><%= t('projects.seeAll') %></a>
+    </div>
+  </section>
+<% } else { %>
+  <div class="project-list">
+    <% projects.forEach((p, i) => { const progress = p.progress; %>
+      <article class="glass project-tile reveal" style="--i: <%= Math.min(i + 1, 6) %>;" aria-labelledby="project-<%= p.id %>">
+        <div class="tile-head">
+          <div class="tile-title">
+            <h2 id="project-<%= p.id %>"><a href="/projects/<%= p.id %>"><%= p.name %></a></h2>
+            <p class="row-meta"><%= t('project.client') %> : <%= p.client_name %></p>
+          </div>
+          <%- include('../partials/project-badge', { status: p.status }) %>
+        </div>
+
+        <% if (p.description) { %>
+          <p class="tile-desc"><%= p.description %></p>
+        <% } else { %>
+          <p class="tile-desc is-empty"><%= t('project.description.none') %></p>
+        <% } %>
+
+        <div class="tile-facts">
+          <div>
+            <p class="tile-label"><%= t('project.progress') %></p>
+            <p class="tile-value"><%= t('dashboard.progress', { approved: progress.approved, total: progress.total }) %></p>
+            <div class="progress-track" role="presentation"><div class="progress-fill" style="width: <%= progress.total ? Math.round((progress.approved / progress.total) * 100) : 0 %>%;"></div></div>
+          </div>
+          <div>
+            <p class="tile-label"><%= t('project.current') %></p>
+            <% if (progress.current) { %>
+              <p class="tile-value"><a href="/milestones/<%= progress.current.id %>"><%= progress.current.title %></a></p>
+              <%- include('../partials/badge', { status: progress.current.status }) %>
+            <% } else { %>
+              <p class="tile-value muted"><%= t('project.current.none') %></p>
+            <% } %>
+          </div>
+        </div>
+
+        <p class="tile-next"><span class="tile-label"><%= t('next.title') %></span> <%- include('../partials/next-text', { step: p.next }) %></p>
+
+        <div class="tile-actions">
+          <% if (p.status === 'active') { %>
+            <a class="btn btn-light btn-large" href="/projects/<%= p.id %>"><%- include('../partials/icon', { name: 'pencil' }) %><%= t('project.update') %></a>
+            <a class="btn btn-large" href="/projects/<%= p.id %>/complete" data-modal><%- include('../partials/icon', { name: 'flag' }) %><%= t('project.complete') %></a>
+            <a class="btn btn-danger btn-large" href="/projects/<%= p.id %>/abandon" data-modal><%- include('../partials/icon', { name: 'archive' }) %><%= t('project.abandon') %></a>
+          <% } else { %>
+            <a class="btn btn-light btn-large" href="/projects/<%= p.id %>"><%- include('../partials/icon', { name: 'eye' }) %><%= t('project.open') %></a>
+            <a class="btn btn-large" href="/projects/<%= p.id %>/reopen" data-modal><%- include('../partials/icon', { name: 'refresh' }) %><%= t('project.reopen') %></a>
+          <% } %>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+<% } %>
+<%- include('../partials/foot') %>

@@ -18,6 +18,7 @@ import { paymentDomain } from '../payment.js';
 import { findFile, listFiles, sendFile } from '../files.js';
 import { storage } from '../storage.js';
 import { describe } from '../text.js';
+import { isClosedForClient } from '../projects.js';
 
 const MAX_NAME_LENGTH = 120;
 
@@ -44,7 +45,8 @@ function clientDetails(req) {
 // Payment details are removed until the client approves, so no page can leak them.
 async function loadMilestone(req, res) {
   const milestone = await findMilestoneByToken(req.params.token);
-  if (!milestone || milestone.status === 'draft') {
+  // A milestone set aside before it was ever sent was never shown to the client either.
+  if (!milestone || milestone.status === 'draft' || milestone.status_before_close === 'draft') {
     res.status(404).render('error', { message: req.t('error.notFound') });
     return null;
   }
@@ -89,6 +91,8 @@ export async function clientPage(milestone, { fileBase, preview = false, mode = 
     description: describe(milestone.description),
     fileBase,
     preview,
+    // The project was completed or abandoned: the page says so and takes no decision.
+    closed: isClosedForClient(milestone),
     mode,
     error,
     values,
@@ -131,7 +135,9 @@ router.get('/r/:token/review', async (req, res) => {
 router.post('/r/:token/approve', async (req, res) => {
   const milestone = await loadMilestone(req, res);
   if (!milestone) return;
-  if (milestone.status !== 'sent' && milestone.status !== 'viewed') return res.redirect(`/r/${req.params.token}`);
+  if (isClosedForClient(milestone) || (milestone.status !== 'sent' && milestone.status !== 'viewed')) {
+    return res.redirect(`/r/${req.params.token}`);
+  }
 
   // The client types their full name: it is recorded with the approval and shown on the certificate.
   const name = (req.body.name ?? '').trim().replace(/\s+/g, ' ');
@@ -167,7 +173,9 @@ router.post('/r/:token/approve', async (req, res) => {
 router.post('/r/:token/feedback', async (req, res) => {
   const milestone = await loadMilestone(req, res);
   if (!milestone) return;
-  if (milestone.status !== 'sent' && milestone.status !== 'viewed') return res.redirect(`/r/${req.params.token}`);
+  if (isClosedForClient(milestone) || (milestone.status !== 'sent' && milestone.status !== 'viewed')) {
+    return res.redirect(`/r/${req.params.token}`);
+  }
 
   const message = (req.body.message ?? '').trim();
   if (!message) {

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { query, queryOne } from './db.js';
 
-export const STATUSES = ['draft', 'sent', 'viewed', 'feedback', 'approved'];
+export const STATUSES = ['draft', 'sent', 'viewed', 'feedback', 'approved', 'not_done', 'cancelled'];
 export const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'CAD'];
 export const LINK_LIFETIME_DAYS = 7;
 
@@ -25,7 +25,7 @@ export async function findMilestoneForUser(userId, milestoneId) {
   const id = toId(milestoneId);
   if (!id) return null;
   return queryOne(
-    `SELECT m.*, p.name AS project_name, p.client_name, p.client_email, p.currency
+    `SELECT m.*, p.name AS project_name, p.client_name, p.client_email, p.currency, p.status AS project_status
        FROM milestones m
        JOIN projects p ON p.id = m.project_id
       WHERE m.id = $1 AND p.user_id = $2`,
@@ -35,7 +35,7 @@ export async function findMilestoneForUser(userId, milestoneId) {
 
 export function findMilestoneByToken(token) {
   return queryOne(
-    `SELECT m.*, p.name AS project_name, p.client_name, p.client_email, p.currency,
+    `SELECT m.*, p.name AS project_name, p.client_name, p.client_email, p.currency, p.status AS project_status,
             u.name AS dev_name, u.email AS dev_email, u.lang AS dev_lang
        FROM milestones m
        JOIN projects p ON p.id = m.project_id

@@ -2,7 +2,7 @@
    const heading = isLocked ? t('milestone.payment.edit') : milestone ? t('milestone.edit') : t('milestone.new');
    const action = isLocked ? `/milestones/${milestone.id}/payment` : milestone ? `/milestones/${milestone.id}` : `/projects/${project.id}/milestones`;
    const canSend = !milestone || milestone.status === 'draft' || milestone.status === 'feedback';
-   const crumbs = [{ label: t('nav.projects'), href: '/dashboard' }, { label: project.name, href: `/projects/${project.id}` }];
+   const crumbs = [{ label: t('nav.projects'), href: '/projects' }, { label: project.name, href: `/projects/${project.id}` }];
    if (milestone) crumbs.push({ label: milestone.title, href: `/milestones/${milestone.id}` });
    crumbs.push({ label: heading }); %>
 <%- include('../partials/head', { title: heading, crumbs }) %>

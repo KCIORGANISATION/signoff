@@ -79,6 +79,7 @@ router.use('/milestones', requireAuth);
 router.post(UPLOAD_PATH, async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return fail(req, res, 404, req.t('error.notFound'));
+  if (milestone.project_status !== 'active') return fail(req, res, 409, req.t('project.closed.error'));
   if (isLocked(milestone)) return fail(req, res, 409, req.t('milestone.locked.error'));
   if (req.uploadError) {
     return fail(req, res, req.uploadError === 'files.error.size' ? 413 : 400, req.t(req.uploadError, LIMITS));
@@ -109,7 +110,7 @@ router.post(UPLOAD_PATH, async (req, res) => {
     const row = await queryOne(
       `INSERT INTO files (milestone_id, storage_key, name, mime, size, sha256)
        SELECT $1::int, $2::text, $3::text, $4::text, $5::bigint, $6::text
-        WHERE EXISTS (SELECT 1 FROM milestones WHERE id = $1::int AND status <> 'approved')
+        WHERE EXISTS (SELECT 1 FROM milestones WHERE id = $1::int AND status IN ('draft', 'sent', 'viewed', 'feedback'))
           AND (SELECT COUNT(*) FROM files WHERE milestone_id = $1::int) < $7::int
           AND (SELECT COALESCE(SUM(f.size), 0) FROM files f
                  JOIN milestones m ON m.id = f.milestone_id
@@ -132,12 +133,13 @@ router.post(UPLOAD_PATH, async (req, res) => {
 router.post('/milestones/:id/files/:fileId/delete', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return fail(req, res, 404, req.t('error.notFound'));
+  if (milestone.project_status !== 'active') return fail(req, res, 409, req.t('project.closed.error'));
   if (isLocked(milestone)) return fail(req, res, 409, req.t('milestone.locked.error'));
 
   const deleted = await query(
     `DELETE FROM files
       WHERE id = $1 AND milestone_id = $2
-        AND EXISTS (SELECT 1 FROM milestones WHERE id = $2 AND status <> 'approved')
+        AND EXISTS (SELECT 1 FROM milestones WHERE id = $2 AND status IN ('draft', 'sent', 'viewed', 'feedback'))
       RETURNING storage_key`,
     [toId(req.params.fileId), milestone.id],
   );

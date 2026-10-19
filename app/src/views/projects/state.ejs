@@ -1,0 +1,78 @@
+<%- include('../partials/head', { title: t(`project.${mode}.title`, { name: project.name }), crumbs: [{ label: t('nav.projects'), href: '/projects' }, { label: project.name, href: `/projects/${project.id}` }, { label: t(`project.${mode}`) }] }) %>
+<div class="page-medium" style="margin: 0 auto;">
+  <section class="glass panel panel-roomy reveal">
+    <div class="state-form" data-modal-content>
+      <h1 class="state-title"><%= t(`project.${mode}.title`, { name: project.name }) %></h1>
+      <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+
+      <form method="post" action="/projects/<%= project.id %>/<%= mode %>" class="stack">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <% if (mode === 'complete') { %>
+          <% if (unapproved.length === 0) { %>
+            <p><%= t('project.complete.allApproved') %></p>
+          <% } else { %>
+            <p><%= t('project.complete.unapproved', { count: unapproved.length }) %></p>
+            <ul class="state-list">
+              <% unapproved.forEach((m) => { %><li><span><%= m.title %></span><%- include('../partials/badge', { status: m.status }) %></li><% }) %>
+            </ul>
+            <label class="check">
+              <input type="checkbox" name="confirm_unapproved" value="yes" required>
+              <span><%= t('project.complete.confirm', { count: unapproved.length }) %></span>
+            </label>
+          <% } %>
+          <p class="hint"><%= t('project.complete.effects') %></p>
+          <div class="form-actions">
+            <button class="btn btn-primary btn-large" type="submit" data-loading><%- include('../partials/icon', { name: 'flag' }) %><%= t('project.complete.submit') %></button>
+            <a class="btn btn-large" href="/projects/<%= project.id %>" data-modal-close><%= t('common.cancel') %></a>
+          </div>
+
+        <% } else if (mode === 'abandon') { %>
+          <fieldset class="choices">
+            <legend><%= t('project.abandon.reason') %></legend>
+            <% reasons.forEach((r) => { %>
+              <label class="choice">
+                <input type="radio" name="reason" value="<%= r %>" required <%= values.reason === r ? 'checked' : '' %>>
+                <span><%= t(`project.reason.${r}`) %></span>
+              </label>
+            <% }) %>
+          </fieldset>
+          <div class="field">
+            <label for="abandon-note"><%= t('project.abandon.note') %></label>
+            <textarea id="abandon-note" name="note" maxlength="<%= reasonMax %>" rows="3"><%= values.note ?? '' %></textarea>
+          </div>
+          <div class="state-effects">
+            <p class="label"><%= t('project.abandon.effectsTitle') %></p>
+            <ul>
+              <li><%= t('project.abandon.effect.approved') %></li>
+              <li><%= t('project.abandon.effect.others') %></li>
+              <li><%= t('project.abandon.effect.client') %></li>
+              <li><%= t('project.abandon.effect.readOnly') %></li>
+            </ul>
+          </div>
+          <label class="check">
+            <input type="checkbox" name="notify_client" value="yes" <%= values.notify ? 'checked' : '' %>>
+            <span><%= t('project.abandon.notify') %><span class="hint"><%= t('project.abandon.notifyHint', { email: project.client_email }) %></span></span>
+          </label>
+          <div class="form-actions">
+            <button class="btn btn-danger btn-large" type="submit" data-loading><%- include('../partials/icon', { name: 'archive' }) %><%= t('project.abandon.submit') %></button>
+            <a class="btn btn-large" href="/projects/<%= project.id %>" data-modal-close><%= t('common.cancel') %></a>
+          </div>
+
+        <% } else { %>
+          <p><%= t(`project.reopen.from.${project.status}`) %></p>
+          <div class="field">
+            <label for="reopen-note"><%= t('project.reopen.note') %></label>
+            <textarea id="reopen-note" name="note" maxlength="<%= reasonMax %>" rows="3" required><%= values.note ?? '' %></textarea>
+            <p class="hint"><%= t('project.reopen.noteHint') %></p>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-light btn-large" type="submit" data-loading><%- include('../partials/icon', { name: 'refresh' }) %><%= t('project.reopen.submit') %></button>
+            <a class="btn btn-large" href="/projects/<%= project.id %>" data-modal-close><%= t('common.cancel') %></a>
+          </div>
+        <% } %>
+      </form>
+    </div>
+  </section>
+</div>
+<%- include('../partials/foot') %>

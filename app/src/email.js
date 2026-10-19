@@ -46,3 +46,11 @@ export function emailFeedback({ to, lang, clientName, title, projectName, messag
 export function emailPasswordReset({ to, lang, link }) {
   return sendEmail({ to, ...compose(lang, 'reset', { link }) });
 }
+
+export function emailReviewReminder({ to, lang, devName, clientName, title, projectName, link }) {
+  return sendEmail({ to, ...compose(lang, 'reminder', { dev: devName, client: clientName, title, project: projectName, link }) });
+}
+
+export function emailProjectClosed({ to, lang, devName, clientName, projectName }) {
+  return sendEmail({ to, ...compose(lang, 'projectClosed', { dev: devName, client: clientName, project: projectName }) });
+}

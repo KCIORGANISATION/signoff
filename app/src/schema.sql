@@ -155,3 +155,49 @@ CREATE OR REPLACE TRIGGER files_locked
 -- With a feedback, the files of the milestone in the order the client saw them,
 -- so "/fichier2" keeps pointing at the right file even if files change later.
 ALTER TABLE review_events ADD COLUMN IF NOT EXISTS files JSONB;
+
+-- Project states: active, completed, abandoned. Existing projects stay active.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
+
+-- Closing a project sets its open milestones to not_done (completed) or cancelled (abandoned).
+-- Their status at that moment is kept, so reopening the project puts them back as they were.
+ALTER TABLE milestones ADD COLUMN IF NOT EXISTS status_before_close TEXT;
+
+-- Append-only journal of a project's state changes.
+-- type: created, completed, abandoned, reopened
+-- reason (abandoned): client_stopped, unforeseen, other
+-- milestones: the milestones a closing changed, as [{ id, title, from, to }]
+CREATE TABLE IF NOT EXISTS project_events (
+  id          SERIAL PRIMARY KEY,
+  project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  type        TEXT NOT NULL,
+  from_status TEXT,
+  to_status   TEXT NOT NULL,
+  reason      TEXT,
+  note        TEXT,
+  milestones  JSONB,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS project_events_project_idx ON project_events(project_id);
+
+CREATE OR REPLACE FUNCTION signoff_project_events_append_only() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND NOT EXISTS (SELECT 1 FROM projects WHERE id = OLD.project_id) THEN
+    RETURN OLD;
+  END IF;
+  RAISE EXCEPTION 'project_events is append-only';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER project_events_append_only
+  BEFORE UPDATE OR DELETE ON project_events
+  FOR EACH ROW EXECUTE FUNCTION signoff_project_events_append_only();
+
+-- The developer's private notes on a project. Kept in their own table, which no client page reads.
+CREATE TABLE IF NOT EXISTS project_notes (
+  project_id INTEGER PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+  body       TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

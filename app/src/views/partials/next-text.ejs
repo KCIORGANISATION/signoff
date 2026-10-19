@@ -1,0 +1,1 @@
+<%# The sentence of a next step, with its date formatted. %><%= t(step.key, { ...step.vars, date: step.vars.date ? fmt.date(step.vars.date) : '' }) %>
