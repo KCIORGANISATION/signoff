@@ -1,0 +1,2 @@
+<% const projectIcons = { active: 'clock', completed: 'flag', abandoned: 'archive' }; %>
+<span class="badge badge-project-<%= status %>"><%- include('icon', { name: projectIcons[status] }) %><%= t('projectStatus.' + status) %></span>

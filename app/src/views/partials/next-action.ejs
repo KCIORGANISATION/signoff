@@ -1,0 +1,11 @@
+<%# The button of a next step: include('next-action', { step, size: 'btn-large', back: 'project' }) %>
+<% const a = step.action; const cls = `btn ${a.positive ? 'btn-primary' : 'btn-light'} ${locals.size || ''}`; %>
+<% if (a.method === 'post') { %>
+  <form class="inline" method="post" action="<%= a.href %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% if (locals.back) { %><input type="hidden" name="back" value="<%= back %>"><% } %>
+    <button class="<%= cls %>" type="submit" data-loading><%- include('icon', { name: 'send' }) %><%= t(a.label) %></button>
+  </form>
+<% } else { %>
+  <a class="<%= cls %>" href="<%= a.href %>" <%- a.modal ? 'data-modal' : '' %>><%= t(a.label) %><%- include('icon', { name: 'arrowRight' }) %></a>
+<% } %>

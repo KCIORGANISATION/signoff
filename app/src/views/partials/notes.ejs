@@ -1,0 +1,25 @@
+<%# Private notes on a project. Without JavaScript, a section at the bottom of the page with a Save button;
+    with it, a tab fixed at the bottom right that slides the panel up, saving as the developer types. %>
+<div class="notes" id="notes" data-notes>
+  <button class="notes-tab" type="button" aria-expanded="false" aria-controls="notes-panel" data-notes-toggle>
+    <%- include('icon', { name: 'notes' }) %><span><%= t('notes.tab') %></span>
+  </button>
+  <section class="glass notes-panel" id="notes-panel" aria-labelledby="notes-title">
+    <div class="notes-head">
+      <h2 id="notes-title"><%= t('notes.title') %></h2>
+      <button class="icon-btn" type="button" data-notes-close aria-label="<%= t('notes.close') %>"><%- include('icon', { name: 'x' }) %></button>
+    </div>
+    <p class="hint"><%= t('notes.private') %></p>
+    <form method="post" action="/projects/<%= project.id %>/notes" data-notes-form>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="sr-only" for="notes-body"><%= t('notes.title') %></label>
+      <textarea id="notes-body" name="body" maxlength="<%= notesMax %>" placeholder="<%= t('notes.placeholder') %>"><%= notes.body %></textarea>
+      <div class="notes-foot">
+        <span class="notes-status" role="status" aria-live="polite" data-notes-status
+              data-saving="<%= t('notes.saving') %>" data-saved="<%= t('notes.saved') %>" data-error="<%= t('notes.error') %>"><% if (notes.updated_at) { %><%= t('notes.savedAt', { date: fmt.dateTime(notes.updated_at) }) %><% } %></span>
+        <span class="notes-count" data-notes-count data-template="<%= t('notes.count', { count: '{count}', max: notesMax }) %>"><%= t('notes.count', { count: notes.body.length, max: notesMax }) %></span>
+      </div>
+      <noscript><button class="btn btn-small" type="submit"><%= t('notes.save') %></button></noscript>
+    </form>
+  </section>
+</div>

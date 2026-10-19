@@ -1,75 +1,71 @@
-<%- include('partials/head', { title: t('dashboard.title') }) %>
-<div class="page-title reveal">
-  <div>
-    <h1><%= t('dashboard.hello', { name: currentUser.name }) %></h1>
-    <p><%= t('dashboard.intro') %></p>
-  </div>
-  <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
-</div>
+<%- include('partials/head', { title: t('nav.home') }) %>
+<% if (!guide.complete) { %>
+  <% const current = guide.steps[guide.currentIndex]; %>
+  <section class="glass onboard reveal" aria-labelledby="onboard-title">
+    <p class="eyebrow"><%= t('dashboard.hello', { name: currentUser.name }) %></p>
+    <h1 id="onboard-title" class="onboard-title"><%= t(`onboard.title.${current.key}`) %></h1>
+    <p class="onboard-lead"><%= t('onboard.lead') %></p>
 
-<div class="stack">
-  <section class="glass panel reveal" style="--i: 1;" aria-labelledby="waiting-title">
-    <div class="panel-head">
-      <h2 id="waiting-title"><%- include('partials/icon', { name: 'clock' }) %><%= t('dashboard.waiting') %></h2>
-      <% if (waiting.length > 0) { %><span class="pill"><%= waiting.length %></span><% } %>
+    <div class="onboard-progress">
+      <span><%= t('onboard.progress', { done: guide.currentIndex, total: guide.steps.length }) %></span>
+      <div class="progress-track" role="presentation"><div class="progress-fill" style="width: <%= Math.round((guide.currentIndex / guide.steps.length) * 100) %>%;"></div></div>
     </div>
-    <% if (waiting.length === 0) { %>
-      <p class="empty"><%= t('dashboard.waiting.empty') %></p>
+
+    <ol class="checklist">
+      <% guide.steps.forEach((step, i) => { const state = step.done ? 'done' : i === guide.currentIndex ? 'current' : 'later'; %>
+        <li class="check-step is-<%= state %>" <%- state === 'current' ? 'aria-current="step"' : '' %>>
+          <span class="check-num" aria-hidden="true"><% if (step.done) { %><%- include('partials/icon', { name: 'check' }) %><% } else { %><%= i + 1 %><% } %></span>
+          <div class="check-body">
+            <h2><%= t(`onboard.step.${step.key}`) %><% if (step.done) { %><span class="sr-only"> · <%= t('onboard.done') %></span><% } %></h2>
+            <% if (state === 'current') { %>
+              <p><%= t(`onboard.step.${step.key}.text`) %></p>
+              <% if (step.href) { %>
+                <a class="btn <%= step.key === 'send' ? 'btn-primary' : 'btn-light' %> btn-large" href="<%= step.href %>"><%= t(`onboard.step.${step.key}.action`) %><%- include('partials/icon', { name: 'arrowRight' }) %></a>
+              <% } %>
+            <% } else if (state === 'later') { %>
+              <p class="check-later"><%= t(`onboard.step.${step.key}.later`) %></p>
+            <% } %>
+          </div>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+<% } else { %>
+  <div class="page-title reveal">
+    <div>
+      <h1><%= t('dashboard.hello', { name: currentUser.name }) %></h1>
+      <p><%= t('dashboard.intro') %></p>
+    </div>
+    <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+  </div>
+
+  <section class="glass panel panel-roomy reveal" style="--i: 1;" aria-labelledby="next-title">
+    <div class="panel-head">
+      <h2 id="next-title"><%= t('dashboard.next') %></h2>
+      <% if (activeCount > 0) { %><a class="small" href="/projects"><%= t('dashboard.activeProjects', { count: activeCount }) %></a><% } %>
+    </div>
+    <% if (steps.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-icon"><%- include('partials/icon', { name: 'folder', cls: 'icon-lg' }) %></span>
+        <h3><%= t('dashboard.noActive.title') %></h3>
+        <p><%= t('dashboard.noActive') %></p>
+        <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
+        <a class="small" href="/projects?filter=all"><%= t('projects.seeAll') %></a>
+      </div>
     <% } else { %>
-      <ul class="rows">
-        <% waiting.forEach((m) => { %>
-          <li>
-            <a class="row-link" href="/milestones/<%= m.id %>">
-              <span class="row-main">
-                <span class="row-title"><%= m.title %></span>
-                <span class="row-meta"><%= m.project.name %> · <%= m.project.client_name %> · <%= t('dashboard.lastActivity') %> <%= fmt.dateTime(m.last_activity) %></span>
-              </span>
-              <span class="row-end"><%- include('partials/badge', { status: m.status }) %><span class="chev"><%- include('partials/icon', { name: 'chevronRight' }) %></span></span>
-            </a>
+      <ul class="next-list">
+        <% steps.forEach((step) => { %>
+          <li class="next-item">
+            <div class="next-main">
+              <a class="next-project" href="/projects/<%= step.project.id %>"><%= step.project.name %> · <%= step.project.client_name %></a>
+              <p class="next-text"><%- include('partials/next-text', { step }) %></p>
+            </div>
+            <div class="next-end"><%- include('partials/next-action', { step, back: 'home' }) %></div>
           </li>
         <% }) %>
       </ul>
+      <% if (moreSteps > 0) { %><a class="small" href="/projects"><%= t('dashboard.moreSteps', { count: moreSteps }) %></a><% } %>
     <% } %>
   </section>
-
-  <section class="glass panel reveal" style="--i: 2;" aria-labelledby="projects-title">
-    <div class="panel-head">
-      <h2 id="projects-title"><%- include('partials/icon', { name: 'folder' }) %><%= t('dashboard.projects') %></h2>
-    </div>
-    <% if (projects.length === 0) { %>
-      <div class="empty-state">
-        <span class="empty-icon"><%- include('partials/icon', { name: 'folder', cls: 'icon-lg' }) %></span>
-        <h3><%= t('dashboard.empty.title') %></h3>
-        <p><%= t('dashboard.empty') %></p>
-        <a class="btn btn-light" href="/projects/new"><%- include('partials/icon', { name: 'plus' }) %><%= t('dashboard.newProject') %></a>
-      </div>
-    <% } else { %>
-      <div class="project-grid">
-        <% projects.forEach((p) => { %>
-          <article class="project-card">
-            <div class="row spread" style="align-items: flex-start;">
-              <div style="min-width: 0;">
-                <h3><a href="/projects/<%= p.id %>"><%= p.name %></a></h3>
-                <p class="row-meta"><%= p.client_name %><% if (p.last_activity) { %> · <%= fmt.date(p.last_activity) %><% } %></p>
-              </div>
-            </div>
-            <% if (p.milestone_count > 0) { %>
-              <div>
-                <div class="row spread small muted" style="margin-bottom: 6px;"><span><%= t('dashboard.progress', { approved: p.approved_count, total: p.milestone_count }) %></span></div>
-                <div class="progress-track" role="presentation"><div class="progress-fill" style="width: <%= Math.round((p.approved_count / p.milestone_count) * 100) %>%;"></div></div>
-              </div>
-              <ul class="chip-list">
-                <% p.milestones.slice(-4).forEach((m) => { %>
-                  <li><a href="/milestones/<%= m.id %>"><span class="chip-title"><%= m.title %></span><%- include('partials/badge', { status: m.status }) %></a></li>
-                <% }) %>
-              </ul>
-            <% } else { %>
-              <p class="empty"><%= t('dashboard.noMilestones') %> · <a href="/projects/<%= p.id %>/milestones/new"><%= t('milestone.new') %></a></p>
-            <% } %>
-          </article>
-        <% }) %>
-      </div>
-    <% } %>
-  </section>
-</div>
+<% } %>
 <%- include('partials/foot') %>

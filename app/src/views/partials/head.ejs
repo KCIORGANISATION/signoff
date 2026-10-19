@@ -44,7 +44,7 @@
     <% if (locals.projectLabel) { %><span class="muted"><%= projectLabel %></span><% } %>
     <% if (locals.positionLabel) { %><span class="pill"><%= positionLabel %></span><% } %>
     <% if (!locals.client && currentUser) { %>
-      <a href="/dashboard" <%- currentPath === '/dashboard' ? 'aria-current="page"' : '' %>><%= t('nav.dashboard') %></a>
+      <span class="account-name"><%= currentUser.name %></span>
       <form class="inline" method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="link-button" type="submit" style="text-decoration: none; padding: 0 8px;"><%= t('nav.logout') %></button></form>
     <% } %>
     <span class="lang" role="group" aria-label="<%= t('nav.language') %>">
@@ -55,4 +55,13 @@
     <% if (locals.headerLogin) { %><a class="btn btn-small header-login" href="/login"><%= t('home.login') %></a><% } %>
   </div>
 </header>
+<% if (!locals.client && currentUser) { %>
+  <% const tab = currentPath.startsWith('/dashboard') ? 'home' : /^\/(projects|milestones)(\/|\?|$)/.test(currentPath) ? 'projects' : null; %>
+  <nav class="app-tabs" aria-label="<%= t('nav.tabs') %>">
+    <div class="app-tabs-track">
+      <a href="/dashboard" <%- tab === 'home' ? 'aria-current="page"' : '' %>><%- include('icon', { name: 'home' }) %><%= t('nav.home') %></a>
+      <a href="/projects" <%- tab === 'projects' ? 'aria-current="page"' : '' %>><%- include('icon', { name: 'folder' }) %><%= t('nav.projects') %></a>
+    </div>
+  </nav>
+<% } %>
 <main id="main" class="page <%= locals.mainClass || '' %>" tabindex="-1">

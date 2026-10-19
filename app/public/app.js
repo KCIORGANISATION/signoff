@@ -354,3 +354,161 @@ if (demo) {
     demo.addEventListener('keydown', stop, true);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Confirmation dialogs: <a href="/projects/1/complete" data-modal>.
+// The link is a page of its own; here its form opens over the current page instead.
+// ---------------------------------------------------------------------------
+document.addEventListener('click', async (event) => {
+  const link = event.target.closest('a[data-modal]');
+  if (!link || typeof HTMLDialogElement !== 'function' || event.metaKey || event.ctrlKey || event.shiftKey) return;
+  event.preventDefault();
+
+  let content = null;
+  try {
+    const response = await fetch(link.href, { credentials: 'same-origin' });
+    if (response.ok) {
+      const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+      content = page.querySelector('[data-modal-content]');
+    }
+  } catch {}
+  if (!content) return (window.location.href = link.href);
+
+  const dialog = document.createElement('dialog');
+  dialog.className = 'modal';
+  const title = content.querySelector('h1');
+  if (title) {
+    title.id = 'modal-title';
+    dialog.setAttribute('aria-labelledby', 'modal-title');
+  }
+  dialog.append(document.importNode(content, true));
+  dialog.querySelectorAll('[data-modal-close]').forEach((close) =>
+    close.addEventListener('click', (closeEvent) => {
+      closeEvent.preventDefault();
+      dialog.close();
+    }),
+  );
+  // A click on the dimmed backdrop closes the dialog; Escape does too, natively.
+  dialog.addEventListener('click', (clickEvent) => {
+    if (clickEvent.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('close', () => {
+    dialog.remove();
+    link.focus();
+  });
+  document.body.append(dialog);
+  dialog.showModal();
+  dialog.querySelector('input, textarea, select, button')?.focus();
+});
+
+// ---------------------------------------------------------------------------
+// Private notes on a project: the tab slides the panel up, and the text is saved
+// a moment after the developer stops typing, and when they leave the page.
+// ---------------------------------------------------------------------------
+const notes = document.querySelector('[data-notes]');
+if (notes) {
+  const toggle = notes.querySelector('[data-notes-toggle]');
+  const form = notes.querySelector('[data-notes-form]');
+  const area = form.querySelector('textarea');
+  const status = notes.querySelector('[data-notes-status]');
+  const count = notes.querySelector('[data-notes-count]');
+  let timer = null;
+  let dirty = false;
+
+  const setOpen = (open) => {
+    notes.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) area.focus({ preventScroll: true });
+    else if (notes.contains(document.activeElement)) toggle.focus();
+  };
+
+  toggle.addEventListener('click', () => setOpen(!notes.classList.contains('is-open')));
+  notes.querySelector('[data-notes-close]').addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && notes.classList.contains('is-open') && !document.querySelector('dialog[open]')) setOpen(false);
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (notes.classList.contains('is-open') && !notes.contains(event.target)) setOpen(false);
+  });
+  if (window.location.hash === '#notes') setOpen(true);
+
+  const formData = () => new URLSearchParams(new FormData(form));
+
+  const save = async () => {
+    clearTimeout(timer);
+    if (!dirty) return;
+    dirty = false;
+    status.textContent = status.dataset.saving;
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData(),
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      status.textContent = status.dataset.saved;
+    } catch {
+      dirty = true;
+      status.textContent = status.dataset.error;
+    }
+  };
+
+  area.addEventListener('input', () => {
+    dirty = true;
+    count.textContent = count.dataset.template.replace('{count}', area.value.length);
+    clearTimeout(timer);
+    timer = setTimeout(save, 800);
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    dirty = true;
+    save();
+  });
+  window.addEventListener('pagehide', () => {
+    if (dirty && navigator.sendBeacon) navigator.sendBeacon(form.action, formData());
+  });
+}
+
+// ---------------------------------------------------------------------------
+// A form in short steps: <form data-steps> with <fieldset data-step="0">…
+// Without JavaScript every step is shown at once.
+// ---------------------------------------------------------------------------
+document.querySelectorAll('form[data-steps]').forEach((form) => {
+  const steps = [...form.querySelectorAll('[data-step]')];
+  const dots = [...form.querySelectorAll('[data-step-dot]')];
+  const back = form.querySelector('[data-step-back]');
+  const next = form.querySelector('[data-step-next]');
+  const submit = form.querySelector('[data-step-submit]');
+  let current = 0;
+
+  const show = (index, focus = true) => {
+    current = index;
+    steps.forEach((step, i) => step.classList.toggle('is-current', i === index));
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('is-current', i === index);
+      dot.classList.toggle('is-done', i < index);
+    });
+    back.hidden = index === 0;
+    next.hidden = index === steps.length - 1;
+    submit.hidden = index !== steps.length - 1;
+    if (focus) steps[index].querySelector('input, textarea, select')?.focus();
+  };
+
+  const valid = (step) => [...step.querySelectorAll('input, textarea, select')].every((field) => field.reportValidity());
+
+  next.addEventListener('click', () => {
+    if (valid(steps[current])) show(current + 1);
+  });
+  back.addEventListener('click', () => show(current - 1));
+  // Enter in a field moves on to the next step rather than sending the form early.
+  form.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && event.target.tagName === 'INPUT' && current < steps.length - 1) {
+      event.preventDefault();
+      next.click();
+    }
+  });
+  // After an error from the server, open the first step with a field to fix.
+  const firstInvalid = steps.findIndex((step) => [...step.querySelectorAll('input, textarea, select')].some((field) => !field.checkValidity()));
+  show(firstInvalid === -1 ? 0 : firstInvalid, firstInvalid !== -1);
+});

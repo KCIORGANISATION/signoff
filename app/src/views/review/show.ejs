@@ -1,5 +1,5 @@
 <%
-  const pending = milestone.status !== 'approved' && milestone.status !== 'feedback';
+  const pending = !closed && milestone.status !== 'approved' && milestone.status !== 'feedback';
   const action = (path) => (preview ? '' : `action="/r/${milestone.token}/${path}"`);
   const disabled = preview ? 'disabled' : '';
   const amount = milestone.amount !== null ? fmt.money(milestone.amount, milestone.currency) : null;
@@ -155,7 +155,15 @@
 
   <aside class="review-side" aria-label="<%= t('review.aside') %>">
     <section class="glass panel decision reveal" style="--i: 1;" id="decision" data-decision data-mode="<%= mode %>" aria-labelledby="decision-title" tabindex="-1">
-      <% if (milestone.status === 'approved') { %>
+      <% if (closed) { %>
+        <div class="d-step">
+          <div class="done-head">
+            <span class="done-check is-closed"><%- include('../partials/icon', { name: 'lock' }) %></span>
+            <h2 id="decision-title"><%= t('review.closed.title') %></h2>
+          </div>
+          <p><%= t('review.closed.body', { dev: milestone.dev_name }) %></p>
+        </div>
+      <% } else if (milestone.status === 'approved') { %>
         <div class="d-step">
           <div class="done-head">
             <span class="done-check"><%- include('../partials/icon', { name: 'check' }) %></span>

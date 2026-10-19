@@ -1,33 +1,85 @@
-<%- include('../partials/head', { title: project.name, crumbs: [{ label: t('nav.projects'), href: '/dashboard' }, { label: project.name }] }) %>
-<div class="page-title reveal">
-  <div>
-    <h1><%= project.name %></h1>
-    <p><%= t('project.client') %> : <%= project.client_name %> · <a href="mailto:<%= project.client_email %>"><%= project.client_email %></a> · <%= project.currency %></p>
+<%- include('../partials/head', { title: project.name, crumbs: [{ label: t('nav.projects'), href: '/projects' }, { label: project.name }] }) %>
+<section class="glass project-head reveal" aria-labelledby="project-title">
+  <div class="project-head-top">
+    <div class="tile-title">
+      <div class="row">
+        <h1 id="project-title"><%= project.name %></h1>
+        <%- include('../partials/project-badge', { status: project.status }) %>
+      </div>
+      <p class="project-client"><%= t('project.client') %> : <%= project.client_name %> · <a href="mailto:<%= project.client_email %>"><%= project.client_email %></a> · <%= project.currency %></p>
+    </div>
+    <div class="tile-actions">
+      <% if (open) { %>
+        <a class="btn btn-light" href="/projects/<%= project.id %>/edit"><%- include('../partials/icon', { name: 'pencil' }) %><%= t('project.update') %></a>
+        <a class="btn" href="/projects/<%= project.id %>/complete" data-modal><%- include('../partials/icon', { name: 'flag' }) %><%= t('project.complete') %></a>
+        <a class="btn btn-danger" href="/projects/<%= project.id %>/abandon" data-modal><%- include('../partials/icon', { name: 'archive' }) %><%= t('project.abandon') %></a>
+      <% } else { %>
+        <a class="btn btn-light" href="/projects/<%= project.id %>/reopen" data-modal><%- include('../partials/icon', { name: 'refresh' }) %><%= t('project.reopen') %></a>
+      <% } %>
+    </div>
   </div>
-  <div class="row">
-    <a class="btn" href="/projects/<%= project.id %>/edit"><%- include('../partials/icon', { name: 'pencil' }) %><%= t('common.edit') %></a>
-    <a class="btn btn-light" href="/projects/<%= project.id %>/milestones/new"><%- include('../partials/icon', { name: 'plus' }) %><%= t('milestone.new') %></a>
-  </div>
-</div>
+  <% if (project.description) { %>
+    <p class="project-desc"><%= project.description %></p>
+  <% } %>
+  <% if (!open) { %>
+    <p class="lock-note"><%- include('../partials/icon', { name: 'lock', cls: 'icon-sm' }) %><span><%= t(`project.readOnly.${project.status}`, { date: fmt.date(project.closed_at) }) %></span></p>
+  <% } %>
+</section>
 
-<section class="glass panel reveal" style="--i: 1;" aria-labelledby="milestones-title">
-  <div class="panel-head"><h2 id="milestones-title"><%= t('project.milestones') %></h2></div>
-  <% if (milestones.length === 0) { %>
+<section class="glass next-banner reveal" style="--i: 1;" aria-labelledby="next-title">
+  <div class="next-main">
+    <p class="eyebrow" id="next-title"><%= t('next.title') %></p>
+    <p class="next-big"><%- include('../partials/next-text', { step: next }) %></p>
+    <% if (next.note) { %><p class="small"><%= t(next.note) %></p><% } %>
+  </div>
+  <div class="next-end">
+    <%- include('../partials/next-action', { step: next, size: 'btn-large', back: 'project' }) %>
+    <% if (next.secondary) { %><a class="btn btn-large" href="<%= next.secondary.href %>"><%- include('../partials/icon', { name: 'plus' }) %><%= t(next.secondary.label) %></a><% } %>
+  </div>
+</section>
+
+<div class="stack">
+<section class="glass panel panel-roomy reveal" style="--i: 2;" aria-labelledby="milestones-title">
+  <div class="panel-head">
+    <h2 id="milestones-title"><%= t('project.milestones') %></h2>
+    <% if (open && milestones.length > 0) { %>
+      <a class="btn btn-small" href="/projects/<%= project.id %>/milestones/new"><%- include('../partials/icon', { name: 'plus', cls: 'icon-sm' }) %><%= t('milestone.new') %></a>
+    <% } %>
+  </div>
+
+  <% if (current) { %>
+    <% const position = milestones.indexOf(current) + 1; %>
+    <article class="current-milestone">
+      <p class="eyebrow"><%= t('project.current') %> · <%= t('welcome.position', { position, total: milestones.length }) %></p>
+      <div class="row">
+        <h3><a href="/milestones/<%= current.id %>"><%= current.title %></a></h3>
+        <%- include('../partials/badge', { status: current.status }) %>
+      </div>
+      <ul class="facts">
+        <% if (current.amount !== null) { %><li><%= fmt.money(current.amount, project.currency) %></li><% } %>
+        <li><%= t('project.current.files', { count: current.file_count }) %></li>
+        <li><%= t('project.current.deliverables', { count: current.deliverable_count }) %></li>
+        <% if (current.sent_at) { %><li><%= t('project.current.sentAt', { date: fmt.date(current.sent_at) }) %></li><% } %>
+      </ul>
+      <a class="btn btn-light" href="/milestones/<%= current.id %>"><%= t('project.current.open') %><%- include('../partials/icon', { name: 'arrowRight' }) %></a>
+    </article>
+  <% } else if (milestones.length === 0) { %>
     <div class="empty-state">
       <span class="empty-icon"><%- include('../partials/icon', { name: 'file', cls: 'icon-lg' }) %></span>
       <h3><%= t('project.milestones.empty') %></h3>
       <p><%= t('project.milestones.emptyHint') %></p>
-      <a class="btn btn-light" href="/projects/<%= project.id %>/milestones/new"><%- include('../partials/icon', { name: 'plus' }) %><%= t('milestone.new') %></a>
     </div>
-  <% } else { %>
+  <% } %>
+
+  <% if (upcoming.length > 0) { %>
+    <h3 class="panel-title-sm"><%= t('project.upcoming') %></h3>
     <ol class="rows">
-      <% milestones.forEach((m, i) => { %>
+      <% upcoming.forEach((m) => { %>
         <li>
           <a class="row-link" href="/milestones/<%= m.id %>">
             <span class="row-main">
-              <span class="row-meta"><%= t('welcome.position', { position: i + 1, total: milestones.length }) %></span>
+              <span class="row-meta"><%= t('welcome.position', { position: milestones.indexOf(m) + 1, total: milestones.length }) %></span>
               <span class="row-title"><%= m.title %></span>
-              <% if (m.amount !== null) { %><span class="row-meta"><%= fmt.money(m.amount, project.currency) %></span><% } %>
             </span>
             <span class="row-end"><%- include('../partials/badge', { status: m.status }) %><span class="chev"><%- include('../partials/icon', { name: 'chevronRight' }) %></span></span>
           </a>
@@ -35,5 +87,52 @@
       <% }) %>
     </ol>
   <% } %>
+
+  <% if (archived.length > 0) { %>
+    <details class="archive" <%= !current && upcoming.length === 0 ? 'open' : '' %>>
+      <summary><%- include('../partials/icon', { name: 'chevronDown', cls: 'icon-sm' }) %><%= t('project.archived', { count: archived.length }) %></summary>
+      <ol class="rows">
+        <% archived.forEach((m) => { %>
+          <li>
+            <a class="row-link" href="/milestones/<%= m.id %>">
+              <span class="row-main">
+                <span class="row-meta"><%= t('welcome.position', { position: milestones.indexOf(m) + 1, total: milestones.length }) %><% if (m.approved_at) { %> · <%= t('project.archived.approvedAt', { date: fmt.date(m.approved_at) }) %><% } %></span>
+                <span class="row-title"><%= m.title %></span>
+                <% if (m.amount !== null) { %><span class="row-meta"><%= fmt.money(m.amount, project.currency) %></span><% } %>
+              </span>
+              <span class="row-end"><% if (m.status === 'approved') { %><%- include('../partials/icon', { name: 'lock', cls: 'icon-sm' }) %><% } %><%- include('../partials/badge', { status: m.status }) %><span class="chev"><%- include('../partials/icon', { name: 'chevronRight' }) %></span></span>
+            </a>
+          </li>
+        <% }) %>
+      </ol>
+    </details>
+  <% } %>
 </section>
+
+<% if (events.length > 0) { %>
+  <section class="glass panel reveal" style="--i: 3;" aria-labelledby="journal-title">
+    <details class="archive">
+      <summary id="journal-title"><%- include('../partials/icon', { name: 'chevronDown', cls: 'icon-sm' }) %><%= t('project.journal', { count: events.length }) %></summary>
+      <ul class="timeline">
+        <% events.forEach((e) => { %>
+          <li class="t-project-<%= e.type %>">
+            <strong><%= t(`projectEvent.${e.type}`) %></strong>
+            <% if (e.reason) { %> · <%= t(`project.reason.${e.reason}`) %><% } %>
+            <span class="meta"><%= fmt.dateTime(e.created_at) %></span>
+            <% if (e.note) { %><div class="message"><%= e.note %></div><% } %>
+          </li>
+        <% }) %>
+      </ul>
+    </details>
+  </section>
+<% } %>
+
+</div>
+
+<form class="danger-zone" method="post" action="/projects/<%= project.id %>/delete" data-confirm="<%= t('project.delete.confirm') %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <button class="btn btn-danger btn-small" type="submit"><%- include('../partials/icon', { name: 'trash', cls: 'icon-sm' }) %><%= t('project.delete') %></button>
+</form>
+
+<%- include('../partials/notes', { project, notes, notesMax }) %>
 <%- include('../partials/foot') %>

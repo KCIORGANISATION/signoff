@@ -7,7 +7,7 @@
   <% } %>
 
   <% if (locked) { %>
-    <% if (files.length > 0) { %><p class="lock-note"><%- include('icon', { name: 'lock', cls: 'icon-sm' }) %><span><%= t('files.frozen') %></span></p><% } %>
+    <% if (files.length > 0 && locals.frozen !== false) { %><p class="lock-note"><%- include('icon', { name: 'lock', cls: 'icon-sm' }) %><span><%= t('files.frozen') %></span></p><% } %>
   <% } else if (!filesEnabled) { %>
     <%- include('alert', { kind: 'info', text: t('files.disabled') }) %>
   <% } else { %>

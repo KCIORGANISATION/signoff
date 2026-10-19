@@ -17,6 +17,7 @@ import projectRoutes from './routes/projects.js';
 import milestoneRoutes from './routes/milestones.js';
 import reviewRoutes from './routes/review.js';
 import homeRoutes from './routes/home.js';
+import dashboardRoutes from './routes/dashboard.js';
 import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -122,6 +123,7 @@ export function createApp() {
   app.use(authRoutes);
   app.use(passwordRoutes);
   app.use(legalRoutes);
+  app.use(dashboardRoutes);
   app.use(projectRoutes);
   app.use(fileRoutes);
   app.use(milestoneRoutes);

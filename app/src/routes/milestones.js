@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { query, queryOne } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { absoluteUrl } from '../config.js';
-import { emailReviewRequest } from '../email.js';
+import { emailReviewReminder, emailReviewRequest } from '../email.js';
 import { parsePaymentLink, parsePaymentNote } from '../payment.js';
 import { ACCOUNT_QUOTA_BYTES, listFiles, storageKeys, usedBytes } from '../files.js';
 import { storage } from '../storage.js';
 import { renderFeedback } from '../text.js';
 import { clientPage, hidePayment } from './review.js';
+import { canRemind, isOpen } from '../projects.js';
 import {
   addEvent,
   certificateData,
@@ -26,8 +27,9 @@ import {
 const router = Router();
 router.use(['/milestones', '/projects/:projectId/milestones'], requireAuth);
 
-// SQL condition that is false once the milestone (whose id is the given parameter) is approved.
-const unlocked = (param) => `EXISTS (SELECT 1 FROM milestones WHERE id = ${param} AND status <> 'approved')`;
+// SQL condition that is false once the milestone (whose id is the given parameter) is approved,
+// or set aside when its project was completed or abandoned.
+const unlocked = (param) => `EXISTS (SELECT 1 FROM milestones WHERE id = ${param} AND status IN ('draft', 'sent', 'viewed', 'feedback'))`;
 
 function notFound(req, res) {
   res.status(404).render('error', { message: req.t('error.notFound') });
@@ -38,6 +40,13 @@ function notFound(req, res) {
 function locked(req, res) {
   res.status(409).render('error', { message: req.t('milestone.locked.error') });
 }
+
+// A completed or abandoned project is read-only until it is reopened.
+function closed(req, res) {
+  res.status(409).render('error', { message: req.t('project.closed.error') });
+}
+
+const projectClosed = (milestone) => milestone.project_status !== 'active';
 
 function readPaymentForm(body) {
   const paymentLink = parsePaymentLink(body.payment_link);
@@ -132,10 +141,17 @@ async function renderMilestone(req, res, milestone, formError = null, status = 2
     quota: { used, total: ACCOUNT_QUOTA_BYTES },
     editedAfterApproval,
     locked: isLocked(milestone),
+    projectClosed: projectClosed(milestone),
+    canRemind: !projectClosed(milestone) && canRemind({ ...milestone, last_contact_at: lastContact(events) }),
     expired: isExpired(milestone),
     link: milestone.status === 'draft' ? null : reviewLink(req, milestone),
     formError,
   });
+}
+
+// When the client was last sent the link or reminded of it. Events are newest first.
+function lastContact(events) {
+  return events.find((event) => event.type === 'sent' || event.type === 'reminded')?.created_at ?? null;
 }
 
 // The create / edit form. An existing milestone also shows its files and upload zone.
@@ -156,6 +172,7 @@ async function renderForm(req, res, locals, status = 200) {
 router.get('/projects/:projectId/milestones/new', async (req, res) => {
   const project = await findProjectForUser(req.session.user.id, req.params.projectId);
   if (!project) return notFound(req, res);
+  if (!isOpen(project)) return closed(req, res);
 
   await renderForm(req, res, { project, milestone: null, values: {}, error: null });
 });
@@ -163,6 +180,7 @@ router.get('/projects/:projectId/milestones/new', async (req, res) => {
 router.post('/projects/:projectId/milestones', async (req, res) => {
   const project = await findProjectForUser(req.session.user.id, req.params.projectId);
   if (!project) return notFound(req, res);
+  if (!isOpen(project)) return closed(req, res);
 
   const { values, error } = readMilestoneForm(req.body);
   if (error) {
@@ -187,6 +205,7 @@ router.get('/milestones/:id', async (req, res) => {
 router.get('/milestones/:id/edit', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
 
   const project = await findProjectForUser(req.session.user.id, milestone.project_id);
   await renderForm(req, res, { project, milestone, values: milestone, error: null, locked: isLocked(milestone) });
@@ -195,6 +214,7 @@ router.get('/milestones/:id/edit', async (req, res) => {
 router.post('/milestones/:id', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
   if (isLocked(milestone)) return locked(req, res);
 
   const { values, error } = readMilestoneForm(req.body);
@@ -207,7 +227,7 @@ router.post('/milestones/:id', async (req, res) => {
   const updated = await query(
     `UPDATE milestones
         SET title = $1, description = $2, amount = $3, payment_link = $4, payment_note = $5, updated_at = now()
-      WHERE id = $6 AND status <> 'approved'
+      WHERE id = $6 AND status IN ('draft', 'sent', 'viewed', 'feedback')
       RETURNING id`,
     [values.title, values.description, values.amount, values.payment_link, values.payment_note, milestone.id],
   );
@@ -250,6 +270,7 @@ router.post('/milestones/:id/payment', async (req, res) => {
 router.post('/milestones/:id/follow-up', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
 
   const followUp = await queryOne(
     `INSERT INTO milestones (project_id, title, token) VALUES ($1, $2, $3) RETURNING id`,
@@ -261,6 +282,7 @@ router.post('/milestones/:id/follow-up', async (req, res) => {
 router.post('/milestones/:id/delete', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
 
   const keys = await storageKeys('SELECT storage_key FROM files WHERE milestone_id = $1', [milestone.id]);
   await query('DELETE FROM milestones WHERE id = $1', [milestone.id]);
@@ -271,6 +293,7 @@ router.post('/milestones/:id/delete', async (req, res) => {
 router.post('/milestones/:id/deliverables', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
   if (isLocked(milestone)) return locked(req, res);
 
   const label = (req.body.label ?? '').trim();
@@ -304,6 +327,7 @@ router.post('/milestones/:id/deliverables', async (req, res) => {
 router.post('/milestones/:id/deliverables/:deliverableId/delete', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
   if (isLocked(milestone)) return locked(req, res);
 
   await query(`DELETE FROM deliverables WHERE id = $1 AND milestone_id = $2 AND ${unlocked('$2')}`, [
@@ -318,9 +342,33 @@ router.post('/milestones/:id/deliverables/:deliverableId/delete', async (req, re
 router.post('/milestones/:id/send', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
 
   await sendToClient(req, milestone);
   res.redirect(`/milestones/${milestone.id}#share`);
+});
+
+// Emails the same link again to a client who has not answered yet, at most once a day.
+router.post('/milestones/:id/remind', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
+
+  const events = await listEvents(milestone.id);
+  if (canRemind({ ...milestone, last_contact_at: lastContact(events) })) {
+    await addEvent(milestone.id, 'reminded');
+    await emailReviewReminder({
+      to: milestone.client_email,
+      lang: req.lang,
+      devName: req.session.user.name,
+      clientName: milestone.client_name,
+      title: milestone.title,
+      projectName: milestone.project_name,
+      link: reviewLink(req, milestone),
+    });
+  }
+  const back = { home: '/dashboard', project: `/projects/${milestone.project_id}` }[req.body.back];
+  res.redirect(back ?? `/milestones/${milestone.id}#share`);
 });
 
 router.get('/milestones/:id/certificate', async (req, res) => {
