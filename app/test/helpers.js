@@ -7,6 +7,7 @@ process.env.APP_URL = '';
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? '';
 process.env.RESEND_API_KEY = '';
 process.env.TRUST_PROXY = '1';
+process.env.CRON_SECRET = 'test-cron-secret-0123456789abcdef0123';
 
 const fs = await import('node:fs');
 const os = await import('node:os');

@@ -98,10 +98,10 @@
       <div class="table-wrap">
         <table class="data-table">
           <caption class="sr-only"><%= t('stats.clients') %></caption>
-          <thead><tr><th scope="col"><%= t('stats.client') %></th><th scope="col"><%= t('stats.clients.projects') %></th><th scope="col"><%= t('stats.clients.response') %></th><th scope="col"><%= t('stats.clients.feedback') %></th></tr></thead>
+          <thead><tr><th scope="col"><%= t('stats.client') %></th><th scope="col"><%= t('stats.clients.projects') %></th><th scope="col"><%= t('stats.clients.response') %></th><th scope="col"><%= t('stats.clients.feedback') %></th><th scope="col"><%= t('stats.clients.outOfScope') %></th><th scope="col"><%= t('stats.clients.supplements') %></th></tr></thead>
           <tbody>
             <% s.clients.forEach((c) => { %>
-              <tr><th scope="row"><%= c.name %><span class="row-meta"><%= c.email %></span></th><td><%= c.projects %></td><td><%= c.responseMs === null ? dash : fmt.duration(c.responseMs) %></td><td><%= c.feedback %></td></tr>
+              <tr><th scope="row"><%= c.name %><span class="row-meta"><%= c.email %></span></th><td><%= c.projects %></td><td><%= c.responseMs === null ? dash : fmt.duration(c.responseMs) %></td><td><%= c.feedback %></td><td><%= c.outOfScope %></td><td><%= c.supplementsProposed === 0 ? dash : t('stats.clients.supplementsValue', { accepted: c.supplementsAccepted, proposed: c.supplementsProposed }) %></td></tr>
             <% }) %>
           </tbody>
         </table>

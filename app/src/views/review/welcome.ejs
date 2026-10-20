@@ -1,4 +1,5 @@
 <%- include('../partials/head', { title: milestone.title, client: true }) %>
+<% const needsFrame = frame && frame.needsAcceptance; %>
 <div class="welcome">
   <section class="glass welcome-card reveal" aria-labelledby="welcome-title">
     <p class="eyebrow"><%= t('welcome.request', { dev: milestone.dev_name }) %></p>
@@ -8,8 +9,27 @@
       <li class="pill"><%= t('welcome.position', position) %></li>
       <% if (milestone.amount !== null) { %><li class="pill"><%= fmt.money(milestone.amount, milestone.currency) %></li><% } %>
     </ul>
-    <p><%= t('welcome.body') %></p>
-    <a class="btn btn-primary btn-large btn-block" href="/r/<%= milestone.token %>/review"><%= t('welcome.open') %><%- include('../partials/icon', { name: 'chevronRight' }) %></a>
+    <% if (needsFrame) { %>
+      <div class="frame-card" id="frame">
+        <h2><%= t(frame.frame.version > 1 ? 'frame.client.titleChanged' : 'frame.client.title') %></h2>
+        <p><%= t(frame.frame.version > 1 ? 'frame.client.leadChanged' : 'frame.client.lead', { dev: milestone.dev_name }) %></p>
+        <%- include('../partials/frame-summary', { frame: frame.frame }) %>
+        <form method="post" action="/r/<%= milestone.token %>/frame" class="stack-sm">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="version" value="<%= frame.frame.version %>">
+          <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+          <label class="check">
+            <input type="checkbox" name="accept" value="yes" required <%- error ? 'aria-invalid="true"' : '' %>>
+            <span><%= t('frame.accept.label') %></span>
+          </label>
+          <p class="small"><%= t('frame.accept.note') %></p>
+          <button class="btn btn-primary btn-large btn-block" type="submit" data-loading><%= t('frame.accept.submit') %><%- include('../partials/icon', { name: 'chevronRight' }) %></button>
+        </form>
+      </div>
+    <% } else { %>
+      <p><%= t('welcome.body') %></p>
+      <a class="btn btn-primary btn-large btn-block" href="/r/<%= milestone.token %>/review"><%= t('welcome.open') %><%- include('../partials/icon', { name: 'chevronRight' }) %></a>
+    <% } %>
     <p class="small"><%= t('welcome.noAccount') %></p>
   </section>
 </div>

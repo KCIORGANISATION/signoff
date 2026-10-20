@@ -1,0 +1,16 @@
+<%# The three parts of a project frame, as the client and the proof file show them.
+    include('frame-summary', { frame: { included, revisions, validation_days } }) %>
+<dl class="frame-facts">
+  <div>
+    <dt><%= t('frame.included') %></dt>
+    <dd><% if (frame.included) { %><span class="pre"><%= frame.included %></span><% } else { %><span class="muted"><%= t('frame.included.none') %></span><% } %></dd>
+  </div>
+  <div>
+    <dt><%= t('frame.revisions') %></dt>
+    <dd><%= frame.revisions === null || frame.revisions === undefined ? t('frame.revisions.unlimitedLong') : t('frame.revisions.perMilestone', { count: frame.revisions }) %></dd>
+  </div>
+  <div>
+    <dt><%= t('frame.days') %></dt>
+    <dd><%= frame.validation_days === null || frame.validation_days === undefined ? t('frame.days.noneLong') : t(frame.validation_days === 1 ? 'frame.days.afterOne' : 'frame.days.after', { count: frame.validation_days }) %></dd>
+  </div>
+</dl>

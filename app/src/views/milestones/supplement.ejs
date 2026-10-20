@@ -1,0 +1,37 @@
+<%- include('../partials/head', { title: t('supplement.new.title'), crumbs: [{ label: t('nav.projects'), href: '/projects' }, { label: milestone.project_name, href: `/projects/${milestone.project_id}` }, { label: milestone.title, href: `/milestones/${milestone.id}` }, { label: t('supplement.new.title') }] }) %>
+<div class="page-medium" style="margin: 0 auto;">
+  <section class="glass panel panel-roomy reveal" aria-labelledby="supplement-title">
+    <h1 id="supplement-title" class="form-title"><%= t('supplement.new.title') %></h1>
+    <p class="muted"><%= t('supplement.new.lead', { client: milestone.client_name }) %></p>
+
+    <figure class="quote-block">
+      <figcaption class="small"><%= t('supplement.new.request', { date: fmt.dateTime(feedback.created_at) }) %></figcaption>
+      <blockquote class="pre"><%= feedback.message %></blockquote>
+    </figure>
+
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <form method="post" action="/milestones/<%= milestone.id %>/supplements" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="feedback_id" value="<%= feedback.id %>">
+      <div class="field">
+        <label for="title"><%= t('supplement.title') %></label>
+        <input id="title" name="title" type="text" required maxlength="<%= limits.title %>" placeholder="<%= t('supplement.title.placeholder') %>" value="<%= values.title ?? '' %>">
+      </div>
+      <div class="field">
+        <label for="description"><%= t('supplement.description') %></label>
+        <textarea id="description" name="description" rows="4" maxlength="<%= limits.description %>" aria-describedby="description-hint"><%= values.description ?? '' %></textarea>
+        <p class="hint" id="description-hint"><%= t('supplement.description.hint') %></p>
+      </div>
+      <div class="field" style="max-width: 260px;">
+        <label for="amount"><%= t('supplement.amount', { currency: milestone.currency }) %></label>
+        <input id="amount" name="amount" type="text" inputmode="decimal" required aria-describedby="amount-hint" value="<%= values.amount ?? '' %>">
+        <p class="hint" id="amount-hint"><%= t('supplement.amount.hint') %></p>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-light btn-large" type="submit" data-loading><%- include('../partials/icon', { name: 'send' }) %><%= t('supplement.submit') %></button>
+        <a class="btn btn-large" href="/milestones/<%= milestone.id %>#feedback-<%= feedback.id %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </section>
+</div>
+<%- include('../partials/foot') %>

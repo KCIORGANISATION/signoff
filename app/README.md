@@ -96,6 +96,21 @@ Le client ne les voit **qu'après avoir approuvé** : avant, ils ne sont pas du 
 
 Signoff ne traite aucun paiement, n'envoie pas d'email au client à ce sujet et ne suit pas les clics. Si le dev modifie le lien après l'approbation, le client voit le nouveau lien ; le lien de paiement ne fait pas partie de la preuve figée.
 
+## Cadre, révisions, suppléments et échéances
+
+- **Cadre du projet** : à la création (étape 4) ou avec « Mettre à jour », le dev indique ce qui est inclus, le nombre de révisions incluses par jalon (0 à 10, ou illimité) et le délai de validation (1 à 30 jours, ou aucun). Avant sa première décision, le client voit le cadre sur la carte d'accueil de son lien et coche « J'ai lu et j'accepte ce cadre » ; Signoff enregistre la date, l'IP, le navigateur et une copie figée de la version acceptée (`frame_acceptances`). Chaque modification crée une nouvelle version (`project_frames`) que le client doit accepter avant sa décision suivante ; les anciennes restent. Un projet sans cadre (créé avant cette version, ou laissé aux valeurs par défaut) fonctionne comme avant : rien à accepter, révisions illimitées, pas de délai.
+- **Compteur de révisions** : chaque « Laisser un retour » est un tour, enregistré avec son numéro et la limite du moment (`review_events.round`, `round_limit`, `over_limit`). Au-delà de la limite, le retour est toujours envoyé (jamais refusé), marqué « au-delà des révisions incluses », et le dev choisit : « Accepter quand même » ou « Proposer un supplément ».
+- **Hors périmètre et suppléments** : sur chaque retour, le dev peut cliquer « Hors périmètre », puis « Proposer un supplément » (titre, description, montant dans la devise du projet). Le client voit la proposition sur la page de son jalon et l'accepte ou la refuse, avec un commentaire facultatif. Accepté : un nouveau jalon brouillon est créé avec ce montant (`supplements.milestone_created_id`). Refusé : c'est enregistré et la demande reste hors périmètre. Un supplément décidé ne peut plus changer (trigger).
+- **Délai de validation** : chaque envoi fixe `milestones.due_at` = envoi + délai. Le client reçoit un rappel à la moitié du délai et la veille (un seul email si les deux tombent en même temps ou si le délai fait 1 ou 2 jours). Une fois le délai passé, l'historique l'indique, le jalon affiche « Sans réponse du client » et le dev reçoit un email. **Aucune approbation automatique** : le jalon reste en attente tant que le client n'a pas décidé.
+- **Vérification des délais** : `checkDeadlines` (`src/deadlines.js`) est idempotente (un index unique empêche d'enregistrer deux fois le même rappel). Elle tourne à l'ouverture des pages concernées (tableau de bord, projet, jalon, lien client) et via `POST /cron/deadlines` avec l'en-tête `Authorization: Bearer <CRON_SECRET>` (comparaison en temps constant ; 401 sans le bon secret, 404 si `CRON_SECRET` n'est pas défini). Le workflow `.github/workflows/deadlines.yml` l'appelle toutes les heures : ajoute dans les secrets GitHub du dépôt `APP_URL` et `CRON_SECRET` (la même valeur que sur Render). Sans ces secrets, il ne fait rien. GitHub suspend les workflows planifiés d'un dépôt sans activité pendant 60 jours : un moniteur externe (UptimeRobot, cron-job.org) peut appeler la même route.
+
+  ```bash
+  curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://ton-app.onrender.com/cron/deadlines
+  # {"status":"ok","reminders":0,"overdue":0}
+  ```
+
+- **Dossier de preuve** : `/projects/:id/proof`, pour le dev propriétaire uniquement. Une page imprimable (bouton « Imprimer ou enregistrer en PDF », qui marche aussi sur téléphone) avec les versions du cadre et leurs acceptations, les jalons et leurs statuts, les fichiers et leur empreinte SHA-256, les décisions et retours datés, les suppléments et leur issue, et le journal des changements d'état.
+
 ## Organisation du code
 
 ```
@@ -114,6 +129,11 @@ app/
     files.js         fichiers joints : type réel, nom, limites, envoi au navigateur
     storage.js       stockage des fichiers (R2, dossier local en développement, ou désactivé)
     email.js         emails via Resend (ou affichés dans le terminal)
+    projects.js      états des projets, prochaine étape, journal, notes
+    scope.js         cadre du projet, compteur de révisions, suppléments
+    deadlines.js     délais de validation et rappels (idempotent)
+    proof.js         données du dossier de preuve
+    stats.js         calculs des statistiques
     auth.js          protège les pages du dev
     routes/
       auth.js        inscription (code d'invitation), connexion, déconnexion
@@ -122,7 +142,8 @@ app/
       projects.js    tableau de bord et projets
       milestones.js  jalons, livrables, lien client, certificat côté dev
       files.js       envoi, suppression et téléchargement des fichiers côté dev
-      review.js      pages client : validation, feedback, certificat
+      review.js      pages client : cadre, validation, feedback, suppléments, certificat
+      cron.js        vérification des délais, protégée par CRON_SECRET
     views/           templates EJS
   public/            style.css et app.js (copier le lien, confirmations, impression)
   scripts/           sauvegarde et restauration de la base (Cloudflare R2)
@@ -146,7 +167,9 @@ Signoff envoie trois sortes d'emails via [Resend](https://resend.com) :
 
 - au client, quand le dev envoie un jalon (avec le lien de validation) ;
 - au dev, quand le client approuve ou laisse un feedback (dans la langue choisie par le dev) ;
-- au dev, pour réinitialiser son mot de passe (lien valable 1 heure, une seule fois).
+- au dev, pour réinitialiser son mot de passe (lien valable 1 heure, une seule fois) ;
+- au client, pour un rappel du délai de validation ou une proposition de supplément ;
+- au dev, pour un retour au-delà des révisions incluses, un délai passé sans réponse, ou la réponse du client à un supplément.
 
 Tant que `RESEND_API_KEY` est vide, l'email s'affiche simplement dans le terminal du serveur.
 
@@ -161,7 +184,7 @@ Tant que `RESEND_API_KEY` est vide, l'email s'affiche simplement dans le termina
 
 ## Variables d'environnement
 
-Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `CONTACT_EMAIL` (facultative), `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
+Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `CONTACT_EMAIL` (facultative), `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, `CRON_SECRET` (facultative : sans elle, la route des délais est désactivée), et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
 
 En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SESSION_SECRET`, `APP_URL`, `DATABASE_URL` ou `INVITE_CODE`, et affiche la liste de ce qui manque.
 

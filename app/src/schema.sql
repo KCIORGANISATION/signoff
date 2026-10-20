@@ -212,3 +212,123 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS activity TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS activity_other TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS delivers TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS questionnaire_at TIMESTAMPTZ;
+
+-- Phase 5, Lot 3 -------------------------------------------------------------
+
+-- The working frame of a project: what is included, how many feedback rounds each milestone
+-- includes (NULL: unlimited) and how many days the client has to decide (NULL: no deadline).
+-- Each change is a new version; old versions stay. A project without any version (created
+-- before frames existed, or left at the defaults) works as before: unlimited, no deadline,
+-- nothing for the client to accept.
+CREATE TABLE IF NOT EXISTS project_frames (
+  id              SERIAL PRIMARY KEY,
+  project_id      INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  version         INTEGER NOT NULL,
+  included        TEXT NOT NULL DEFAULT '',
+  revisions       INTEGER,
+  validation_days INTEGER,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (project_id, version)
+);
+
+-- The client's acceptance of one frame version, with a frozen copy of what they accepted.
+CREATE TABLE IF NOT EXISTS frame_acceptances (
+  id           SERIAL PRIMARY KEY,
+  frame_id     INTEGER NOT NULL REFERENCES project_frames(id) ON DELETE CASCADE,
+  project_id   INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  milestone_id INTEGER REFERENCES milestones(id) ON DELETE SET NULL,
+  snapshot     JSONB NOT NULL,
+  ip           TEXT,
+  user_agent   TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (frame_id)
+);
+CREATE INDEX IF NOT EXISTS frame_acceptances_project_idx ON frame_acceptances(project_id);
+
+-- Frame versions and acceptances are never changed (deleting the project still removes them).
+-- A milestone deleted later only loses its link to the acceptance.
+CREATE OR REPLACE FUNCTION signoff_frames_append_only() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND NOT EXISTS (SELECT 1 FROM projects WHERE id = OLD.project_id) THEN
+    RETURN OLD;
+  END IF;
+  IF TG_OP = 'UPDATE' AND TG_TABLE_NAME = 'frame_acceptances' THEN
+    IF NEW.milestone_id IS NULL AND NEW.frame_id = OLD.frame_id AND NEW.snapshot = OLD.snapshot AND NEW.created_at = OLD.created_at THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+  RAISE EXCEPTION '% is append-only', TG_TABLE_NAME;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER project_frames_append_only
+  BEFORE UPDATE OR DELETE ON project_frames
+  FOR EACH ROW EXECUTE FUNCTION signoff_frames_append_only();
+
+CREATE OR REPLACE TRIGGER frame_acceptances_append_only
+  BEFORE UPDATE OR DELETE ON frame_acceptances
+  FOR EACH ROW EXECUTE FUNCTION signoff_frames_append_only();
+
+-- Feedback rounds: each feedback records its round number, the limit of the frame at that
+-- moment, and whether it went beyond the included revisions.
+-- Milestone history also gets these event types, all written by the app:
+--   out_of_scope (the developer marked a feedback as out of scope; snapshot.feedback_id),
+--   revision_accepted (the developer accepted a feedback beyond the limit; snapshot.feedback_id),
+--   supplement_proposed / supplement_accepted / supplement_declined (snapshot.supplement_id),
+--   deadline_reminder / deadline_passed (snapshot.key, unique per deadline and kind).
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS round INTEGER;
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS round_limit INTEGER;
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS over_limit BOOLEAN NOT NULL DEFAULT false;
+
+-- Makes the deadline check idempotent: the same reminder can only ever be recorded once.
+CREATE UNIQUE INDEX IF NOT EXISTS review_events_deadline_once
+  ON review_events (milestone_id, type, (snapshot->>'key'))
+  WHERE type IN ('deadline_reminder', 'deadline_passed');
+
+-- When the client should decide by: the last sending plus the frame's validation days.
+-- NULL without a deadline. Nothing is ever approved automatically when it passes.
+ALTER TABLE milestones ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ;
+
+-- A paid supplement proposed to the client for an out-of-scope request.
+-- status: proposed, accepted (a new milestone is created: milestone_created_id), declined.
+CREATE TABLE IF NOT EXISTS supplements (
+  id                   SERIAL PRIMARY KEY,
+  project_id           INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  milestone_id         INTEGER NOT NULL REFERENCES milestones(id) ON DELETE CASCADE,
+  feedback_id          INTEGER REFERENCES review_events(id) ON DELETE SET NULL,
+  title                TEXT NOT NULL,
+  description          TEXT NOT NULL DEFAULT '',
+  amount               NUMERIC(12, 2) NOT NULL,
+  currency             TEXT NOT NULL,
+  status               TEXT NOT NULL DEFAULT 'proposed',
+  client_comment       TEXT,
+  decided_at           TIMESTAMPTZ,
+  ip                   TEXT,
+  user_agent           TEXT,
+  milestone_created_id INTEGER REFERENCES milestones(id) ON DELETE SET NULL,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS supplements_milestone_idx ON supplements(milestone_id);
+CREATE INDEX IF NOT EXISTS supplements_project_idx ON supplements(project_id);
+
+-- A decided supplement is a record: only the links to deleted rows may still be cleared.
+CREATE OR REPLACE FUNCTION signoff_supplement_locked() RETURNS trigger AS $$
+BEGIN
+  IF OLD.status <> 'proposed' AND (
+       NEW.status IS DISTINCT FROM OLD.status
+    OR NEW.title IS DISTINCT FROM OLD.title
+    OR NEW.description IS DISTINCT FROM OLD.description
+    OR NEW.amount IS DISTINCT FROM OLD.amount
+    OR NEW.currency IS DISTINCT FROM OLD.currency
+    OR NEW.client_comment IS DISTINCT FROM OLD.client_comment
+    OR NEW.decided_at IS DISTINCT FROM OLD.decided_at
+  ) THEN
+    RAISE EXCEPTION 'supplement % is decided and locked', OLD.id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER supplements_locked
+  BEFORE UPDATE ON supplements
+  FOR EACH ROW EXECUTE FUNCTION signoff_supplement_locked();

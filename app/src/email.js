@@ -54,3 +54,24 @@ export function emailReviewReminder({ to, lang, devName, clientName, title, proj
 export function emailProjectClosed({ to, lang, devName, clientName, projectName }) {
   return sendEmail({ to, ...compose(lang, 'projectClosed', { dev: devName, client: clientName, project: projectName }) });
 }
+
+export function emailFeedbackOverLimit({ to, lang, clientName, title, projectName, message, round, limit, link }) {
+  return sendEmail({ to, ...compose(lang, 'overLimit', { client: clientName, title, project: projectName, message, round, limit, link }) });
+}
+
+export function emailDeadlineReminder({ to, lang, devName, clientName, title, projectName, date, link }) {
+  return sendEmail({ to, ...compose(lang, 'deadline', { dev: devName, client: clientName, title, project: projectName, date, link }) });
+}
+
+export function emailDeadlinePassed({ to, lang, clientName, title, projectName, date, link }) {
+  return sendEmail({ to, ...compose(lang, 'overdue', { client: clientName, title, project: projectName, date, link }) });
+}
+
+export function emailSupplementProposed({ to, lang, devName, clientName, title, projectName, amount, link }) {
+  return sendEmail({ to, ...compose(lang, 'supplement', { dev: devName, client: clientName, title, project: projectName, amount, link }) });
+}
+
+export function emailSupplementDecided({ to, lang, clientName, title, projectName, accepted, comment, link }) {
+  const name = accepted ? 'supplementAccepted' : 'supplementDeclined';
+  return sendEmail({ to, ...compose(lang, name, { client: clientName, title, project: projectName, comment: comment || '–', link }) });
+}

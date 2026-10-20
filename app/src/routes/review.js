@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db.js';
-import { absoluteUrl } from '../config.js';
-import { emailApproved, emailFeedback } from '../email.js';
+import { absoluteUrl, baseUrl } from '../config.js';
+import { emailApproved, emailFeedback, emailFeedbackOverLimit, emailSupplementDecided } from '../email.js';
 import {
   LINK_LIFETIME_DAYS,
   addEvent,
@@ -13,12 +13,16 @@ import {
   latestApproval,
   listDeliverables,
   milestonePosition,
+  newToken,
+  toId,
 } from '../models.js';
 import { paymentDomain } from '../payment.js';
 import { findFile, listFiles, sendFile } from '../files.js';
 import { storage } from '../storage.js';
 import { describe } from '../text.js';
-import { isClosedForClient } from '../projects.js';
+import { cleanText, isClosedForClient } from '../projects.js';
+import { COMMENT_MAX_LENGTH, acceptFrame, acceptSupplement, declineSupplement, frameStatus, listSupplements, revisionCount } from '../scope.js';
+import { checkDeadlines, isOverdue } from '../deadlines.js';
 
 const MAX_NAME_LENGTH = 120;
 
@@ -54,8 +58,13 @@ async function loadMilestone(req, res) {
     res.status(410).render('review/expired', { milestone });
     return null;
   }
+  // A deadline that passed while nobody called the scheduled check is recorded now.
+  if (milestone.due_at) await checkDeadlines({ baseUrl: baseUrl(req), milestoneIds: [milestone.id] });
   return hidePayment(milestone);
 }
+
+// The client can decide on this milestone right now (not considering the frame).
+const awaitsDecision = (milestone) => !isClosedForClient(milestone) && (milestone.status === 'sent' || milestone.status === 'viewed');
 
 // The payment link and note leave the server only once the milestone is approved.
 // Before that, the page only knows whether the developer gave payment details.
@@ -74,14 +83,21 @@ export function hidePayment(milestone) {
 // Everything the client milestone page shows. fileBase is where the files are served:
 // the client link, or the developer's own URL for the "view as client" preview.
 export async function clientPage(milestone, { fileBase, preview = false, mode = 'choose', error = null, values = {} }) {
-  const [deliverables, files, history, position, approval] = await Promise.all([
+  const [deliverables, files, history, position, approval, frame, supplements] = await Promise.all([
     listDeliverables(milestone.id),
     listFiles(milestone.id),
     clientHistory(milestone),
     milestonePosition(milestone),
     milestone.status === 'approved' ? latestApproval(milestone.id) : null,
+    frameStatus(milestone.project_id),
+    listSupplements(milestone.id),
   ]);
+  const revisions = await revisionCount(milestone.id, frame.frame);
   return {
+    frame,
+    revisions,
+    supplements,
+    overdue: isOverdue(milestone),
     milestone,
     approval,
     deliverables,
@@ -120,9 +136,27 @@ router.get('/r/:token', async (req, res) => {
   if (!milestone) return;
   await markViewed(req, milestone);
 
-  if (milestone.status !== 'viewed') return renderReview(req, res, milestone);
+  // Before the first decision, and after each change of the frame, the client accepts the frame here.
+  const frame = awaitsDecision(milestone) ? await frameStatus(milestone.project_id) : null;
+  if (milestone.status !== 'viewed' && !frame?.needsAcceptance) return renderReview(req, res, milestone);
   const position = await milestonePosition(milestone);
-  res.render('review/welcome', { milestone, position });
+  res.render('review/welcome', { milestone, position, frame, error: null });
+});
+
+router.post('/r/:token/frame', async (req, res) => {
+  const milestone = await loadMilestone(req, res);
+  if (!milestone) return;
+  const frame = await frameStatus(milestone.project_id);
+  if (!awaitsDecision(milestone) || !frame.needsAcceptance) return res.redirect(`/r/${req.params.token}/review`);
+  // Only the current version can be accepted: a frame changed while the page was open is shown again.
+  if (String(req.body.version) !== String(frame.frame.version)) return res.redirect(`/r/${req.params.token}`);
+
+  if (req.body.accept !== 'yes') {
+    const position = await milestonePosition(milestone);
+    return res.status(400).render('review/welcome', { milestone, position, frame, error: req.t('frame.accept.error') });
+  }
+  await acceptFrame(frame.frame, { projectId: milestone.project_id, milestoneId: milestone.id, ...clientDetails(req) });
+  res.redirect(`/r/${req.params.token}/review`);
 });
 
 router.get('/r/:token/review', async (req, res) => {
@@ -135,7 +169,7 @@ router.get('/r/:token/review', async (req, res) => {
 router.post('/r/:token/approve', async (req, res) => {
   const milestone = await loadMilestone(req, res);
   if (!milestone) return;
-  if (isClosedForClient(milestone) || (milestone.status !== 'sent' && milestone.status !== 'viewed')) {
+  if (!awaitsDecision(milestone) || (await frameStatus(milestone.project_id)).needsAcceptance) {
     return res.redirect(`/r/${req.params.token}`);
   }
 
@@ -173,7 +207,8 @@ router.post('/r/:token/approve', async (req, res) => {
 router.post('/r/:token/feedback', async (req, res) => {
   const milestone = await loadMilestone(req, res);
   if (!milestone) return;
-  if (isClosedForClient(milestone) || (milestone.status !== 'sent' && milestone.status !== 'viewed')) {
+  const frame = await frameStatus(milestone.project_id);
+  if (!awaitsDecision(milestone) || frame.needsAcceptance) {
     return res.redirect(`/r/${req.params.token}`);
   }
 
@@ -192,11 +227,61 @@ router.post('/r/:token/feedback', async (req, res) => {
 
   // The files in the order the client saw them, so their /fichierN citations keep their meaning.
   const files = (await listFiles(milestone.id)).map(({ id, name }) => ({ id, name }));
-  await addEvent(milestone.id, 'feedback', { ...clientDetails(req), clientName: milestone.client_name, message, files });
+  // Each feedback is a revision round. Beyond the rounds the frame includes, it is still sent,
+  // never refused, and marked so the developer decides what to do with it.
+  const { used, limit } = await revisionCount(milestone.id, frame.frame);
+  const round = used + 1;
+  const overLimit = limit !== null && round > limit;
+  await addEvent(milestone.id, 'feedback', {
+    ...clientDetails(req), clientName: milestone.client_name, message, files, round, roundLimit: limit, overLimit,
+  });
 
-  await emailFeedback({ ...developerEmail(req, milestone), message });
+  if (overLimit) await emailFeedbackOverLimit({ ...developerEmail(req, milestone), message, round, limit });
+  else await emailFeedback({ ...developerEmail(req, milestone), message });
 
   res.redirect(`/r/${req.params.token}`);
+});
+
+// The client answers a supplement proposed on this milestone. Accepting creates a new milestone
+// with its amount; declining records it, and the request stays out of scope.
+router.post('/r/:token/supplements/:id/:decision', async (req, res) => {
+  const milestone = await loadMilestone(req, res);
+  if (!milestone) return;
+  const decision = req.params.decision;
+  const supplementId = toId(req.params.id);
+  const supplement = (await listSupplements(milestone.id)).find((s) => s.id === supplementId);
+  if (!supplement || (decision !== 'accept' && decision !== 'decline')) {
+    return res.status(404).render('error', { message: req.t('error.notFound') });
+  }
+  const back = `/r/${req.params.token}/review#supplement-${supplement.id}`;
+  if (supplement.status !== 'proposed' || milestone.project_status !== 'active') return res.redirect(back);
+
+  const comment = cleanText(req.body.comment, COMMENT_MAX_LENGTH);
+  if (comment === false) {
+    const page = await clientPage(milestone, { fileBase: `/r/${req.params.token}/files` });
+    return res.status(400).render('review/show', { ...page, supplementError: { id: supplement.id, message: req.t('supplement.comment.tooLong', { max: COMMENT_MAX_LENGTH }), comment: String(req.body.comment ?? '') } });
+  }
+
+  const details = { comment, ...clientDetails(req) };
+  const decided = decision === 'accept'
+    ? await acceptSupplement(supplement.id, { ...details, token: newToken() })
+    : await declineSupplement(supplement.id, details);
+  if (!decided) return res.redirect(back);
+
+  await addEvent(milestone.id, decision === 'accept' ? 'supplement_accepted' : 'supplement_declined', {
+    ...clientDetails(req),
+    clientName: milestone.client_name,
+    message: comment,
+    snapshot: { supplement_id: supplement.id, title: supplement.title, amount: supplement.amount, currency: supplement.currency },
+  });
+  await emailSupplementDecided({
+    ...developerEmail(req, milestone),
+    title: supplement.title,
+    accepted: decision === 'accept',
+    comment,
+    link: absoluteUrl(req, decided.milestone_created_id ? `/milestones/${decided.milestone_created_id}` : `/milestones/${milestone.id}`),
+  });
+  res.redirect(back);
 });
 
 // A file of this milestone, for whoever holds its valid client link.

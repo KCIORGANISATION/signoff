@@ -6,6 +6,16 @@
       <%- include('../partials/badge', { status: milestone.status }) %>
     </div>
     <p><%= milestone.client_name %><% if (milestone.amount !== null) { %> · <%= fmt.money(milestone.amount, milestone.currency) %><% } %></p>
+    <ul class="milestone-facts">
+      <% if (revisions.limited) { %>
+        <li class="<%= revisions.used > revisions.limit ? 'is-beyond' : '' %>"><%= revisions.used === 0 ? t('revisions.none', { limit: revisions.limit }) : revisions.used > revisions.limit ? t('revisions.beyond', { used: revisions.used, limit: revisions.limit }) : t('revisions.count', { used: revisions.used, limit: revisions.limit }) %></li>
+      <% } %>
+      <% if (overdue) { %>
+        <li class="is-overdue"><%- include('../partials/icon', { name: 'clock', cls: 'icon-sm' }) %><%= t('deadline.dev.passed', { date: fmt.date(milestone.due_at) }) %></li>
+      <% } else if (milestone.due_at && (milestone.status === 'sent' || milestone.status === 'viewed')) { %>
+        <li><%- include('../partials/icon', { name: 'clock', cls: 'icon-sm' }) %><%= t('deadline.dev.due', { date: fmt.date(milestone.due_at) }) %></li>
+      <% } %>
+    </ul>
   </div>
   <div class="row">
     <a class="btn" href="/milestones/<%= milestone.id %>/preview"><%- include('../partials/icon', { name: 'eye' }) %><%= t('milestone.form.preview') %></a>
@@ -161,15 +171,45 @@
         <p class="empty"><%= t('milestone.history.empty') %></p>
       <% } else { %>
         <ul class="timeline">
-          <% events.forEach((e) => { %>
-            <li class="t-<%= e.type %>">
+          <% events.forEach((e) => { const snap = typeof e.snapshot === 'string' ? JSON.parse(e.snapshot) : e.snapshot; %>
+            <li class="t-<%= e.type %>" <%- e.type === 'feedback' ? `id="feedback-${e.id}"` : '' %>>
               <strong><%= t('event.' + e.type) %></strong>
               <% if (e.type === 'approved' && e.client_name) { %> · <%= e.client_name %><% } %>
+              <% if (e.type === 'feedback' && e.round) { %> · <%= e.round_limit === null ? t('revisions.round', { round: e.round }) : t('revisions.roundOf', { round: e.round, limit: e.round_limit }) %><% } %>
+              <% if (e.type.startsWith('supplement_') && snap) { %> · <%= snap.title %> · <%= fmt.money(snap.amount, snap.currency) %><% } %>
               <span class="meta"><%= fmt.dateTime(e.created_at) %></span>
               <% if (e.html) { %>
                 <div class="message"><%- e.html %></div>
               <% } else if (e.message) { %>
                 <div class="message"><%= e.message %></div>
+              <% } %>
+              <% if (e.type === 'feedback') { const d = decisions.byFeedback.get(e.id) ?? { outOfScope: null, acceptedAnyway: null, supplements: [] }; %>
+                <div class="feedback-scope">
+                  <% if (e.over_limit) { %><span class="scope-tag is-beyond"><%= t('revisions.beyondTag') %></span><% } %>
+                  <% if (d.outOfScope) { %><span class="scope-tag"><%= t('scope.tag') %></span><% } %>
+                  <% if (d.acceptedAnyway) { %><span class="scope-tag is-ok"><%= t('revisions.acceptedTag') %></span><% } %>
+                  <% d.supplements.forEach((sup) => { %><span class="scope-tag is-<%= sup.status %>"><%= t(`supplement.status.${sup.status}`) %> · <%= fmt.money(sup.amount, sup.currency) %></span><% }) %>
+                </div>
+                <% if (!projectClosed) { %>
+                  <div class="feedback-actions">
+                    <% if (e.over_limit && !d.acceptedAnyway && d.supplements.length === 0) { %>
+                      <p class="small"><%= t('revisions.beyondHint') %></p>
+                      <form method="post" action="/milestones/<%= milestone.id %>/feedback/<%= e.id %>/accept">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-small" type="submit"><%= t('revisions.acceptAnyway') %></button>
+                      </form>
+                    <% } %>
+                    <% if (!d.outOfScope && !d.acceptedAnyway && !e.over_limit) { %>
+                      <form method="post" action="/milestones/<%= milestone.id %>/feedback/<%= e.id %>/out-of-scope" data-confirm="<%= t('scope.mark.confirm') %>">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-small" type="submit"><%= t('scope.mark') %></button>
+                      </form>
+                    <% } %>
+                    <% if (canPropose && (d.outOfScope || (e.over_limit && !d.acceptedAnyway)) && !d.supplements.some((sup) => sup.status !== 'declined')) { %>
+                      <a class="btn btn-small btn-light" href="/milestones/<%= milestone.id %>/supplements/new?feedback=<%= e.id %>"><%- include('../partials/icon', { name: 'plus', cls: 'icon-sm' }) %><%= t('supplement.propose') %></a>
+                    <% } %>
+                  </div>
+                <% } %>
               <% } %>
             </li>
           <% }) %>
