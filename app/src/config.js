@@ -23,6 +23,10 @@ export function load(env) {
     if (!env.INVITE_CODE) errors.push('INVITE_CODE is required (nobody could sign up without it).');
     if (!env.RESEND_API_KEY) console.warn('RESEND_API_KEY is not set: emails are printed in the logs instead of being sent.');
   }
+  // Secret of the deadline check route (/cron/deadlines). Without it the route is off.
+  const cronSecret = env.CRON_SECRET ?? '';
+  if (cronSecret && cronSecret.length < 32) errors.push('CRON_SECRET must be a random string of at least 32 characters.');
+  if (production && !cronSecret) console.warn('CRON_SECRET is not set: deadline reminders only run when the pages concerned are opened.');
   if (env.RESEND_API_KEY && !env.EMAIL_FROM) errors.push('EMAIL_FROM is required when RESEND_API_KEY is set.');
 
   // File uploads go to a private R2 bucket. Without its four variables the app still
@@ -57,6 +61,7 @@ export function load(env) {
     databaseUrl: env.DATABASE_URL || '',
     resendApiKey: env.RESEND_API_KEY || '',
     emailFrom: env.EMAIL_FROM || '',
+    cronSecret,
     trustProxy: Number.isInteger(trustProxy) && trustProxy >= 0 ? trustProxy : 1,
     files: {
       storage: filesStorage,
@@ -76,6 +81,11 @@ export const config = load(process.env);
 export function absoluteUrl(req, pathname) {
   const base = config.appUrl || `${req.protocol}://${req.get('host')}`;
   return `${base}${pathname}`;
+}
+
+// Base URL for links in emails sent outside a page request: APP_URL, else the request's host.
+export function baseUrl(req) {
+  return config.appUrl || `${req.protocol}://${req.get('host')}`;
 }
 
 // Optional contact address shown on the "Request access" page. Ignored if it does not look like an email.

@@ -1,0 +1,127 @@
+<%- include('../partials/head', { title: t('proof.title', { name: project.name }), client: true }) %>
+<%
+  const parse = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+  const statusLabel = (s) => t(`status.${s}`);
+%>
+<div class="certificate-actions" style="max-width: 860px; margin-left: auto; margin-right: auto;">
+  <a class="btn btn-small" href="/projects/<%= project.id %>"><%- include('../partials/icon', { name: 'arrowLeft', cls: 'icon-sm' }) %><%= t('common.back') %></a>
+  <button class="btn btn-light btn-small" type="button" data-print><%- include('../partials/icon', { name: 'print', cls: 'icon-sm' }) %><%= t('cert.print') %></button>
+</div>
+
+<article class="certificate proof glass reveal">
+  <div class="certificate-top">
+    <div>
+      <span class="brand brand-print"><span class="brand-mark"><%- include('../partials/icon', { name: 'check' }) %></span>Signoff</span>
+      <h1><%= t('proof.heading') %></h1>
+      <p><%= t('proof.intro') %></p>
+    </div>
+  </div>
+
+  <dl class="cert-facts">
+    <dt><%= t('cert.project') %></dt><dd><strong><%= project.name %></strong></dd>
+    <dt><%= t('cert.provider') %></dt><dd><%= provider %></dd>
+    <dt><%= t('project.client') %></dt><dd><%= project.client_name %> · <%= project.client_email %></dd>
+    <dt><%= t('proof.state') %></dt><dd><%= t(`projectStatus.${project.status}`) %></dd>
+    <dt><%= t('proof.createdAt') %></dt><dd class="mono"><%= fmt.isoUtc(project.created_at) %></dd>
+    <dt><%= t('proof.generatedAt') %></dt><dd class="mono"><%= fmt.isoUtc(generatedAt) %></dd>
+  </dl>
+
+  <section class="cert-section" aria-labelledby="proof-frame">
+    <h2 id="proof-frame"><%= t('proof.frame') %></h2>
+    <% if (frames.length === 0) { %>
+      <p class="muted"><%= t('proof.frame.none') %></p>
+    <% } %>
+    <% frames.forEach((f) => { %>
+      <div class="proof-block">
+        <h3><%= t('frame.version', { version: f.version }) %> <span class="muted small">· <%= t('proof.frame.created', { date: fmt.isoUtc(f.created_at) }) %></span></h3>
+        <% if (f.accepted_at) { %>
+          <p><%= t('proof.frame.accepted', { date: fmt.isoUtc(f.accepted_at) }) %></p>
+          <p class="small muted mono"><%= t('cert.ip') %> <%= f.accepted_ip %> · <%= f.accepted_user_agent %></p>
+          <%- include('../partials/frame-summary', { frame: f.accepted_snapshot }) %>
+        <% } else { %>
+          <p class="muted"><%= t('proof.frame.notAccepted') %></p>
+          <%- include('../partials/frame-summary', { frame: f }) %>
+        <% } %>
+      </div>
+    <% }) %>
+  </section>
+
+  <section class="cert-section" aria-labelledby="proof-milestones">
+    <h2 id="proof-milestones"><%= t('proof.milestones', { count: milestones.length }) %></h2>
+    <% if (milestones.length === 0) { %><p class="muted"><%= t('proof.milestones.none') %></p><% } %>
+    <% milestones.forEach((m, i) => { %>
+      <div class="proof-block">
+        <h3><%= i + 1 %>. <%= m.title %> <span class="muted small">· <%= statusLabel(m.status) %><% if (m.amount !== null) { %> · <%= fmt.money(m.amount, project.currency) %><% } %></span></h3>
+        <% if (m.approval) { %>
+          <p><%= t('proof.approvedBy', { name: m.approval.client_name, date: fmt.isoUtc(m.approval.created_at) }) %></p>
+          <p class="small muted mono"><%= t('cert.reference') %> <%= m.reference %> · <%= t('cert.ip') %> <%= m.approval.ip %></p>
+        <% } %>
+
+        <% if (m.files.length > 0) { %>
+          <h4><%= m.frozenFiles ? t('cert.files') : t('proof.files') %></h4>
+          <ol class="cert-files">
+            <% m.files.forEach((f) => { %>
+              <li><span class="file-name"><%= f.name %></span> <span class="file-size small">· <%= fmt.bytes(f.size) %></span><div class="mono hash">SHA-256 <%= f.sha256 %></div></li>
+            <% }) %>
+          </ol>
+        <% } %>
+
+        <h4><%= t('proof.history') %></h4>
+        <% if (m.events.length === 0) { %>
+          <p class="muted small"><%= t('milestone.history.empty') %></p>
+        <% } else { %>
+          <ol class="proof-events">
+            <% m.events.forEach((e) => { const snap = e.snapshot; %>
+              <li>
+                <span class="mono when"><%= fmt.isoUtc(e.created_at) %></span>
+                <span>
+                  <strong><%= t('event.' + e.type) %></strong>
+                  <% if (e.type === 'approved' && e.client_name) { %> · <%= e.client_name %><% } %>
+                  <% if (e.type === 'feedback' && e.round) { %> · <%= e.round_limit === null ? t('revisions.round', { round: e.round }) : t('revisions.roundOf', { round: e.round, limit: e.round_limit }) %><% if (e.over_limit) { %> · <%= t('revisions.beyondTag') %><% } %><% } %>
+                  <% if (e.type.startsWith('supplement_') && snap) { %> · <%= snap.title %> · <%= fmt.money(snap.amount, snap.currency) %><% } %>
+                  <% if (e.type.startsWith('deadline_') && snap) { %> · <%= t('proof.deadline', { date: fmt.isoUtc(snap.due_at) }) %><% } %>
+                  <% if ((e.type === 'feedback' || e.type.startsWith('supplement_')) && e.message) { %><span class="pre proof-message"><%= e.message %></span><% } %>
+                </span>
+              </li>
+            <% }) %>
+          </ol>
+        <% } %>
+      </div>
+    <% }) %>
+  </section>
+
+  <section class="cert-section" aria-labelledby="proof-supplements">
+    <h2 id="proof-supplements"><%= t('supplement.list.title') %></h2>
+    <% if (supplements.length === 0) { %><p class="muted"><%= t('proof.supplements.none') %></p><% } %>
+    <% supplements.forEach((sup) => { %>
+      <div class="proof-block">
+        <h3><%= sup.title %> <span class="muted small">· <%= fmt.money(sup.amount, sup.currency) %> · <%= t(`supplement.status.${sup.status}`) %></span></h3>
+        <p class="small"><%= t('proof.supplement.origin', { title: titleOf[sup.milestone_id] ?? '–', date: fmt.isoUtc(sup.created_at) }) %></p>
+        <% if (sup.description) { %><p class="pre"><%= sup.description %></p><% } %>
+        <% if (sup.decided_at) { %>
+          <p><%= t(`proof.supplement.${sup.status}`, { date: fmt.isoUtc(sup.decided_at) }) %><% if (sup.milestone_created_id && titleOf[sup.milestone_created_id]) { %> · <%= t('proof.supplement.milestone', { title: titleOf[sup.milestone_created_id] }) %><% } %></p>
+          <% if (sup.client_comment) { %><p class="small pre"><%= t('proof.supplement.comment') %> <%= sup.client_comment %></p><% } %>
+          <p class="small muted mono"><%= t('cert.ip') %> <%= sup.ip %></p>
+        <% } %>
+      </div>
+    <% }) %>
+  </section>
+
+  <section class="cert-section" aria-labelledby="proof-journal">
+    <h2 id="proof-journal"><%= t('proof.journal') %></h2>
+    <ol class="proof-events">
+      <% journal.forEach((e) => { %>
+        <li>
+          <span class="mono when"><%= fmt.isoUtc(e.created_at) %></span>
+          <span>
+            <strong><%= t(`projectEvent.${e.type}`) %></strong><% if (e.reason) { %> · <%= t(`project.reason.${e.reason}`) %><% } %>
+            <% if (e.note) { %><span class="pre proof-message"><%= e.note %></span><% } %>
+          </span>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+
+  <p class="small muted proof-eidas"><%= t('proof.eidas') %></p>
+</article>
+<%- include('../partials/foot', { client: true }) %>

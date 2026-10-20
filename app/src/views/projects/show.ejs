@@ -16,6 +16,7 @@
       <% } else { %>
         <a class="btn btn-light" href="/projects/<%= project.id %>/reopen" data-modal><%- include('../partials/icon', { name: 'refresh' }) %><%= t('project.reopen') %></a>
       <% } %>
+      <a class="btn" href="/projects/<%= project.id %>/proof"><%- include('../partials/icon', { name: 'shield' }) %><%= t('proof.open') %></a>
     </div>
   </div>
   <% if (project.description) { %>
@@ -108,6 +109,56 @@
     </details>
   <% } %>
 </section>
+
+<section class="glass panel panel-roomy reveal" style="--i: 3;" aria-labelledby="frame-title">
+  <div class="panel-head">
+    <h2 id="frame-title"><%= t('frame.dev.title') %></h2>
+    <% if (open) { %><a class="btn btn-small" href="/projects/<%= project.id %>/edit#frame_included"><%- include('../partials/icon', { name: 'pencil', cls: 'icon-sm' }) %><%= t('frame.dev.edit') %></a><% } %>
+  </div>
+  <% if (frames.length === 0) { %>
+    <p class="muted"><%= t('frame.dev.none') %></p>
+  <% } else { const f = frames[0]; %>
+    <p class="frame-status <%= f.accepted_at ? 'is-accepted' : '' %>">
+      <%- include('../partials/icon', { name: f.accepted_at ? 'check' : 'clock', cls: 'icon-sm' }) %>
+      <span><%= f.accepted_at ? t('frame.dev.accepted', { version: f.version, date: fmt.dateTime(f.accepted_at) }) : t('frame.dev.waiting', { version: f.version }) %></span>
+    </p>
+    <%- include('../partials/frame-summary', { frame: f }) %>
+    <% if (frames.length > 1) { %>
+      <details class="archive">
+        <summary><%- include('../partials/icon', { name: 'chevronDown', cls: 'icon-sm' }) %><%= t('frame.dev.history', { count: frames.length - 1 }) %></summary>
+        <ul class="timeline">
+          <% frames.slice(1).forEach((old) => { %>
+            <li>
+              <strong><%= t('frame.version', { version: old.version }) %></strong>
+              <span class="meta"><%= t('frame.dev.created', { date: fmt.dateTime(old.created_at) }) %> · <%= old.accepted_at ? t('frame.dev.acceptedOn', { date: fmt.dateTime(old.accepted_at) }) : t('frame.dev.neverAccepted') %></span>
+              <%- include('../partials/frame-summary', { frame: old }) %>
+            </li>
+          <% }) %>
+        </ul>
+      </details>
+    <% } %>
+  <% } %>
+</section>
+
+<% if (supplements.length > 0) { %>
+  <section class="glass panel panel-roomy reveal" style="--i: 3;" aria-labelledby="supplements-title">
+    <h2 id="supplements-title"><%= t('supplement.list.title') %></h2>
+    <ol class="rows">
+      <% supplements.forEach((sup) => { %>
+        <li>
+          <a class="row-link" href="/milestones/<%= sup.milestone_created_id ?? sup.milestone_id %>">
+            <span class="row-main">
+              <span class="row-meta"><%= t('supplement.list.proposed', { date: fmt.date(sup.created_at) }) %><% if (sup.decided_at) { %> · <%= t(`supplement.list.${sup.status}`, { date: fmt.date(sup.decided_at) }) %><% } %></span>
+              <span class="row-title"><%= sup.title %></span>
+              <span class="row-meta"><%= fmt.money(sup.amount, sup.currency) %></span>
+            </span>
+            <span class="row-end"><span class="scope-tag is-<%= sup.status %>"><%= t(`supplement.status.${sup.status}`) %></span><span class="chev"><%- include('../partials/icon', { name: 'chevronRight' }) %></span></span>
+          </a>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+<% } %>
 
 <% if (events.length > 0) { %>
   <section class="glass panel reveal" style="--i: 3;" aria-labelledby="journal-title">

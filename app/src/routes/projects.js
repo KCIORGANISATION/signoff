@@ -5,6 +5,10 @@ import { CURRENCIES, findProjectForUser } from '../models.js';
 import { storageKeys } from '../files.js';
 import { storage } from '../storage.js';
 import { emailProjectClosed } from '../email.js';
+import { baseUrl } from '../config.js';
+import { checkDeadlines } from '../deadlines.js';
+import { MAX_REVISIONS, MAX_VALIDATION_DAYS, FRAME_INCLUDED_MAX_LENGTH, currentFrame, frameHistory, readFrameForm, saveFrame } from '../scope.js';
+import { proofData } from '../proof.js';
 import {
   ABANDON_REASONS,
   NOTES_MAX_LENGTH,
@@ -63,8 +67,17 @@ function wantsJson(req) {
   return (req.get('accept') ?? '').includes('application/json');
 }
 
+const FRAME_LIMITS = { included: FRAME_INCLUDED_MAX_LENGTH, revisions: MAX_REVISIONS, days: MAX_VALIDATION_DAYS };
+
 function renderForm(res, locals, status = 200) {
-  res.status(status).render('projects/form', { currencies: CURRENCIES, limits: PROJECT_LIMITS, ...locals });
+  res.status(status).render('projects/form', { currencies: CURRENCIES, limits: PROJECT_LIMITS, frameLimits: FRAME_LIMITS, ...locals });
+}
+
+// The project form and its frame fields, read together: either error shows on the same form.
+function readForms(body) {
+  const project = readProjectForm(body);
+  const frame = readFrameForm(body);
+  return { values: project.values, frame: frame.values, error: project.error ?? frame.error };
 }
 
 router.get('/projects', async (req, res) => {
@@ -89,12 +102,12 @@ router.get('/projects', async (req, res) => {
 });
 
 router.get('/projects/new', (req, res) => {
-  renderForm(res, { project: null, values: { currency: 'EUR' }, error: null });
+  renderForm(res, { project: null, values: { currency: 'EUR' }, frame: { included: '', revisions: null, validation_days: null }, error: null });
 });
 
 router.post('/projects', async (req, res) => {
-  const { values, error } = readProjectForm(req.body);
-  if (error) return renderForm(res, { project: null, values, error: req.t(error) }, 400);
+  const { values, frame, error } = readForms(req.body);
+  if (error) return renderForm(res, { project: null, values, frame, error: req.t(error) }, 400);
 
   const project = await queryOne(
     `INSERT INTO projects (user_id, name, client_name, client_email, currency, description)
@@ -102,6 +115,7 @@ router.post('/projects', async (req, res) => {
     [req.session.user.id, values.name, values.client_name, values.client_email, values.currency, values.description],
   );
   await addProjectEvent(project.id, 'created', { to: 'active' });
+  await saveFrame(project.id, frame);
   res.redirect(`/projects/${project.id}`);
 });
 
@@ -109,10 +123,13 @@ router.get('/projects/:id', async (req, res) => {
   const project = await findProjectForUser(req.session.user.id, req.params.id);
   if (!project) return notFound(req, res);
 
-  const [milestones, events, notes] = await Promise.all([
+  await checkDeadlines({ baseUrl: baseUrl(req), userId: req.session.user.id });
+  const [milestones, events, notes, frames, supplements] = await Promise.all([
     milestonesWithProgress([project.id]),
     listProjectEvents(project.id),
     readNotes(project.id),
+    frameHistory(project.id),
+    query('SELECT * FROM supplements WHERE project_id = $1 ORDER BY id DESC', [project.id]),
   ]);
   res.render('projects/show', {
     project,
@@ -123,6 +140,8 @@ router.get('/projects/:id', async (req, res) => {
     notes,
     notesMax: NOTES_MAX_LENGTH,
     open: isOpen(project),
+    frames,
+    supplements,
   });
 });
 
@@ -131,7 +150,7 @@ router.get('/projects/:id/edit', async (req, res) => {
   if (!project) return notFound(req, res);
   if (!isOpen(project)) return closed(req, res);
 
-  renderForm(res, { project, values: project, error: null });
+  renderForm(res, { project, values: project, frame: await currentFrame(project.id), error: null });
 });
 
 router.post('/projects/:id', async (req, res) => {
@@ -139,9 +158,10 @@ router.post('/projects/:id', async (req, res) => {
   if (!project) return notFound(req, res);
   if (!isOpen(project)) return closed(req, res);
 
-  const { values, error } = readProjectForm(req.body);
-  if (error) return renderForm(res, { project, values, error: req.t(error) }, 400);
+  const { values, frame, error } = readForms(req.body);
+  if (error) return renderForm(res, { project, values, frame, error: req.t(error) }, 400);
 
+  await saveFrame(project.id, frame);
   await query(
     `UPDATE projects SET name = $1, client_name = $2, client_email = $3, currency = $4, description = $5
       WHERE id = $6 AND status = 'active'`,
@@ -264,6 +284,16 @@ router.post('/projects/:id/reopen', async (req, res) => {
 
   await reopenProject(project.id, project.status, note);
   res.redirect(`/projects/${project.id}`);
+});
+
+// ---------------------------------------------------------------------------
+// The proof file: everything Signoff recorded on the project, on one printable page.
+// For the owner only; nothing here is reachable from a client link.
+// ---------------------------------------------------------------------------
+router.get('/projects/:id/proof', async (req, res) => {
+  const project = await findProjectForUser(req.session.user.id, req.params.id);
+  if (!project) return notFound(req, res);
+  res.render('projects/proof', await proofData(project, req.session.user));
 });
 
 // ---------------------------------------------------------------------------

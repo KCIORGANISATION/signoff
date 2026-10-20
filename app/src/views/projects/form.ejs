@@ -3,6 +3,7 @@
   { key: 'project', fields: ['name', 'description'] },
   { key: 'client', fields: ['client_name', 'client_email'] },
   { key: 'money', fields: ['currency'] },
+  { key: 'frame', fields: ['frame_included', 'frame_revisions', 'frame_days'] },
 ]; %>
 <div class="page-medium" style="margin: 0 auto;">
   <section class="glass panel panel-roomy reveal">
@@ -56,6 +57,34 @@
           </select>
         </div>
         <p class="hint" id="currency-hint"><%= t('project.currency.hint') %></p>
+      </fieldset>
+
+      <fieldset class="form-step" data-step="3">
+        <legend><span class="step-count"><%= t('project.step.count', { step: 4, total: steps.length }) %></span><%= t('project.step.frame') %></legend>
+        <p class="hint"><%= t(project ? 'frame.form.leadEdit' : 'frame.form.lead') %></p>
+        <div class="field">
+          <label for="frame_included"><%= t('frame.included') %></label>
+          <textarea id="frame_included" name="frame_included" maxlength="<%= frameLimits.included %>" rows="4" aria-describedby="frame-included-hint" placeholder="<%= t('frame.included.placeholder') %>"><%= frame.included ?? '' %></textarea>
+          <p class="hint" id="frame-included-hint"><%= t('frame.included.hint') %></p>
+        </div>
+        <div class="fields-row">
+          <div class="field">
+            <label for="frame_revisions"><%= t('frame.revisions') %></label>
+            <select id="frame_revisions" name="frame_revisions" aria-describedby="frame-revisions-hint">
+              <option value="unlimited" <%= frame.revisions === null ? 'selected' : '' %>><%= t('frame.revisions.unlimited') %></option>
+              <% for (let n = 0; n <= frameLimits.revisions; n += 1) { %><option value="<%= n %>" <%= frame.revisions === n ? 'selected' : '' %>><%= t('frame.revisions.n', { count: n }) %></option><% } %>
+            </select>
+            <p class="hint" id="frame-revisions-hint"><%= t('frame.revisions.hint') %></p>
+          </div>
+          <div class="field">
+            <label for="frame_days"><%= t('frame.days') %></label>
+            <select id="frame_days" name="frame_days" aria-describedby="frame-days-hint">
+              <option value="none" <%= frame.validation_days === null ? 'selected' : '' %>><%= t('frame.days.none') %></option>
+              <% for (let n = 1; n <= frameLimits.days; n += 1) { %><option value="<%= n %>" <%= frame.validation_days === n ? 'selected' : '' %>><%= t(n === 1 ? 'frame.days.one' : 'frame.days.n', { count: n }) %></option><% } %>
+            </select>
+            <p class="hint" id="frame-days-hint"><%= t('frame.days.hint') %></p>
+          </div>
+        </div>
       </fieldset>
 
       <div class="form-actions">

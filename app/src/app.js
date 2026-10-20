@@ -20,6 +20,7 @@ import homeRoutes from './routes/home.js';
 import dashboardRoutes from './routes/dashboard.js';
 import profileRoutes, { requireNames } from './routes/profile.js';
 import statsRoutes from './routes/stats.js';
+import cronRoutes from './routes/cron.js';
 import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -107,6 +108,9 @@ export function createApp() {
     res.locals.describe = describe;
     next();
   });
+
+  // The deadline check is called by a scheduler with a secret, not by a browser form.
+  app.use(cronRoutes);
 
   // File uploads are multipart: their form, including the CSRF token, is read here first.
   app.post(UPLOAD_PATH, uploadParser);

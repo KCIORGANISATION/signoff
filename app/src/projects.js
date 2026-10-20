@@ -97,9 +97,11 @@ export function nextStep(project, milestones, now = new Date()) {
   }
   if (current.status === 'sent' || current.status === 'viewed') {
     const days = daysSince(current.sent_at ?? current.updated_at, now);
+    // Past the validation deadline the milestone still waits: nothing is approved for the client.
+    const overdue = current.due_at && new Date(current.due_at) <= now;
     return {
-      key: days === 0 ? 'next.waiting.today' : days === 1 ? 'next.waiting.oneDay' : 'next.waiting.days',
-      vars: { ...vars, days },
+      key: overdue ? 'next.overdue' : days === 0 ? 'next.waiting.today' : days === 1 ? 'next.waiting.oneDay' : 'next.waiting.days',
+      vars: { ...vars, days, date: current.due_at },
       action: canRemind(current, now)
         ? { label: 'next.remind.action', href: `${milestone}/remind`, method: 'post' }
         : { label: 'next.waiting.action', href: `${milestone}#share` },

@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import { query, queryOne } from '../db.js';
 import { requireAuth } from '../auth.js';
-import { absoluteUrl } from '../config.js';
-import { emailReviewReminder, emailReviewRequest } from '../email.js';
+import { absoluteUrl, baseUrl } from '../config.js';
+import { emailReviewReminder, emailReviewRequest, emailSupplementProposed } from '../email.js';
 import { parsePaymentLink, parsePaymentNote } from '../payment.js';
 import { ACCOUNT_QUOTA_BYTES, listFiles, storageKeys, usedBytes } from '../files.js';
 import { storage } from '../storage.js';
 import { renderFeedback } from '../text.js';
 import { clientPage, hidePayment } from './review.js';
 import { canRemind, isOpen } from '../projects.js';
+import { SUPPLEMENT_LIMITS, currentFrame, feedbackDecisions, readSupplementForm, revisionCount } from '../scope.js';
+import { checkDeadlines, isOverdue } from '../deadlines.js';
 import {
   addEvent,
   certificateData,
@@ -82,9 +84,14 @@ function reviewLink(req, milestone) {
 // Emails the review link to the client, for a draft or after feedback. Returns whether it was sent.
 async function sendToClient(req, milestone) {
   if (milestone.status !== 'draft' && milestone.status !== 'feedback') return false;
+  // With a validation delay in the frame, each sending sets the date the client should decide by.
+  const frame = await currentFrame(milestone.project_id);
   const updated = await query(
-    `UPDATE milestones SET status = 'sent', updated_at = now() WHERE id = $1 AND status IN ('draft', 'feedback') RETURNING id`,
-    [milestone.id],
+    `UPDATE milestones
+        SET status = 'sent', updated_at = now(),
+            due_at = CASE WHEN $2::int IS NULL THEN NULL ELSE now() + make_interval(days => $2::int) END
+      WHERE id = $1 AND status IN ('draft', 'feedback') RETURNING id`,
+    [milestone.id, frame.validation_days],
   );
   if (updated.length === 0) return false;
   await addEvent(milestone.id, 'sent');
@@ -112,13 +119,17 @@ async function afterSave(req, res, milestoneId) {
 }
 
 async function renderMilestone(req, res, milestone, formError = null, status = 200) {
-  const [deliverables, events, approval, files, used] = await Promise.all([
+  if (milestone.due_at) await checkDeadlines({ baseUrl: baseUrl(req), milestoneIds: [milestone.id] });
+  const [deliverables, events, approval, files, used, frame, decisions] = await Promise.all([
     listDeliverables(milestone.id),
     listEvents(milestone.id),
     latestApproval(milestone.id),
     listFiles(milestone.id),
     usedBytes(req.session.user.id),
+    currentFrame(milestone.project_id),
+    feedbackDecisions(milestone.id),
   ]);
+  const revisions = await revisionCount(milestone.id, frame);
   // Feedback citations (/fichier2) link to the files as they were when the client wrote.
   const current = new Map(files.map((file) => [file.id, file]));
   for (const event of events) {
@@ -146,6 +157,11 @@ async function renderMilestone(req, res, milestone, formError = null, status = 2
     expired: isExpired(milestone),
     link: milestone.status === 'draft' ? null : reviewLink(req, milestone),
     formError,
+    frame,
+    revisions,
+    decisions,
+    overdue: isOverdue(milestone),
+    canPropose: !projectClosed(milestone) && !isExpired(milestone),
   });
 }
 
@@ -369,6 +385,94 @@ router.post('/milestones/:id/remind', async (req, res) => {
   }
   const back = { home: '/dashboard', project: `/projects/${milestone.project_id}` }[req.body.back];
   res.redirect(back ?? `/milestones/${milestone.id}#share`);
+});
+
+// ---------------------------------------------------------------------------
+// Out-of-scope requests, revisions beyond the frame, and paid supplements.
+// ---------------------------------------------------------------------------
+async function findFeedback(milestoneId, eventId) {
+  const id = toId(eventId);
+  if (!id) return null;
+  return queryOne(`SELECT * FROM review_events WHERE id = $1 AND milestone_id = $2 AND type = 'feedback'`, [id, milestoneId]);
+}
+
+// Records a decision about one feedback once: marking it out of scope, or accepting it beyond the limit.
+async function recordFeedbackDecision(milestoneId, type, feedbackId) {
+  const exists = await queryOne(
+    `SELECT 1 FROM review_events WHERE milestone_id = $1 AND type = $2 AND (snapshot->>'feedback_id')::int = $3`,
+    [milestoneId, type, feedbackId],
+  );
+  if (!exists) await addEvent(milestoneId, type, { snapshot: { feedback_id: feedbackId } });
+}
+
+router.post('/milestones/:id/feedback/:eventId/out-of-scope', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+  const feedback = await findFeedback(milestone.id, req.params.eventId);
+  if (!feedback) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
+
+  await recordFeedbackDecision(milestone.id, 'out_of_scope', feedback.id);
+  res.redirect(`/milestones/${milestone.id}#feedback-${feedback.id}`);
+});
+
+// "Accept anyway": the feedback beyond the included revisions is handled as part of the milestone.
+router.post('/milestones/:id/feedback/:eventId/accept', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+  const feedback = await findFeedback(milestone.id, req.params.eventId);
+  if (!feedback || !feedback.over_limit) return notFound(req, res);
+  if (projectClosed(milestone)) return closed(req, res);
+
+  await recordFeedbackDecision(milestone.id, 'revision_accepted', feedback.id);
+  res.redirect(`/milestones/${milestone.id}#feedback-${feedback.id}`);
+});
+
+async function renderSupplementForm(req, res, milestone, feedback, { values = {}, error = null, status = 200 } = {}) {
+  res.status(status).render('milestones/supplement', { milestone, feedback, values, error, limits: SUPPLEMENT_LIMITS });
+}
+
+router.get('/milestones/:id/supplements/new', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+  const feedback = await findFeedback(milestone.id, req.query.feedback);
+  if (!feedback) return notFound(req, res);
+  if (projectClosed(milestone) || isExpired(milestone)) return closed(req, res);
+
+  await renderSupplementForm(req, res, milestone, feedback);
+});
+
+router.post('/milestones/:id/supplements', async (req, res) => {
+  const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
+  if (!milestone) return notFound(req, res);
+  const feedback = await findFeedback(milestone.id, req.body.feedback_id);
+  if (!feedback) return notFound(req, res);
+  if (projectClosed(milestone) || isExpired(milestone)) return closed(req, res);
+
+  const { values, error } = readSupplementForm(req.body);
+  if (error) return renderSupplementForm(req, res, milestone, feedback, { values, error: req.t(error), status: 400 });
+
+  // Proposing a supplement for a request means it is out of scope; if it is declined, it stays so.
+  await recordFeedbackDecision(milestone.id, 'out_of_scope', feedback.id);
+  const supplement = await queryOne(
+    `INSERT INTO supplements (project_id, milestone_id, feedback_id, title, description, amount, currency)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [milestone.project_id, milestone.id, feedback.id, values.title, values.description, values.amount, milestone.currency],
+  );
+  await addEvent(milestone.id, 'supplement_proposed', {
+    snapshot: { supplement_id: supplement.id, feedback_id: feedback.id, title: supplement.title, amount: supplement.amount, currency: supplement.currency },
+  });
+  await emailSupplementProposed({
+    to: milestone.client_email,
+    lang: req.lang,
+    devName: req.session.user.name,
+    clientName: milestone.client_name,
+    title: supplement.title,
+    projectName: milestone.project_name,
+    amount: res.locals.fmt.money(supplement.amount, supplement.currency),
+    link: absoluteUrl(req, `/r/${milestone.token}/review`),
+  });
+  res.redirect(`/milestones/${milestone.id}#feedback-${feedback.id}`);
 });
 
 router.get('/milestones/:id/certificate', async (req, res) => {

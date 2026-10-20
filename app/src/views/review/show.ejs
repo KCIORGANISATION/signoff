@@ -1,5 +1,7 @@
 <%
-  const pending = !closed && milestone.status !== 'approved' && milestone.status !== 'feedback';
+  const needsFrame = !closed && frame.needsAcceptance && (milestone.status === 'sent' || milestone.status === 'viewed');
+  const pending = !closed && !needsFrame && milestone.status !== 'approved' && milestone.status !== 'feedback';
+  const supplementError = locals.supplementError ?? null;
   const action = (path) => (preview ? '' : `action="/r/${milestone.token}/${path}"`);
   const disabled = preview ? 'disabled' : '';
   const amount = milestone.amount !== null ? fmt.money(milestone.amount, milestone.currency) : null;
@@ -191,10 +193,21 @@
           </div>
           <p><%= t('review.feedback.sent', { dev: milestone.dev_name }) %></p>
         </div>
+      <% } else if (needsFrame && !preview) { %>
+        <div class="d-step">
+          <h2 id="decision-title"><%= t('frame.client.first') %></h2>
+          <p><%= t('frame.client.firstBody') %></p>
+          <a class="btn btn-light btn-large btn-block" href="/r/<%= milestone.token %>#frame"><%= t('frame.client.read') %><%- include('../partials/icon', { name: 'chevronRight' }) %></a>
+        </div>
       <% } else { %>
         <div class="d-step d-choose">
           <h2 id="decision-title"><%= t('review.decision') %></h2>
           <p><%= t('review.decision.intro') %></p>
+          <% if (overdue) { %>
+            <p class="deadline-note is-overdue"><%- include('../partials/icon', { name: 'clock', cls: 'icon-sm' }) %><span><%= t('deadline.client.passed', { date: fmt.date(milestone.due_at) }) %></span></p>
+          <% } else if (milestone.due_at) { %>
+            <p class="deadline-note"><%- include('../partials/icon', { name: 'clock', cls: 'icon-sm' }) %><span><%= t('deadline.client.due', { date: fmt.date(milestone.due_at) }) %></span></p>
+          <% } %>
           <button class="btn btn-primary btn-large btn-block" type="button" data-mode-set="approve"><%= t('review.approve') %></button>
           <button class="btn btn-large btn-block" type="button" data-mode-set="feedback" style="font-size: 16px;"><%= t('review.feedback') %></button>
         </div>
@@ -219,6 +232,13 @@
             <button class="icon-btn" type="button" data-widen aria-pressed="false" aria-label="<%= t('review.feedback.widen') %>" data-label-widen="<%= t('review.feedback.widen') %>" data-label-narrow="<%= t('review.feedback.narrow') %>"><%- include('../partials/icon', { name: 'expand' }) %></button>
           </div>
           <p class="small"><%= t('review.feedback.intro') %></p>
+          <% if (revisions.limited) { %>
+            <% if (revisions.reached) { %>
+              <%- include('../partials/alert', { kind: 'info', text: t('revisions.client.beyond', { limit: revisions.limit, dev: milestone.dev_name }) }) %>
+            <% } else { %>
+              <p class="small revision-count"><%= t('revisions.client.next', { round: revisions.used + 1, limit: revisions.limit }) %></p>
+            <% } %>
+          <% } %>
           <% if (files.length > 0) { %>
             <div class="cite-pills">
               <% files.forEach((f, i) => { const tag = citeTag(i + 1); %>
@@ -237,6 +257,48 @@
         <% if (preview) { %><p class="small muted"><%= t('review.preview.disabled') %></p><% } %>
       <% } %>
     </section>
+
+    <% supplements.forEach((sup) => { const err = supplementError && supplementError.id === sup.id ? supplementError : null; %>
+      <section class="glass panel panel-tight supplement-card reveal is-<%= sup.status %>" style="--i: 2;" id="supplement-<%= sup.id %>" aria-labelledby="supplement-title-<%= sup.id %>">
+        <p class="eyebrow"><%= t('supplement.client.eyebrow') %></p>
+        <h2 id="supplement-title-<%= sup.id %>"><%= sup.title %></h2>
+        <p class="amount-value"><%= fmt.money(sup.amount, sup.currency) %></p>
+        <% if (sup.description) { %><p class="pre"><%= sup.description %></p><% } %>
+        <% if (sup.status === 'proposed' && !closed) { %>
+          <p class="small"><%= t('supplement.client.intro', { dev: milestone.dev_name }) %></p>
+          <form method="post" <%- preview ? '' : `action="/r/${milestone.token}/supplements/${sup.id}/accept"` %> class="stack-sm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% if (err) { %><%- include('../partials/alert', { kind: 'error', text: err.message }) %><% } %>
+            <div class="field">
+              <label for="supplement-comment-<%= sup.id %>"><%= t('supplement.client.comment') %></label>
+              <textarea id="supplement-comment-<%= sup.id %>" name="comment" rows="2" maxlength="1000"><%= err ? err.comment : '' %></textarea>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit" data-loading <%= disabled %>><%- include('../partials/icon', { name: 'check' }) %><%= t('supplement.client.accept') %></button>
+            <button class="btn btn-block" type="submit" <%- preview ? '' : `formaction="/r/${milestone.token}/supplements/${sup.id}/decline"` %> <%= disabled %>><%= t('supplement.client.decline') %></button>
+          </form>
+        <% } else if (sup.status === 'proposed') { %>
+          <p class="small"><%= t('supplement.client.closed') %></p>
+        <% } else { %>
+          <p class="supplement-outcome"><%- include('../partials/icon', { name: sup.status === 'accepted' ? 'check' : 'x', cls: 'icon-sm' }) %><span><%= t(`supplement.client.${sup.status}`, { date: fmt.dateTime(sup.decided_at) }) %></span></p>
+          <% if (sup.client_comment) { %><p class="small pre"><%= sup.client_comment %></p><% } %>
+        <% } %>
+      </section>
+    <% }) %>
+
+    <% if (frame.frame.id) { %>
+      <section class="glass panel panel-tight frame-panel reveal" style="--i: 2;" aria-labelledby="frame-title">
+        <h2 id="frame-title"><%= t('frame.client.panel') %></h2>
+        <% if (frame.accepted) { %>
+          <p class="small"><%= t('frame.client.accepted', { version: frame.frame.version, date: fmt.dateTime(frame.accepted.created_at) }) %></p>
+        <% } else { %>
+          <p class="small"><%= t('frame.client.notAccepted', { version: frame.frame.version }) %></p>
+        <% } %>
+        <%- include('../partials/frame-summary', { frame: frame.frame }) %>
+        <% if (revisions.limited) { %>
+          <p class="revision-count"><%= revisions.used === 0 ? t('revisions.none', { limit: revisions.limit }) : revisions.used > revisions.limit ? t('revisions.beyond', { used: revisions.used, limit: revisions.limit }) : t('revisions.count', { used: revisions.used, limit: revisions.limit }) %></p>
+        <% } %>
+      </section>
+    <% } %>
 
     <section class="glass panel panel-tight history reveal" style="--i: 2;" aria-labelledby="history-title">
       <h2 id="history-title"><%= t('review.history') %></h2>

@@ -4,6 +4,8 @@ import { requireAuth } from '../auth.js';
 import { milestonesWithProgress, nextStep, onboarding } from '../projects.js';
 import { activityLabel, findUser } from '../profile.js';
 import { computeHome, loadStatsData } from '../stats.js';
+import { baseUrl } from '../config.js';
+import { checkDeadlines } from '../deadlines.js';
 
 const router = Router();
 const MAX_STEPS = 6;
@@ -12,6 +14,7 @@ export const HOME_CHARTS = ['projects', 'amounts', 'milestones'];
 // Home tab: the greeting, the first-launch guide or what to do next on each active project, and a chart.
 router.get('/dashboard', requireAuth, async (req, res) => {
   const userId = req.session.user.id;
+  await checkDeadlines({ baseUrl: baseUrl(req), userId });
   const [user, guide, data] = await Promise.all([findUser(userId), onboarding(userId), loadStatsData(userId)]);
   const chart = HOME_CHARTS.includes(req.query.chart) ? req.query.chart : 'projects';
 

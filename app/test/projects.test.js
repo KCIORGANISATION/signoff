@@ -100,7 +100,7 @@ test('projects: created in steps with a description, listed as cards with a filt
   const dev = await signUp('cards@example.com');
   const form = await dev.get('/projects/new');
   assert.match(form.text, /data-steps/);
-  assert.match(form.text, /Step 1 of 3/);
+  assert.match(form.text, /Step 1 of 4/);
 
   const tooLong = await dev.post('/projects', {
     name: 'x'.repeat(121), client_name: 'Client Démo', client_email: 'client-demo@example.com', currency: 'EUR',

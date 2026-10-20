@@ -1,0 +1,31 @@
+name: Validation deadlines
+
+on:
+  schedule:
+    # Every hour. Reminders are sent halfway through the delay and the day before the deadline.
+    - cron: '17 * * * *'
+  # Lets you run the check by hand from the Actions tab.
+  workflow_dispatch:
+
+concurrency:
+  group: validation-deadlines
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Call the deadline check
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL or CRON_SECRET is not set in the repository secrets: nothing to call."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            -X POST -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/cron/deadlines"

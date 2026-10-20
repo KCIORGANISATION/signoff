@@ -123,7 +123,8 @@ test('the period keeps only what happened in it; speed and clients follow the cl
   assert.equal(month.speed.feedbackRounds, 1);
   assert.equal(month.clients.length, 1);
   assert.deepEqual(month.clients[0], {
-    email: 'client-demo@example.com', name: 'Client Démo', projects: 1, feedback: 1, responseMs: 1.5 * 24 * 60 * 60 * 1000,
+    email: 'client-demo@example.com', name: 'Client Démo', projects: 1, feedback: 1, outOfScope: 0, supplementsProposed: 0, supplementsAccepted: 0,
+    responseMs: 1.5 * 24 * 60 * 60 * 1000,
   });
 
   const year = computeStats(data, { since: periodStart('12m', NOW), now: NOW });

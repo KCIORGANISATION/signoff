@@ -62,8 +62,8 @@ export function latestApproval(milestoneId) {
 
 export function addEvent(milestoneId, type, fields = {}) {
   return queryOne(
-    `INSERT INTO review_events (milestone_id, type, client_name, message, ip, user_agent, snapshot, files)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    `INSERT INTO review_events (milestone_id, type, client_name, message, ip, user_agent, snapshot, files, round, round_limit, over_limit)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
     [
       milestoneId,
       type,
@@ -73,6 +73,9 @@ export function addEvent(milestoneId, type, fields = {}) {
       fields.userAgent ?? null,
       fields.snapshot ? JSON.stringify(fields.snapshot) : null,
       fields.files ? JSON.stringify(fields.files) : null,
+      fields.round ?? null,
+      fields.roundLimit ?? null,
+      fields.overLimit ?? false,
     ],
   );
 }
