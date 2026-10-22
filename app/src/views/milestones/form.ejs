@@ -52,7 +52,7 @@
           <div class="dropzone" aria-disabled="true" style="opacity: 0.75;">
             <%- include('../partials/icon', { name: 'upload' }) %>
             <p class="dropzone-title"><%= t('milestone.form.filesLater') %></p>
-            <p class="hint"><%= t('files.rules') %></p>
+            <p class="hint"><%= t('files.types', { types: uploadRules.types }) %><br><%= t('files.limits', uploadRules) %></p>
           </div>
         <% } %>
       </section>

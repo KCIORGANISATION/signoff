@@ -17,17 +17,14 @@ import {
   sendFile,
   sha256,
   typeInfo,
+  UPLOAD_RULES,
   usedBytes,
 } from '../files.js';
 
 export const UPLOAD_PATH = '/milestones/:id/files';
 
 // Shown in messages, in megabytes.
-const LIMITS = {
-  size: MAX_FILE_BYTES / 1024 / 1024,
-  count: MAX_FILES_PER_MILESTONE,
-  quota: ACCOUNT_QUOTA_BYTES / 1024 / 1024,
-};
+const LIMITS = UPLOAD_RULES;
 
 // The browser script asks for JSON so it can show errors next to the drop zone.
 function wantsJson(req) {
@@ -91,7 +88,7 @@ router.post(UPLOAD_PATH, async (req, res) => {
   const accepted = [];
   for (const file of incoming) {
     const type = detectType(file.buffer, file.originalname);
-    if (!type) return fail(req, res, 415, req.t('files.error.type', { name: file.originalname }));
+    if (!type) return fail(req, res, 415, req.t('files.error.type', { name: file.originalname, types: UPLOAD_RULES.types }));
     accepted.push({ buffer: file.buffer, type, name: cleanName(file.originalname, type) });
   }
 

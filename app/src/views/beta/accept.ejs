@@ -1,0 +1,19 @@
+<%- include('../partials/head', { title: t('beta.accept.title') }) %>
+<div class="auth">
+  <section class="glass auth-card reveal">
+    <h1><%= t('beta.accept.title') %></h1>
+    <p class="lead"><%= t('beta.accept.lead') %></p>
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <form method="post" action="/beta/accept" class="stack" style="margin-top: 16px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="back" value="<%= back %>">
+      <label class="check">
+        <input type="checkbox" name="beta_rules" value="yes" required <%- error ? 'aria-invalid="true"' : '' %>>
+        <span><%= t('beta.accept.label') %></span>
+      </label>
+      <p class="hint"><a href="/beta" target="_blank" rel="noopener"><%= t('beta.accept.read') %><span class="sr-only"> <%= t('review.newTab') %></span></a></p>
+      <div class="form-actions"><button class="btn btn-light btn-large btn-block" type="submit" data-loading><%= t('beta.accept.submit') %></button></div>
+    </form>
+  </section>
+</div>
+<%- include('../partials/foot', { centered: true }) %>

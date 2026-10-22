@@ -13,7 +13,7 @@ export function load(env) {
     } else {
       // A throwaway secret: sessions simply reset when the dev server restarts.
       sessionSecret = crypto.randomBytes(32).toString('hex');
-      if (env.NODE_ENV !== 'test') console.warn('SESSION_SECRET is not set: using a temporary one, you will be logged out on restart.');
+      if (env.NODE_ENV !== 'test' && !env.SIGNOFF_CLI) console.warn('SESSION_SECRET is not set: using a temporary one, you will be logged out on restart.');
     }
   }
 
@@ -56,6 +56,11 @@ export function load(env) {
     test: env.NODE_ENV === 'test',
     appUrl: (env.APP_URL || '').replace(/\/$/, ''),
     contactEmail: validEmail(env.CONTACT_EMAIL),
+    feedbackUrl: httpsUrl(env.FEEDBACK_URL),
+    beta: {
+      enabled: ['true', '1'].includes((env.BETA_MODE || '').trim().toLowerCase()),
+      responsibleName: (env.BETA_RESPONSIBLE_NAME || '').trim(),
+    },
     sessionSecret,
     inviteCode: env.INVITE_CODE || '',
     databaseUrl: env.DATABASE_URL || '',
@@ -92,4 +97,23 @@ export function baseUrl(req) {
 function validEmail(value) {
   const email = (value || '').trim();
   return /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email) ? email : '';
+}
+
+// Optional "Give feedback" address (Discord or other). Only a plain https:// URL is kept.
+export function httpsUrl(value) {
+  const text = (value || '').trim();
+  if (!/^https:\/\/[^\s"'<>]+$/.test(text)) return '';
+  try {
+    const url = new URL(text);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+// Where the "Give feedback" link points: FEEDBACK_URL, else CONTACT_EMAIL, else nowhere.
+export function feedbackLink(settings = config) {
+  if (settings.feedbackUrl) return { href: settings.feedbackUrl, external: true };
+  if (settings.contactEmail) return { href: `mailto:${settings.contactEmail}`, external: false };
+  return null;
 }

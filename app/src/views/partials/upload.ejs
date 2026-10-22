@@ -12,14 +12,15 @@
     <%- include('alert', { kind: 'info', text: t('files.disabled') }) %>
   <% } else { %>
     <form class="dropzone" method="post" action="/milestones/<%= milestone.id %>/files" enctype="multipart/form-data" data-upload
-          data-error-generic="<%= t('files.error.upload') %>">
+          data-error-generic="<%= t('files.error.upload') %>" data-max-bytes="<%= uploadRules.size * 1024 * 1024 %>"
+          data-error-size="<%= t('files.error.tooBig', { size: uploadRules.size, name: '{name}' }) %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <%- include('icon', { name: 'upload' }) %>
       <p class="dropzone-title"><%= t('files.drop') %></p>
-      <p class="hint"><%= t('files.rules') %></p>
+      <p class="hint"><%= t('files.types', { types: uploadRules.types }) %><br><%= t('files.limits', uploadRules) %></p>
       <label class="btn dropzone-button">
         <%= t('files.choose') %>
-        <input class="sr-only" type="file" name="files" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,.txt,.md,.csv">
+        <input class="sr-only" type="file" name="files" multiple accept="<%= uploadRules.accept %>">
       </label>
       <noscript><button class="btn btn-small" type="submit"><%= t('files.upload') %></button></noscript>
       <progress max="100" value="0" hidden aria-label="<%= t('files.progress') %>"></progress>

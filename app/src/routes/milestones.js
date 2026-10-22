@@ -98,6 +98,7 @@ async function sendToClient(req, milestone) {
   await emailReviewRequest({
     to: milestone.client_email,
     lang: req.lang,
+    term: req.term,
     devName: req.session.user.name,
     clientName: milestone.client_name,
     title: milestone.title,
@@ -376,6 +377,7 @@ router.post('/milestones/:id/remind', async (req, res) => {
     await emailReviewReminder({
       to: milestone.client_email,
       lang: req.lang,
+      term: req.term,
       devName: req.session.user.name,
       clientName: milestone.client_name,
       title: milestone.title,
@@ -465,6 +467,7 @@ router.post('/milestones/:id/supplements', async (req, res) => {
   await emailSupplementProposed({
     to: milestone.client_email,
     lang: req.lang,
+    term: req.term,
     devName: req.session.user.name,
     clientName: milestone.client_name,
     title: supplement.title,

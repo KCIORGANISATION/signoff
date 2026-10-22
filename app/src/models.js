@@ -36,7 +36,7 @@ export async function findMilestoneForUser(userId, milestoneId) {
 export function findMilestoneByToken(token) {
   return queryOne(
     `SELECT m.*, p.name AS project_name, p.client_name, p.client_email, p.currency, p.status AS project_status,
-            u.name AS dev_name, u.email AS dev_email, u.lang AS dev_lang
+            u.name AS dev_name, u.email AS dev_email, u.lang AS dev_lang, u.activity AS dev_activity
        FROM milestones m
        JOIN projects p ON p.id = m.project_id
        JOIN users u ON u.id = p.user_id

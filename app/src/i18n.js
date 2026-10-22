@@ -1,3 +1,5 @@
+import { deliveryWording } from './vocabulary.js';
+
 const en = {
   'app.tagline': 'Client sign-off for freelance developers',
   'nav.dashboard': 'Dashboard',
@@ -99,7 +101,6 @@ const en = {
   'files.none': 'No files.',
   'files.quota': '{used} of {total} used',
   'files.drop': 'Drop screenshots, PDFs or mockups here',
-  'files.rules': 'PNG, JPG, WebP, GIF, PDF or plain text. 10 MB max per file, 10 files per milestone.',
   'files.choose': 'Choose files',
   'files.upload': 'Upload',
   'files.progress': 'Upload progress',
@@ -111,7 +112,7 @@ const en = {
   'files.disabled': 'File uploads are not available on this server yet. You can still add links and notes.',
   'files.unavailable': 'This file cannot be opened right now. Try again later.',
   'files.error.none': 'Choose at least one file.',
-  'files.error.type': '"{name}" was refused: only images (PNG, JPG, WebP, GIF), PDF and plain text are accepted.',
+  'files.error.type': '"{name}" was refused: its type is not accepted. Accepted files: {types}.',
   'files.error.size': 'Each file can be {size} MB at most.',
   'files.error.count': 'A milestone can have {count} files at most.',
   'files.error.quota': 'This would go over your {quota} MB of storage during the beta. Delete some files first.',
@@ -538,6 +539,7 @@ const en = {
   'profile.business.hint': 'Shown to your clients on the review page and in emails. Without it, your first and last name are shown.',
   'profile.activity': 'Your work',
   'profile.activityOther': 'Your work, in a few words',
+  'profile.activity.vocabulary': 'It also sets the word Signoff uses with you and your clients: “deliveries” for video, design, illustration and photography, “milestones” otherwise.',
   'profile.activityOther.placeholder': 'e.g. Motion design',
   'profile.delivers': 'You mostly deliver',
   'profile.save': 'Save my profile',
@@ -775,6 +777,53 @@ const en = {
   'email.supplementAccepted.body': "{client} accepted the supplement “{title}” for the project {project}. It is now a new milestone, as a draft.\n\nComment: {comment}\n\n{link}",
   'email.supplementDeclined.subject': '{client} declined the supplement “{title}”',
   'email.supplementDeclined.body': "{client} declined the supplement “{title}” for the project {project}. The request stays out of scope.\n\nComment: {comment}\n\n{link}",
+  'files.types': 'Accepted files: {types}.',
+  'files.error.tooBig': '“{name}” was refused: it is over {size} MB.',
+  'files.limits': '{size} MB max per file, {count} files per milestone, {quota} MB in total.',
+
+  'beta.banner': 'Test beta. Do not send any real client file or data.',
+  'beta.banner.rules': 'Beta rules',
+  'beta.banner.close': 'Hide until next login',
+  'beta.title': 'Beta rules',
+  'beta.lead': 'Signoff is in a closed test beta. Thank you for trying it out. Five things to know before you start:',
+  'beta.rule.trial': 'It is a trial: bugs are normal. Tell us when you meet one.',
+  'beta.rule.testData': 'Only use test data: made-up clients, made-up files. No confidential content, and nothing that belongs to someone else.',
+  'beta.rule.deletion': 'Beta accounts and data may be deleted at any time. You can also delete your own account whenever you want, from “My profile”.',
+  'beta.rule.availability': 'There is no guarantee of availability: the app may be slow, interrupted or reset.',
+  'beta.rule.firstLoad': 'The first load can take up to a minute (test hosting).',
+  'beta.questions': 'Any question? {link}.',
+  'beta.questions.none': 'Any question? Ask the person who invited you.',
+  'beta.responsible': 'The beta is run by {name}. See also the {privacy} and the {terms}.',
+  'beta.responsible.default': 'the beta publisher',
+  'beta.accept.label': 'I understand this is a test beta: I do not send any real client file or data.',
+  'beta.accept.read': 'Read the beta rules',
+  'beta.accept.error': 'Tick the box to confirm you understand the beta rules.',
+  'beta.accept.title': 'Before you continue',
+  'beta.accept.lead': 'Signoff is a test beta. Read its rules, then confirm to continue.',
+  'beta.accept.submit': 'Continue',
+  'forgot.beta': 'Emails are not active yet during the beta. Write to us to reset your password: {link}.',
+  'forgot.beta.none': 'Emails are not active yet during the beta. Ask the person who invited you to reset your password.',
+
+  'feedback.link': 'Give feedback',
+
+  'account.delete.open': 'Delete my account',
+  'account.delete.zone': 'Delete my account and all its data.',
+  'account.delete.title': 'Delete my account',
+  'account.delete.lead': 'This deletes, right away and for good:',
+  'account.delete.item.account': 'your account and your profile: names, email, password, questionnaire answers;',
+  'account.delete.item.projects': 'your projects ({projects}) and their milestones ({milestones}), approved ones included, with their deliverables, frames and notes;',
+  'account.delete.item.files': 'your files ({files}), from the database and from file storage;',
+  'account.delete.item.records': 'your clients’ feedback, the supplements, the approval records and every event log;',
+  'account.delete.item.links': 'the links you sent to your clients stop working, and their certificates are no longer available.',
+  'account.delete.backups': 'The database backups keep a copy until they expire, then it is gone too.',
+  'account.delete.proof': 'Need a record? Open the proof file of each project and save it before deleting.',
+  'account.delete.password': 'Your password',
+  'account.delete.word': 'Type {word} to confirm',
+  'account.delete.keyword': 'DELETE',
+  'account.delete.submit': 'Delete for good',
+  'account.delete.error.password': 'Wrong password. Nothing was deleted.',
+  'account.delete.error.word': 'Type {word} in capital letters to confirm. Nothing was deleted.',
+  'account.deleted': 'Your account and all its data have been deleted.',
 };
 
 const fr = {
@@ -878,7 +927,6 @@ const fr = {
   'files.none': 'Aucun fichier.',
   'files.quota': '{used} utilisés sur {total}',
   'files.drop': 'Glissez ici vos captures, PDF ou maquettes',
-  'files.rules': 'PNG, JPG, WebP, GIF, PDF ou texte brut. 10 Mo maximum par fichier, 10 fichiers par jalon.',
   'files.choose': 'Choisir des fichiers',
   'files.upload': 'Envoyer',
   'files.progress': "Progression de l'envoi",
@@ -890,7 +938,7 @@ const fr = {
   'files.disabled': "L'envoi de fichiers n'est pas encore disponible sur ce serveur. Vous pouvez toujours ajouter des liens et des notes.",
   'files.unavailable': "Ce fichier ne peut pas être ouvert pour le moment. Réessayez plus tard.",
   'files.error.none': 'Choisissez au moins un fichier.',
-  'files.error.type': '« {name} » a été refusé : seuls les images (PNG, JPG, WebP, GIF), les PDF et le texte brut sont acceptés.',
+  'files.error.type': '« {name} » a été refusé : ce type de fichier n’est pas accepté. Fichiers acceptés : {types}.',
   'files.error.size': 'Chaque fichier peut faire {size} Mo au maximum.',
   'files.error.count': 'Un jalon peut contenir {count} fichiers au maximum.',
   'files.error.quota': 'Vous dépasseriez vos {quota} Mo de stockage pendant la bêta. Supprimez d\'abord quelques fichiers.',
@@ -1317,6 +1365,7 @@ const fr = {
   'profile.business.hint': 'Affiché à vos clients sur la page de validation et dans les emails. Sans lui, ce sont vos prénom et nom.',
   'profile.activity': 'Votre activité',
   'profile.activityOther': 'Votre activité, en quelques mots',
+  'profile.activity.vocabulary': 'Elle choisit aussi le mot que Signoff emploie avec vous et vos clients : « livraisons » pour la vidéo, le design, l’illustration et la photo, « jalons » sinon.',
   'profile.activityOther.placeholder': 'ex. Motion design',
   'profile.delivers': 'Vous livrez surtout',
   'profile.save': 'Enregistrer mon profil',
@@ -1554,15 +1603,72 @@ const fr = {
   'email.supplementAccepted.body': "{client} a accepté le supplément « {title} » du projet {project}. C'est maintenant un nouveau jalon, en brouillon.\n\nCommentaire : {comment}\n\n{link}",
   'email.supplementDeclined.subject': '{client} a refusé le supplément « {title} »',
   'email.supplementDeclined.body': "{client} a refusé le supplément « {title} » du projet {project}. La demande reste hors périmètre.\n\nCommentaire : {comment}\n\n{link}",
+  'files.types': 'Fichiers acceptés : {types}.',
+  'files.error.tooBig': '« {name} » a été refusé : il dépasse {size} Mo.',
+  'files.limits': '{size} Mo maximum par fichier, {count} fichiers par jalon, {quota} Mo au total.',
+
+  'beta.banner': 'Bêta de test. N’envoyez aucun fichier ni donnée réelle de client.',
+  'beta.banner.rules': 'Règles de la bêta',
+  'beta.banner.close': 'Masquer jusqu’à la prochaine connexion',
+  'beta.title': 'Règles de la bêta',
+  'beta.lead': 'Signoff est en bêta de test fermée. Merci de l’essayer. Cinq choses à savoir avant de commencer :',
+  'beta.rule.trial': 'C’est un essai : des bugs sont normaux. Signalez-les quand vous en croisez un.',
+  'beta.rule.testData': 'N’utilisez que des données de test : de faux clients, de faux fichiers. Pas de contenu confidentiel, ni rien qui appartienne à quelqu’un d’autre.',
+  'beta.rule.deletion': 'Les comptes et les données de la bêta peuvent être supprimés à tout moment. Vous pouvez aussi supprimer votre compte vous-même, quand vous voulez, depuis « Mon profil ».',
+  'beta.rule.availability': 'Aucune garantie de disponibilité : l’app peut être lente, interrompue ou remise à zéro.',
+  'beta.rule.firstLoad': 'Le premier chargement peut prendre jusqu’à une minute (hébergement de test).',
+  'beta.questions': 'Une question ? {link}.',
+  'beta.questions.none': 'Une question ? Adressez-vous à la personne qui vous a invité.',
+  'beta.responsible': 'La bêta est menée par {name}. Voir aussi la {privacy} et les {terms}.',
+  'beta.responsible.default': 'l’éditeur de la bêta',
+  'beta.accept.label': 'J’ai compris que c’est une bêta de test : je n’envoie aucun fichier ni donnée réelle de client.',
+  'beta.accept.read': 'Lire les règles de la bêta',
+  'beta.accept.error': 'Cochez la case pour confirmer que vous avez compris les règles de la bêta.',
+  'beta.accept.title': 'Avant de continuer',
+  'beta.accept.lead': 'Signoff est une bêta de test. Lisez ses règles, puis confirmez pour continuer.',
+  'beta.accept.submit': 'Continuer',
+  'forgot.beta': 'Les emails ne sont pas encore actifs en bêta. Écrivez-nous pour réinitialiser votre mot de passe : {link}.',
+  'forgot.beta.none': 'Les emails ne sont pas encore actifs en bêta. Demandez à la personne qui vous a invité de réinitialiser votre mot de passe.',
+
+  'feedback.link': 'Donner un retour',
+
+  'account.delete.open': 'Supprimer mon compte',
+  'account.delete.zone': 'Supprimer mon compte et toutes ses données.',
+  'account.delete.title': 'Supprimer mon compte',
+  'account.delete.lead': 'Ceci supprime, tout de suite et définitivement :',
+  'account.delete.item.account': 'votre compte et votre profil : noms, email, mot de passe, réponses au questionnaire ;',
+  'account.delete.item.projects': 'vos projets ({projects}) et leurs jalons ({milestones}), y compris les jalons approuvés, avec leurs livrables, cadres et notes ;',
+  'account.delete.item.files': 'vos fichiers ({files}), dans la base et dans le stockage ;',
+  'account.delete.item.records': 'les retours de vos clients, les suppléments, les preuves d’approbation et tous les journaux d’événements ;',
+  'account.delete.item.links': 'les liens envoyés à vos clients cessent de fonctionner, et leurs certificats ne sont plus disponibles.',
+  'account.delete.backups': 'Les sauvegardes de la base en gardent une copie jusqu’à leur expiration, puis elle disparaît aussi.',
+  'account.delete.proof': 'Besoin d’une trace ? Ouvrez le dossier de preuve de chaque projet et enregistrez-le avant de supprimer.',
+  'account.delete.password': 'Votre mot de passe',
+  'account.delete.word': 'Tapez {word} pour confirmer',
+  'account.delete.keyword': 'SUPPRIMER',
+  'account.delete.submit': 'Supprimer définitivement',
+  'account.delete.error.password': 'Mot de passe incorrect. Rien n’a été supprimé.',
+  'account.delete.error.word': 'Tapez {word} en majuscules pour confirmer. Rien n’a été supprimé.',
+  'account.deleted': 'Votre compte et toutes ses données ont été supprimés.',
 };
 
-const dictionaries = { en, fr };
+export const dictionaries = { en, fr };
 export const languages = Object.keys(dictionaries);
 
-export function translator(lang) {
+// term: 'milestone' (default) or 'delivery', the word the freelancer's activity calls for (vocabulary.js).
+export function translator(lang, term = 'milestone') {
   const dict = dictionaries[lang] ?? en;
+  const words = term === 'delivery' ? deliveryWording(lang in dictionaries ? lang : 'en', en) : {};
+  const enWords = term === 'delivery' ? deliveryWording('en', en) : {};
   return (key, vars = {}) => {
-    const text = dict[key] ?? en[key] ?? key;
+    const text = words[key] ?? dict[key] ?? enWords[key] ?? en[key] ?? key;
     return text.replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
   };
+}
+
+// Switches the texts of this request to a freelancer's word for a milestone.
+export function useTerm(req, res, term) {
+  req.term = term;
+  req.t = translator(req.lang, term);
+  res.locals.t = req.t;
 }

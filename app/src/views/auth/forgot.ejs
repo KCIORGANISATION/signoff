@@ -2,10 +2,17 @@
 <div class="auth">
   <section class="glass auth-card reveal">
     <h1><%= t('forgot.title') %></h1>
+    <% if (betaNoEmail) { %>
+      <%# Beta without an email service: the link is only written in the server logs. %>
+      <% const [before, after] = t('forgot.beta', { link: '\u0001' }).split('\u0001'); %>
+      <div class="alert alert-info" role="status" style="margin-top: 16px;"><%- include('../partials/icon', { name: 'info' }) %>
+        <span><% if (feedback) { %><%= before %><a href="<%= feedback.href %>" <%- feedback.external ? 'target="_blank" rel="noopener noreferrer"' : '' %>><%= t('feedback.link') %><% if (feedback.external) { %><span class="sr-only"> <%= t('review.newTab') %></span><% } %></a><%= after %><% } else { %><%= t('forgot.beta.none') %><% } %></span>
+      </div>
+    <% } %>
     <% if (sent) { %>
-      <div style="margin-top: 16px;"><%- include('../partials/alert', { kind: 'success', text: t('forgot.sent') }) %></div>
+      <% if (!betaNoEmail) { %><div style="margin-top: 16px;"><%- include('../partials/alert', { kind: 'success', text: t('forgot.sent') }) %></div><% } %>
     <% } else { %>
-      <p class="lead"><%= t('forgot.intro') %></p>
+      <p class="lead" style="margin-top: 12px;"><%= t('forgot.intro') %></p>
       <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
       <form method="post" action="/forgot" style="margin-top: 16px;">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">

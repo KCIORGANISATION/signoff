@@ -32,10 +32,13 @@ function validInviteCode(code) {
 export function logIn(req, user) {
   req.session.user = { id: user.id, name: user.name, email: user.email, named: hasNames(user) };
   req.session.lang = user.lang;
+  // The beta banner comes back at each login, even if it was hidden in the last session.
+  req.session.betaBannerHidden = null;
 }
 
 router.use('/signup', (req, res, next) => {
   res.locals.inviteRequired = Boolean(config.inviteCode);
+  res.locals.betaRules = config.beta.enabled;
   next();
 });
 
@@ -55,6 +58,8 @@ router.post('/signup', limiter('auth/signup'), async (req, res) => {
   if (!validInviteCode(req.body.invite_code)) return fail('auth.error.invite');
   if (names.error === 'profile.error.names' || !EMAIL_PATTERN.test(email) || password.length < 8) return fail('auth.error.fields');
   if (names.error || businessName.length > BUSINESS_NAME_MAX_LENGTH) return fail('profile.error.length');
+  const betaAccepted = config.beta.enabled && req.body.beta_rules === 'yes';
+  if (config.beta.enabled && !betaAccepted) return fail('beta.accept.error');
   // The name clients see: the business name if given, else the person's name.
   const name = businessName || `${names.values.first_name} ${names.values.last_name}`;
 
@@ -63,9 +68,9 @@ router.post('/signup', limiter('auth/signup'), async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await queryOne(
-    `INSERT INTO users (name, first_name, last_name, email, password_hash, lang)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [name, names.values.first_name, names.values.last_name, email, passwordHash, req.lang],
+    `INSERT INTO users (name, first_name, last_name, email, password_hash, lang, beta_rules_accepted_at)
+     VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $7::boolean THEN now() END) RETURNING *`,
+    [name, names.values.first_name, names.values.last_name, email, passwordHash, req.lang, betaAccepted],
   );
   logIn(req, user);
   res.redirect('/welcome');

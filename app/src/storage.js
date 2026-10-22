@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DeleteObjectsCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { config } from './config.js';
+import { query } from './db.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const LOCAL_DIR = path.join(here, '..', 'uploads');
@@ -63,6 +64,7 @@ const disabledBackend = {
 };
 
 function createBackend(mode, options = {}) {
+  if (options.backend) return options.backend;
   if (mode === 'r2') return r2Backend(options.r2 ?? config.files.r2);
   if (mode === 'disk') return diskBackend(options.dir ?? LOCAL_DIR);
   return disabledBackend;
@@ -70,7 +72,7 @@ function createBackend(mode, options = {}) {
 
 let backend = createBackend(config.files.storage);
 
-// Tests switch between a temporary folder and a disabled storage.
+// Tests switch between a temporary folder, a disabled storage, or a backend of their own.
 export function useStorage(mode, options) {
   backend = createBackend(mode, options);
 }
@@ -82,13 +84,34 @@ export const storage = {
   put: (key, body, contentType) => backend.put(key, body, contentType),
   read: (key) => backend.read(key),
   // Deleting a milestone, project or account must not fail because storage is unreachable:
-  // the database rows are already gone, so a leftover object is only logged.
+  // the database rows are already gone, so the leftover keys (random, nothing personal) are
+  // kept in storage_orphans for "npm run admin:clean-storage". Returns false when they were.
   async removeQuietly(keys) {
-    if (keys.length === 0) return;
+    if (keys.length === 0) return true;
     try {
       await backend.remove(keys);
+      return true;
     } catch (error) {
-      console.error(`Could not delete ${keys.length} file(s) from storage:`, error.message, keys);
+      console.error(`Could not delete ${keys.length} file(s) from storage (${error.name}); kept in storage_orphans.`);
+      await storage.later(keys);
+      return false;
     }
+  },
+  // Records files to delete later with "npm run admin:clean-storage".
+  async later(keys) {
+    if (keys.length === 0) return;
+    try {
+      await query('INSERT INTO storage_orphans (storage_key) SELECT unnest($1::text[]) ON CONFLICT DO NOTHING', [keys]);
+    } catch (error) {
+      console.error('Could not record the leftover files:', error.message, keys);
+    }
+  },
+  // Retries the deletions that failed. Throws, and keeps the list, if storage still refuses.
+  async cleanOrphans() {
+    const keys = (await query('SELECT storage_key FROM storage_orphans ORDER BY created_at')).map((row) => row.storage_key);
+    if (keys.length === 0) return 0;
+    await backend.remove(keys);
+    await query('DELETE FROM storage_orphans WHERE storage_key = ANY($1::text[])', [keys]);
+    return keys.length;
   },
 };

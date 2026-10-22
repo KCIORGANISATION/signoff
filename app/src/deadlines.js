@@ -1,6 +1,7 @@
 import { query } from './db.js';
 import { formatters } from './format.js';
 import { emailDeadlinePassed, emailDeadlineReminder } from './email.js';
+import { termFor } from './vocabulary.js';
 
 // Validation deadlines. When a milestone is sent under a frame with a validation delay,
 // due_at = sending + delay. The client is reminded halfway and the day before (one email if
@@ -57,7 +58,7 @@ export async function checkDeadlines({ baseUrl, now = new Date(), milestoneIds =
     `SELECT m.id, m.title, m.token, m.due_at,
             (SELECT MAX(e.created_at) FROM review_events e WHERE e.milestone_id = m.id AND e.type = 'sent') AS sent_at,
             p.name AS project_name, p.client_name, p.client_email,
-            u.name AS dev_name, u.email AS dev_email, u.lang AS dev_lang
+            u.name AS dev_name, u.email AS dev_email, u.lang AS dev_lang, u.activity AS dev_activity
        FROM milestones m JOIN projects p ON p.id = m.project_id JOIN users u ON u.id = p.user_id
       WHERE ${conditions.join(' AND ')}
       ORDER BY m.id`,
@@ -77,6 +78,7 @@ export async function checkDeadlines({ baseUrl, now = new Date(), milestoneIds =
         await emailDeadlinePassed({
           to: m.dev_email,
           lang: m.dev_lang,
+          term: termFor(m.dev_activity),
           clientName: m.client_name,
           title: m.title,
           projectName: m.project_name,
@@ -98,6 +100,7 @@ export async function checkDeadlines({ baseUrl, now = new Date(), milestoneIds =
       await emailDeadlineReminder({
         to: m.client_email,
         lang: m.dev_lang,
+        term: termFor(m.dev_activity),
         devName: m.dev_name,
         clientName: m.client_name,
         title: m.title,

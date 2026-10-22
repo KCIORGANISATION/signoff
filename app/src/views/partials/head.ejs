@@ -24,6 +24,16 @@
 </head>
 <body class="<%= locals.bodyClass || '' %>">
 <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+<% if (locals.betaBanner && !locals.client) { %>
+  <div class="beta-banner" role="note" aria-label="<%= t('beta.title') %>">
+    <p><%- include('icon', { name: 'info', cls: 'icon-sm' }) %><span><%= t('beta.banner') %> <a href="/beta"><%= t('beta.banner.rules') %></a></span></p>
+    <form method="post" action="/beta/dismiss">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="back" value="<%= currentPath %>">
+      <button class="icon-btn beta-banner-close" type="submit" aria-label="<%= t('beta.banner.close') %>" title="<%= t('beta.banner.close') %>"><%- include('icon', { name: 'x', cls: 'icon-sm' }) %></button>
+    </form>
+  </div>
+<% } %>
 <header class="site-header">
   <% if (!locals.client && !currentUser) { %>
     <a class="brand" href="/" <%- currentPath === '/' ? 'aria-current="page"' : '' %>><span class="brand-mark"><%- include('icon', { name: 'check' }) %></span>Signoff</a>

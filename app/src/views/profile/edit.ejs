@@ -28,5 +28,10 @@
       </div>
     </form>
   </section>
+  <section class="glass panel account-delete reveal" style="--i: 1;" aria-labelledby="account-delete-title">
+    <h2 id="account-delete-title" class="sr-only"><%= t('account.delete.title') %></h2>
+    <p class="muted"><%= t('account.delete.zone') %></p>
+    <a class="btn btn-danger" href="/profile/delete"><%- include('../partials/icon', { name: 'trash' }) %><%= t('account.delete.open') %></a>
+  </section>
 </div>
 <%- include('../partials/foot') %>

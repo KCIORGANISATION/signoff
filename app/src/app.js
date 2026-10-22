@@ -4,12 +4,14 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cookieSession from 'cookie-session';
 import helmet from 'helmet';
-import { config } from './config.js';
+import { config, feedbackLink } from './config.js';
 import { query, queryOne } from './db.js';
-import { languages, translator } from './i18n.js';
+import { languages, translator, useTerm } from './i18n.js';
+import { termFor } from './vocabulary.js';
 import { formatters } from './format.js';
 import { csrfProtection } from './csrf.js';
 import { citationTag, describe } from './text.js';
+import { UPLOAD_RULES } from './files.js';
 import authRoutes from './routes/auth.js';
 import passwordRoutes from './routes/password.js';
 import legalRoutes from './routes/legal.js';
@@ -19,6 +21,8 @@ import reviewRoutes from './routes/review.js';
 import homeRoutes from './routes/home.js';
 import dashboardRoutes from './routes/dashboard.js';
 import profileRoutes, { requireNames } from './routes/profile.js';
+import accountRoutes from './routes/account.js';
+import betaRoutes, { requireBetaRules } from './routes/beta.js';
 import statsRoutes from './routes/stats.js';
 import cronRoutes from './routes/cron.js';
 import fileRoutes, { UPLOAD_PATH, uploadParser } from './routes/files.js';
@@ -89,6 +93,15 @@ export function createApp() {
     }),
   );
 
+  // The signed-in account, read on each request: an account deleted elsewhere is logged out
+  // here too, and the vocabulary and the beta acceptance always follow the latest profile.
+  app.use(async (req, res, next) => {
+    if (!req.session.user) return next();
+    req.account = await queryOne('SELECT id, activity, beta_rules_accepted_at FROM users WHERE id = $1', [req.session.user.id]);
+    if (!req.account) req.session.user = null;
+    next();
+  });
+
   // Language, translation and formatting helpers available in every view.
   app.use((req, res, next) => {
     // The language the visitor chose, else the one their browser asks for by name, else French.
@@ -96,9 +109,8 @@ export function createApp() {
     const browser = asked && asked !== '*' ? req.acceptsLanguages(...languages) : false;
     const lang = languages.includes(req.session.lang) ? req.session.lang : browser || 'fr';
     req.lang = lang;
-    req.t = translator(lang);
     res.locals.lang = lang;
-    res.locals.t = req.t;
+    useTerm(req, res, termFor(req.account?.activity));
     res.locals.fmt = formatters(lang);
     res.locals.currentUser = req.session.user ?? null;
     res.locals.currentPath = req.originalUrl;
@@ -106,6 +118,10 @@ export function createApp() {
     res.locals.logo = logoMarkup;
     res.locals.citeTag = (position) => citationTag(lang, position);
     res.locals.describe = describe;
+    res.locals.feedback = feedbackLink();
+    res.locals.uploadRules = UPLOAD_RULES;
+    // The beta banner: on while BETA_MODE is, until hidden for the rest of the session.
+    res.locals.betaBanner = config.beta.enabled && Boolean(req.session.user) && !req.session.betaBannerHidden;
     next();
   });
 
@@ -125,12 +141,15 @@ export function createApp() {
     res.redirect(back ? req.query.back : '/');
   });
 
+  app.use(requireBetaRules);
   app.use(requireNames);
   app.use(homeRoutes);
+  app.use(betaRoutes);
   app.use(authRoutes);
   app.use(passwordRoutes);
   app.use(legalRoutes);
   app.use(dashboardRoutes);
+  app.use(accountRoutes);
   app.use(profileRoutes);
   app.use(statsRoutes);
   app.use(projectRoutes);

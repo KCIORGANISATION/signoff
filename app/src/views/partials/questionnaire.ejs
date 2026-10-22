@@ -9,6 +9,7 @@
       </label>
     <% }) %>
   </div>
+  <p class="hint"><%= t('profile.activity.vocabulary') %></p>
   <div class="field" data-show-when="activity=other">
     <label for="activity_other"><%= t('profile.activityOther') %></label>
     <input id="activity_other" name="activity_other" type="text" maxlength="60" placeholder="<%= t('profile.activityOther.placeholder') %>" value="<%= values.activity_other ?? '' %>">

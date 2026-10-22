@@ -3,6 +3,9 @@
   <% if (locals.client && !locals.centered) { %>
     <span class="footer-chip"><span><%= t('review.poweredBy') %> <a href="/" target="_blank" rel="noopener">Signoff</a></span></span>
   <% } %>
+  <% if (!locals.client && currentUser && feedback) { %>
+    <span class="footer-chip"><a href="<%= feedback.href %>" <%- feedback.external ? 'target="_blank" rel="noopener noreferrer"' : '' %>><%- include('icon', { name: 'message', cls: 'icon-sm' }) %><span><%= t('feedback.link') %></span><% if (feedback.external) { %><span class="sr-only"> <%= t('review.newTab') %></span><% } %></a></span>
+  <% } %>
   <nav class="footer-chip" aria-label="<%= t('legal.nav') %>">
     <a href="/legal"><%= t('legal.legal') %></a>
     <a href="/privacy"><%= t('legal.privacy.short') %></a>
