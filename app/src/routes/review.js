@@ -23,6 +23,8 @@ import { describe } from '../text.js';
 import { cleanText, isClosedForClient } from '../projects.js';
 import { COMMENT_MAX_LENGTH, acceptFrame, acceptSupplement, declineSupplement, frameStatus, listSupplements, revisionCount } from '../scope.js';
 import { checkDeadlines, isOverdue } from '../deadlines.js';
+import { useTerm } from '../i18n.js';
+import { termFor } from '../vocabulary.js';
 
 const MAX_NAME_LENGTH = 120;
 
@@ -33,6 +35,7 @@ function developerEmail(req, milestone) {
   return {
     to: milestone.dev_email,
     lang: milestone.dev_lang,
+    term: termFor(milestone.dev_activity),
     clientName: milestone.client_name,
     title: milestone.title,
     projectName: milestone.project_name,
@@ -49,6 +52,8 @@ function clientDetails(req) {
 // Payment details are removed until the client approves, so no page can leak them.
 async function loadMilestone(req, res) {
   const milestone = await findMilestoneByToken(req.params.token);
+  // The client reads the freelancer's own word for a milestone.
+  if (milestone) useTerm(req, res, termFor(milestone.dev_activity));
   // A milestone set aside before it was ever sent was never shown to the client either.
   if (!milestone || milestone.status === 'draft' || milestone.status_before_close === 'draft') {
     res.status(404).render('error', { message: req.t('error.notFound') });

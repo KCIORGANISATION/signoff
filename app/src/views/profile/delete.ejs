@@ -1,0 +1,35 @@
+<%- include('../partials/head', { title: t('account.delete.title'), crumbs: [{ label: t('profile.title'), href: '/profile' }, { label: t('account.delete.title') }] }) %>
+<div class="page-medium" style="margin: 0 auto;">
+  <section class="glass panel panel-roomy reveal" aria-labelledby="delete-title">
+    <h1 id="delete-title" class="form-title"><%= t('account.delete.title') %></h1>
+    <% if (error) { %><%- include('../partials/alert', { kind: 'error', text: error }) %><% } %>
+    <div class="state-effects">
+      <p class="label"><%= t('account.delete.lead') %></p>
+      <ul>
+        <li><%= t('account.delete.item.account') %></li>
+        <li><%= t('account.delete.item.projects', { projects: summary.projects, milestones: summary.milestones }) %></li>
+        <li><%= t('account.delete.item.files', { files: summary.files }) %></li>
+        <li><%= t('account.delete.item.records') %></li>
+        <li><%= t('account.delete.item.links') %></li>
+      </ul>
+    </div>
+    <p class="hint"><%= t('account.delete.backups') %></p>
+    <% if (summary.projects > 0) { %><p class="hint"><%= t('account.delete.proof') %></p><% } %>
+    <form method="post" action="/profile/delete" class="stack" autocomplete="off">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="field">
+        <label for="delete-password"><%= t('account.delete.password') %></label>
+        <input id="delete-password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="field">
+        <label for="delete-confirm"><%= t('account.delete.word', { word: keyword }) %></label>
+        <input id="delete-confirm" name="confirm" type="text" required autocapitalize="characters" spellcheck="false">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-danger btn-large" type="submit" data-loading><%- include('../partials/icon', { name: 'trash' }) %><%= t('account.delete.submit') %></button>
+        <a class="btn btn-large" href="/profile"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </section>
+</div>
+<%- include('../partials/foot') %>

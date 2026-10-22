@@ -94,6 +94,9 @@ function bindFiles(region) {
 
     const upload = (files) => {
       if (files.length === 0 || form.classList.contains('is-uploading')) return;
+      // A file over the size limit is refused here, before a long upload the server would refuse.
+      const tooBig = files.find((file) => file.size > Number(form.dataset.maxBytes));
+      if (tooBig) return showError(form.dataset.errorSize.replace('{name}', tooBig.name));
       const data = new FormData();
       data.append('_csrf', form.querySelector('input[name="_csrf"]').value);
       for (const file of files) data.append('files', file);

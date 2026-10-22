@@ -124,6 +124,9 @@ app/
     schema.sql       les tables, créées au démarrage si elles n'existent pas
     models.js        requêtes partagées (jalons, livrables, preuves)
     i18n.js          textes en anglais et en français
+    vocabulary.js    « jalon » ou « livraison » selon l'activité (textes « livraison »)
+    account.js       suppression de compte (un seul service, pour la page et le script)
+    password-reset.js liens de réinitialisation du mot de passe
     format.js        affichage des montants et des dates
     payment.js       vérification du lien et des instructions de paiement
     files.js         fichiers joints : type réel, nom, limites, envoi au navigateur
@@ -138,6 +141,8 @@ app/
     routes/
       auth.js        inscription (code d'invitation), connexion, déconnexion
       password.js    mot de passe oublié
+      account.js     « Supprimer mon compte »
+      beta.js        bêta : page /beta, bandeau, acceptation des règles
       legal.js       mentions légales, confidentialité, conditions
       projects.js    tableau de bord et projets
       milestones.js  jalons, livrables, lien client, certificat côté dev
@@ -146,13 +151,13 @@ app/
       cron.js        vérification des délais, protégée par CRON_SECRET
     views/           templates EJS
   public/            style.css et app.js (copier le lien, confirmations, impression)
-  scripts/           sauvegarde et restauration de la base (Cloudflare R2)
+  scripts/           sauvegarde et restauration de la base (Cloudflare R2), outils admin
   test/              tests automatiques (npm test)
 ```
 
 ## Base de données
 
-Sept tables : `users`, `projects`, `milestones`, `deliverables`, `files`, `review_events`, `password_resets`.
+Tables principales : `users`, `projects`, `milestones`, `deliverables`, `files`, `review_events`, `password_resets`, plus celles des phases suivantes (`project_events`, `project_notes`, `project_frames`, `frame_acceptances`, `supplements`) et `storage_orphans` (fichiers à supprimer du stockage plus tard).
 
 - `milestones.payment_link` et `milestones.payment_note` contiennent le lien et les instructions de paiement (vides par défaut).
 - `files` décrit chaque fichier joint (nom nettoyé, type, taille, empreinte SHA-256, clé de stockage aléatoire). Le contenu est dans R2, pas dans la base.
@@ -160,6 +165,46 @@ Sept tables : `users`, `projects`, `milestones`, `deliverables`, `files`, `revie
 - `review_events` est le journal des actions (envoyé, vu, feedback, approuvé). L'app n'y fait que des ajouts, jamais de modification. Une approbation y stocke l'IP, le navigateur et un `snapshot` JSON des livrables.
 
 Pour passer sur Neon plus tard : crée une base gratuite sur neon.tech, copie la chaîne de connexion dans `DATABASE_URL` du `.env`, relance. Les tables se créent toutes seules.
+
+## Bêta fermée
+
+Avec `BETA_MODE=true`, l'app se prépare à accueillir des testeurs invités. Sans cette variable (ou avec `false`), rien de ce qui suit n'apparaît.
+
+- **Bandeau** en haut de l'espace connecté : « Bêta de test. N'envoyez aucun fichier ni donnée réelle de client. » avec un lien vers les règles. La croix le masque jusqu'à la prochaine connexion.
+- **Page `/beta`** (publique) : les règles de la bêta, le nom du responsable (`BETA_RESPONSIBLE_NAME`, sinon « l'éditeur de la bêta ») et les liens vers `/privacy` et `/terms`.
+- **Inscription** : une case obligatoire « J'ai compris que c'est une bêta de test… ». La date est enregistrée dans `users.beta_rules_accepted_at`. Les comptes qui n'ont pas cette date (créés avant) voient la même case à leur prochaine visite.
+- **Mot de passe oublié** : tant que `RESEND_API_KEY` est vide, la page explique que les emails ne sont pas actifs et renvoie vers « Donner un retour ». Le lien est toujours créé et affiché dans les journaux du serveur, comme avant.
+
+### « Donner un retour »
+
+Un lien discret dans le pied de page de l'espace connecté (et sur `/beta`). Il pointe vers `FEEDBACK_URL` (Discord ou autre, uniquement une adresse `https://`, ouverte dans un nouvel onglet), sinon vers `CONTACT_EMAIL` en `mailto:`, sinon il n'apparaît pas. Il fonctionne aussi hors bêta. L'app ne collecte rien.
+
+### Le mot « jalon » ou « livraison »
+
+L'activité choisie dans « Mon profil » décide du mot : « livraison » pour le montage vidéo, le design et graphisme, l'illustration et la photographie ; « jalon » pour le développement web, la rédaction, « Autre » ou sans réponse. Il s'applique à l'espace du freelance, aux pages de son client et aux emails, en français et en anglais (« delivery » / « milestone »). Les phrases « livraison » sont toutes dans `src/vocabulary.js` (accords au féminin compris) ; un test vérifie qu'aucun texte n'a été oublié. La page d'accueil publique ne change pas.
+
+## Suppression de compte
+
+« Mon profil » › « Supprimer mon compte » : une page dit exactement ce qui sera supprimé, puis demande le mot de passe et le mot `SUPPRIMER` (`DELETE` en anglais). Limité à 5 essais par 15 minutes.
+
+La suppression (`src/account.js`) est une seule requête SQL, donc tout ou rien : supprimer l'utilisateur supprime en cascade ses projets, jalons (approuvés compris), livrables, fichiers, retours, suppléments, cadres, notes, journaux et liens de réinitialisation. Ensuite les fichiers sont supprimés du stockage. Si le stockage ne répond pas, le compte est quand même supprimé et les clés des fichiers restants (aléatoires, rien de personnel) sont gardées dans la table `storage_orphans` : `npm run admin:clean-storage` les supprime plus tard.
+
+**Et le verrou des jalons approuvés ?** Les déclencheurs de la base refusent de modifier ou supprimer un jalon approuvé, ses livrables, ses fichiers et son journal tant que leur parent existe. Une suppression en cascade supprime d'abord le parent : les déclencheurs la laissent donc passer, sans réglage spécial ni contournement. Le verrou reste entier pour tout le reste (les tests le vérifient, sur PGlite et sur un vrai Postgres).
+
+Les sauvegardes de la base ne sont pas touchées : elles gardent les données jusqu'à leur expiration.
+
+## Outils d'administration
+
+Pour dépanner un testeur depuis ton ordinateur, sans interface d'administration en ligne. Ils lisent `DATABASE_URL` (dans `app/.env` ou l'environnement) et refusent de tourner sans elle. Rien n'est écrit dans le dépôt ni dans les journaux.
+
+```bash
+npm run admin:reset-password -- testeur@example.com   # affiche une fois un lien de nouveau mot de passe (24 h, usage unique)
+npm run admin:delete-user -- testeur@example.com      # résume le compte, demande de retaper l'email, puis supprime tout
+npm run admin:clean-storage                           # supprime les fichiers restés dans storage_orphans (FILES_R2_* nécessaires)
+```
+
+- `admin:reset-password` utilise les liens de réinitialisation déjà en place : le testeur choisit lui-même son nouveau mot de passe, que personne d'autre ne connaît. Mets `APP_URL` pour avoir le lien complet.
+- `admin:delete-user` appelle le même service que « Supprimer mon compte ». Sans les quatre `FILES_R2_*`, les fichiers ne sont pas supprimés tout de suite : ils sont notés dans `storage_orphans` pour `admin:clean-storage`.
 
 ## Emails
 
@@ -180,11 +225,12 @@ Tant que `RESEND_API_KEY` est vide, l'email s'affiche simplement dans le termina
 - **CSRF** : chaque formulaire envoie un jeton caché lié à la session ; un POST sans le bon jeton est refusé (403).
 - **En-têtes** : `helmet` ajoute les en-têtes de sécurité standard (CSP, HSTS en production, nosniff…).
 - **Inscription sur invitation** : il faut le code `INVITE_CODE` pour créer un compte.
-- **Limites** : 10 tentatives de connexion ou d'inscription et 5 demandes de mot de passe oublié par 15 minutes et par IP.
+- **Limites** : 10 tentatives de connexion ou d'inscription, 5 demandes de mot de passe oublié et 5 tentatives de suppression de compte par 15 minutes et par IP.
+- **Compte supprimé** : chaque requête relit le compte connecté ; une session ouverte ailleurs sur un compte supprimé est déconnectée.
 
 ## Variables d'environnement
 
-Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `CONTACT_EMAIL` (facultative), `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, `CRON_SECRET` (facultative : sans elle, la route des délais est désactivée), et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
+Toutes sont décrites dans [`.env.example`](.env.example) : `NODE_ENV`, `APP_URL`, `SESSION_SECRET`, `DATABASE_URL`, `CONTACT_EMAIL` (facultative), `BETA_MODE`, `BETA_RESPONSIBLE_NAME` et `FEEDBACK_URL` (facultatives, voir « Bêta fermée »), `RESEND_API_KEY`, `EMAIL_FROM`, `INVITE_CODE`, `CRON_SECRET` (facultative : sans elle, la route des délais est désactivée), et les quatre `FILES_R2_*` du stockage des fichiers (facultatives : sans elles, l'envoi de fichiers est désactivé en production).
 
 En production (`NODE_ENV=production`), l'app refuse de démarrer s'il manque `SESSION_SECRET`, `APP_URL`, `DATABASE_URL` ou `INVITE_CODE`, et affiche la liste de ce qui manque.
 
@@ -199,6 +245,8 @@ npm test
 ```
 
 Les tests démarrent l'app avec une base en mémoire et vérifient le parcours complet : inscription du dev, projet, jalon, envoi du lien au client, ouverture par le client, approbation, puis le certificat horodaté avec l'IP réelle. Ils couvrent aussi les fichiers (type refusé selon le contenu réel, taille, nombre, quota, CSRF, accès refusé à un autre dev et à un mauvais lien client, en-têtes, fichiers figés après approbation, empreintes dans le certificat, suppression du stockage, app sans stockage configuré), le verrouillage des jalons approuvés (édition refusée côté serveur et par la base, certificat inchangé après une tentative, paiement toujours modifiable, jalon de suite), le lien de paiement (absent de la page avant l'approbation, présent après, liens dangereux refusés, instructions échappées), le code d'invitation, le CSRF, le mot de passe oublié, `/health`, les pages légales, les en-têtes de sécurité, la page d'accueil client et le nom obligatoire à l'approbation, l'ordre des fichiers gardé avec un retour et l'affichage échappé des `/fichierN`, et l'aperçu « Voir comme le client » sans effet de bord.
+
+Les tests de la bêta (`beta.test.js`, `account.test.js`, `vocabulary.test.js`) couvrent le bandeau et la page `/beta` seulement avec `BETA_MODE`, la case obligatoire et sa date, la suppression de compte (tout supprimé en base et dans le stockage, jalons approuvés compris, autre compte intact, mauvais mot de passe refusé, stockage en panne), le verrou toujours actif, le lien de retour, les scripts admin sans `DATABASE_URL`, et le vocabulaire par activité côté freelance et côté client.
 
 Pour les lancer contre un vrai Postgres jetable : `TEST_DATABASE_URL=postgres://… npm test`.
 
@@ -262,6 +310,5 @@ En cas de vrai sinistre, la même commande peut restaurer dans une nouvelle base
 ## Pas encore dans cette version
 
 - Sauvegarde du bucket de fichiers.
-- Suppression de compte (elle devra aussi supprimer les fichiers du stockage).
 - Logo du dev sur la page client : plus tard.
 - Mise en ligne (comptes Render, Neon, Resend, domaine) : à faire de ton côté.

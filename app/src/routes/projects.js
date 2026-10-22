@@ -256,6 +256,7 @@ router.post('/projects/:id/abandon', async (req, res) => {
     await emailProjectClosed({
       to: project.client_email,
       lang: req.lang,
+      term: req.term,
       devName: req.session.user.name,
       clientName: project.client_name,
       projectName: project.name,

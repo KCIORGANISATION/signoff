@@ -5748,3 +5748,114 @@ html:not(.js) .demo-caption {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Closed beta: banner, rules page, feedback link, account deletion
+   ========================================================================== */
+.beta-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  min-height: var(--tap);
+  padding: var(--space-1) var(--page-x);
+  border-bottom: 1px solid rgba(255, 207, 122, 0.45);
+  background: rgba(40, 20, 10, 0.6);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.beta-banner p {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.beta-banner p > .icon {
+  flex-shrink: 0;
+  color: var(--st-feedback);
+}
+
+.beta-banner p > span {
+  line-height: 1.4;
+}
+
+/* The tap area grows to 44 px without making the lines taller. */
+.beta-banner a {
+  display: inline-block;
+  padding: 12px 0;
+  margin: -12px 0;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.beta-banner .icon-btn {
+  border-color: transparent;
+  background: transparent;
+}
+
+.beta-banner .icon-btn:hover {
+  background: var(--glass-hover);
+}
+
+.beta-rules .hero-pill {
+  align-self: flex-start;
+}
+
+.beta-rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.beta-list {
+  display: grid;
+  gap: var(--space-3);
+  padding-left: 1.4em;
+  color: var(--text-body);
+}
+
+.beta-list li::marker {
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+.beta-check {
+  margin-top: var(--space-4);
+}
+
+.beta-check-link a,
+.beta-rules a {
+  display: inline-block;
+  padding: 12px 0;
+  margin: -12px 0;
+}
+
+.footer-chip a .icon {
+  margin-right: var(--space-2);
+}
+
+.account-delete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+}
+
+.hero-notice {
+  width: 100%;
+  max-width: 520px;
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  .beta-banner {
+    justify-content: space-between;
+    padding-right: var(--space-2);
+  }
+}

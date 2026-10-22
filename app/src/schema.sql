@@ -332,3 +332,16 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE TRIGGER supplements_locked
   BEFORE UPDATE ON supplements
   FOR EACH ROW EXECUTE FUNCTION signoff_supplement_locked();
+
+-- Closed beta ----------------------------------------------------------------
+
+-- When the account accepted the beta rules (only asked while BETA_MODE is on).
+-- Accounts created before have none: the app asks them on their next visit.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS beta_rules_accepted_at TIMESTAMPTZ;
+
+-- Stored files whose deletion failed after their rows were deleted (storage unreachable).
+-- Only random storage keys, nothing personal. "npm run admin:clean-storage" retries them.
+CREATE TABLE IF NOT EXISTS storage_orphans (
+  storage_key TEXT PRIMARY KEY,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);

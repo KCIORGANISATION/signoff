@@ -10,7 +10,10 @@
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "test": "node --test --test-concurrency=1 test/*.test.js",
     "backup": "node --env-file-if-exists=.env scripts/backup.js",
-    "restore": "node --env-file-if-exists=.env scripts/restore.js"
+    "restore": "node --env-file-if-exists=.env scripts/restore.js",
+    "admin:reset-password": "node --env-file-if-exists=.env scripts/admin-reset-password.js",
+    "admin:delete-user": "node --env-file-if-exists=.env scripts/admin-delete-user.js",
+    "admin:clean-storage": "node --env-file-if-exists=.env scripts/admin-clean-storage.js"
   },
   "engines": {
     "node": ">=22"

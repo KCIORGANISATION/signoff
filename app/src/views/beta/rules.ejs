@@ -1,0 +1,37 @@
+<%
+  // Splits a translated sentence around its {placeholders}, so links can sit inside it.
+  const parts = (key, names) => {
+    const marks = Object.fromEntries(names.map((name, i) => [name, `\u0001${i}\u0001`]));
+    return t(key, marks).split(/\u0001(\d)\u0001/);
+  };
+  const responsibleParts = parts('beta.responsible', ['name', 'privacy', 'terms']);
+  const questionParts = parts('beta.questions', ['link']);
+  const links = [
+    () => `<strong>${escape(responsible)}</strong>`,
+    () => `<a href="/privacy">${escape(t('legal.privacy'))}</a>`,
+    () => `<a href="/terms">${escape(t('legal.terms'))}</a>`,
+  ];
+  function escape(text) { return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&#34;'); }
+%>
+<%- include('../partials/head', { title: t('beta.title') }) %>
+<div class="page-medium" style="margin: 0 auto;">
+  <section class="glass panel panel-roomy reveal beta-rules" aria-labelledby="beta-title">
+    <span class="hero-pill"><%= t('home.beta') %></span>
+    <h1 id="beta-title" class="form-title"><%= t('beta.title') %></h1>
+    <p class="lead"><%= t('beta.lead') %></p>
+    <ol class="beta-list">
+      <li><%= t('beta.rule.trial') %></li>
+      <li><%= t('beta.rule.testData') %></li>
+      <li><%= t('beta.rule.deletion') %></li>
+      <li><%= t('beta.rule.availability') %></li>
+      <li><%= t('beta.rule.firstLoad') %></li>
+    </ol>
+    <% if (feedback) { %>
+      <p><% questionParts.forEach((part, i) => { %><% if (i % 2 === 0) { %><%= part %><% } else { %><a href="<%= feedback.href %>" <%- feedback.external ? 'target="_blank" rel="noopener noreferrer"' : '' %>><%= t('feedback.link') %><% if (feedback.external) { %><span class="sr-only"> <%= t('review.newTab') %></span><% } %></a><% } %><% }) %></p>
+    <% } else { %>
+      <p><%= t('beta.questions.none') %></p>
+    <% } %>
+    <p class="muted"><% responsibleParts.forEach((part, i) => { %><% if (i % 2 === 0) { %><%= part %><% } else { %><%- links[Number(part)]() %><% } %><% }) %></p>
+  </section>
+</div>
+<%- include('../partials/foot') %>

@@ -49,6 +49,15 @@ export function detectType(buffer, originalName = '') {
   return 'txt';
 }
 
+// What the upload form and its error messages show: the real limits and accepted types.
+export const UPLOAD_RULES = {
+  types: Object.values(TYPES).flatMap((info) => info.extensions).join(', '),
+  accept: Object.values(TYPES).flatMap((info) => [info.mime.split(';')[0], ...info.extensions]).join(','),
+  size: MAX_FILE_BYTES / 1024 / 1024,
+  count: MAX_FILES_PER_MILESTONE,
+  quota: ACCOUNT_QUOTA_BYTES / 1024 / 1024,
+};
+
 export function typeInfo(type) {
   return TYPES[type];
 }

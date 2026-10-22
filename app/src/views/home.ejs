@@ -20,6 +20,7 @@
 
 <%# 1 · Arrival: the logo writes itself, then the promise and the two ways in %>
 <section class="hero">
+  <% if (locals.notice) { %><div class="hero-notice"><%- include('partials/alert', { kind: 'success', text: notice }) %></div><% } %>
   <span class="hero-pill hero-in" style="--d: 0.1s;"><%= t('home.beta') %></span>
   <div class="hero-logo"><%- logo({ id: 'hero', animated: true }) %></div>
   <h1 class="hero-in" style="--d: 2.1s;"><%= t('home.title') %></h1>

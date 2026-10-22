@@ -37,6 +37,13 @@
         <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="password-hint">
         <p class="hint" id="password-hint" style="margin-top: 2px;"><%= t('auth.password.hint') %></p>
       </div>
+      <% if (betaRules) { %>
+        <label class="check beta-check">
+          <input type="checkbox" name="beta_rules" value="yes" required>
+          <span><%= t('beta.accept.label') %></span>
+        </label>
+        <p class="hint beta-check-link"><a href="/beta" target="_blank" rel="noopener"><%= t('beta.accept.read') %><span class="sr-only"> <%= t('review.newTab') %></span></a></p>
+      <% } %>
       <div class="form-actions"><button class="btn btn-light btn-large btn-block" type="submit" data-loading><%= t('auth.signup.submit') %></button></div>
     </form>
     <p class="auth-switch muted"><%= t('auth.signup.switch') %> <a href="/login"><%= t('nav.login') %></a></p>

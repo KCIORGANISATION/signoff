@@ -1,26 +1,18 @@
-import crypto from 'node:crypto';
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { absoluteUrl } from '../config.js';
+import { absoluteUrl, config } from '../config.js';
 import { query, queryOne } from '../db.js';
 import { emailPasswordReset } from '../email.js';
 import { limiter, logIn } from './auth.js';
+import { createPasswordReset, findValidReset } from '../password-reset.js';
 
 const router = Router();
-const RESET_LIFETIME_MINUTES = 60;
 
-function hashToken(token) {
-  return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-function findValidReset(token) {
-  return queryOne(
-    `SELECT r.id, r.user_id
-       FROM password_resets r
-      WHERE r.token_hash = $1 AND r.used_at IS NULL AND r.expires_at > now()`,
-    [hashToken(String(token))],
-  );
-}
+// During the beta, without an email service, the page says how to get a new password instead.
+router.use('/forgot', (req, res, next) => {
+  res.locals.betaNoEmail = config.beta.enabled && !config.resendApiKey;
+  next();
+});
 
 router.get('/forgot', (req, res) => {
   res.render('auth/forgot', { error: null, values: {}, sent: false });
@@ -33,12 +25,7 @@ router.post('/forgot', limiter('auth/forgot', 5), async (req, res) => {
   const user = await queryOne('SELECT id, email, lang FROM users WHERE email = $1', [email]);
 
   if (user) {
-    const token = crypto.randomBytes(32).toString('base64url');
-    await queryOne(
-      `INSERT INTO password_resets (user_id, token_hash, expires_at)
-       VALUES ($1, $2, now() + make_interval(mins => $3)) RETURNING id`,
-      [user.id, hashToken(token), RESET_LIFETIME_MINUTES],
-    );
+    const token = await createPasswordReset(user.id);
     await emailPasswordReset({ to: user.email, lang: user.lang, link: absoluteUrl(req, `/reset/${token}`) });
   }
 
