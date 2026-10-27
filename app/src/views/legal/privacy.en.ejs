@@ -1,94 +1,93 @@
 <h1>Privacy policy</h1>
-<p class="muted">Last updated: 18 October 2026</p>
+<p class="muted">Last updated: <%- legal('lastUpdated') %></p>
 
 <p>This policy explains which personal data Signoff processes, why, for how long, with whom, and what your rights are. It applies the General Data Protection Regulation (GDPR, Regulation (EU) 2016/679) and the Belgian Act of 30 July 2018 on the protection of natural persons with regard to the processing of personal data.</p>
 
-<h2>1. Who is responsible?</h2>
-<p>Signoff is published by Kostia Masset-Depasse, <span class="placeholder">[ADRESSE]</span>, Brussels, Belgium, company number <span class="placeholder">[BCE]</span>. Contact for any question about your data: <span class="placeholder">[EMAIL]</span>.</p>
-<p>Signoff acts in two different roles:</p>
-<ul>
-  <li><strong>Controller</strong> for the data of the developers who have a Signoff account ("users").</li>
-  <li><strong>Processor</strong> for the data of users' clients (the people a user sends a milestone to for approval). For this data, the controller is the user who created the project. Signoff processes it only on the user's behalf, under the data processing agreement in the <a href="/terms#dpa">terms of use</a>.</li>
-</ul>
-
-<h2>2. Data collected</h2>
-<h3>User accounts (developers)</h3>
-<ul>
-  <li>Name or business name, email address, password (stored only as an irreversible hash, never in plain text), preferred language.</li>
-  <li>Content created in the app: projects, milestones, amounts, deliverables (links and notes).</li>
-  <li>Password reset requests (only a hash of the emailed link is kept).</li>
-</ul>
-<h3>Users' clients</h3>
-<ul>
-  <li>Client name and email address, entered by the user.</li>
-  <li>Feedback messages written by the client.</li>
-  <li>Proof of approval: exact date and time (UTC), IP address, browser (user agent) and a frozen copy of the deliverables at the moment of approval. The IP address and browser are also recorded when the client opens the link or leaves feedback.</li>
-</ul>
-<h3>Technical data</h3>
-<ul>
-  <li>One session cookie, strictly necessary for the service (login, chosen language, form protection). It is signed, never used to track you, and expires after 30 days. Signoff uses no advertising cookies, no audience measurement and no third-party trackers, so no consent is requested.</li>
-  <li>The host's technical logs (IP address, requested page, date), used for security and troubleshooting.</li>
-</ul>
-
-<h2>3. Why, and on what legal basis?</h2>
+<h2>1. Who is responsible for your data?</h2>
 <table>
-  <thead><tr><th>Purpose</th><th>Legal basis (Art. 6 GDPR)</th></tr></thead>
   <tbody>
-    <tr><td>Create and manage the account and provide the service (projects, milestones, review links, certificates, notification and reset emails)</td><td>Performance of the contract with the user (Art. 6(1)(b))</td></tr>
-    <tr><td>Record the client's proof of approval (date, IP, browser, copy of the deliverables) on behalf of the user</td><td>Processing on behalf of the user, who relies on their legitimate interest in proving their client's agreement (Art. 6(1)(f))</td></tr>
-    <tr><td>Keep the service secure (login attempt limits, logs, backups)</td><td>Legitimate interest in protecting the service and the data (Art. 6(1)(f))</td></tr>
-    <tr><td>Meet accounting and legal obligations, where applicable</td><td>Legal obligation (Art. 6(1)(c))</td></tr>
+    <tr><th scope="row">Publisher of the service</th><td><%- legal('companyName') %> (<%- legal('legalForm') %>)</td></tr>
+    <tr><th scope="row">Registered office</th><td><%- legal('address') %></td></tr>
+    <tr><th scope="row">Enterprise number (BCE/KBO)</th><td><%- legal('enterpriseNumber') %></td></tr>
+    <tr><th scope="row">VAT number</th><td><%- legal('vatNumber') %></td></tr>
+    <tr><th scope="row">Contact email</th><td><%- legal('contactEmail') %></td></tr>
+    <tr><th scope="row">Legal representative</th><td><%- legal('legalRepresentative') %></td></tr>
   </tbody>
 </table>
-<p>Signoff does not sell your data, does not use it for advertising, and makes no automated decision with legal effects on you.</p>
-
-<h2>4. How long?</h2>
+<p>Signoff is an online service that lets a freelancer have their client approve deliverables or project stages (called "milestones" or "deliveries" depending on the activity), with a timestamped history.</p>
+<p>There are two situations:</p>
 <ul>
-  <li>Account data and created content (including client data and proofs of approval): for as long as the account exists, then <strong>1 year</strong> after it is closed, so the user can still obtain proof in case of a dispute. It is then deleted.</li>
-  <li>A project or milestone deleted by the user is erased from the database immediately, along with its proofs.</li>
-  <li>Password reset links: valid for 1 hour, kept with the account.</li>
-  <li>Backups: copies of the database kept for 30 days at most, then replaced.</li>
-  <li>Technical logs: according to the host's retention period, limited to a few weeks.</li>
+  <li><strong>Your account data</strong> (if you are a freelancer): Signoff is the <strong>controller</strong>.</li>
+  <li><strong>Your clients' data</strong> that you enter or send in Signoff (name, email, files, comments): you are the controller, Signoff acts as <strong>processor</strong> and only uses this data to provide the service, under the data processing agreement in the <a href="/terms#dpa">terms of use</a>.</li>
 </ul>
 
-<h2>5. Who can access the data? (sub-processors)</h2>
-<p>Only the publisher of Signoff has access to the data, together with the following providers, strictly to run the service:</p>
+<h2>2. What data, why, and on what basis?</h2>
 <table>
-  <thead><tr><th>Provider</th><th>Role</th><th>Data location</th></tr></thead>
+  <thead><tr><th>Data</th><th>Purpose</th><th>Legal basis (Art. 6 GDPR)</th></tr></thead>
   <tbody>
-    <tr><td>Render Services, Inc.</td><td>Application hosting</td><td>European Union (Frankfurt, Germany)</td></tr>
-    <tr><td>Neon</td><td>Database</td><td>European Union (Frankfurt, Germany)</td></tr>
-    <tr><td>Resend</td><td>Sending emails (review link, notifications, password reset)</td><td>United States</td></tr>
-    <tr><td>Cloudflare, Inc. (R2)</td><td>Backup storage</td><td>European Union</td></tr>
+    <tr><td>Freelancer account: first name, last name, name shown to your clients (name or business name), email, password (stored only as a hash, never in plain text), language, activity and answers to the welcome questionnaire<% if (beta) { %>, date the beta rules were accepted (<code>beta_rules_accepted_at</code>)<% } %></td><td>Create and secure the account, provide the service</td><td>Performance of the contract (Art. 6(1)(b))</td></tr>
+    <tr><td>Content of your projects: projects, milestones or deliveries, amounts, deliverables (links, texts), project frame, supplements</td><td>Provide the service</td><td>Performance of the contract (Art. 6(1)(b))</td></tr>
+    <tr><td>Client data entered by the freelancer: name, email, project name</td><td>Let the client open the approval page and approve</td><td>Performance of the contract / legitimate interest of the freelancer, who is the controller (Art. 6(1)(b) and (f))</td></tr>
+    <tr><td>Uploaded files and the SHA-256 fingerprint of each file</td><td>Deliver the file to the client and show it was not changed after approval</td><td>Performance of the contract (Art. 6(1)(b))</td></tr>
+    <tr><td>Event log: opening of the link, acceptance of the frame, approval, change request and its comments (including file references such as "/file1", with the list of files in the order the client saw them), answers to supplements; full name typed by the client when approving; date and time (UTC), IP address and browser (user agent) of the client at each action; frozen copy of the deliverables at the moment of approval</td><td>Build the timestamped history of the approval, an element of proof for the freelancer</td><td>Legitimate interest (proof) / performance of the contract (Art. 6(1)(f) and (b))</td></tr>
+    <tr><td>Freelancer's private notes</td><td>The freelancer's own use, never shown to the client</td><td>Performance of the contract (Art. 6(1)(b))</td></tr>
+    <tr><td>Password reset requests (only a fingerprint of the link is kept)</td><td>Let you choose a new password</td><td>Performance of the contract (Art. 6(1)(b))</td></tr>
+    <tr><td>Support and feedback messages sent through the "<%= t('feedback.link') %>" link (the beta's Discord server) or to the contact address: username or address, content of the message</td><td>Answer questions, fix bugs, improve the service</td><td>Legitimate interest / consent of the person writing (Art. 6(1)(f) and (a))</td></tr>
+    <tr><td>Session cookie (signed, 30 days) and security token against forged forms (CSRF)</td><td>Keep you signed in, remember the language, protect forms</td><td>Strictly necessary: no consent required</td></tr>
+    <tr><td>Server technical logs (errors, requests, IP address)</td><td>Security, troubleshooting</td><td>Legitimate interest (Art. 6(1)(f))</td></tr>
   </tbody>
 </table>
-<p>Some of these providers are companies established in the United States. Where data is transferred to or accessible from outside the European Economic Area, the transfer relies on the EU–US Data Privacy Framework where the provider is certified, or on the standard contractual clauses adopted by the European Commission.</p>
-<p>A user sees the data of their own projects. A user's client only sees the milestone they received the link for.</p>
+<p>While sending emails is not turned on, the content of notification emails (password reset links included) is written to the server's technical logs instead of being sent.</p>
+<p>We use no advertising cookies, no audience measurement and no third-party trackers. Fonts are served by the app itself. We do not sell your data. We make no automated decisions about you.</p>
 
-<h2>6. Security</h2>
-<p>Encrypted connections (HTTPS), passwords and reset links stored as hashes, protection against forged form submissions, login attempt limits, data access restricted to the publisher, daily backups. No measure is infallible: if a data breach creates a risk, the people concerned and the Data Protection Authority will be informed as the GDPR requires.</p>
+<h2>3. Who is it shared with (processors)?</h2>
+<table>
+  <thead><tr><th>Provider</th><th>Role</th><th>Location</th></tr></thead>
+  <tbody>
+    <tr><td>Render</td><td>Hosting of the application</td><td><%- legal('regionRender') %></td></tr>
+    <tr><td>Neon</td><td>PostgreSQL database</td><td><%- legal('regionNeon') %></td></tr>
+    <tr><td>Cloudflare R2</td><td>Storage of uploaded files, and storage of the database backups (in a separate space)</td><td><%- legal('regionR2') %></td></tr>
+    <tr><td>GitHub (Actions)</td><td>Runs the automatic database backup every night: the copy is made on a GitHub machine, then sent to Cloudflare R2</td><td><%- legal('regionGitHub') %></td></tr>
+    <tr><td>Resend</td><td>Sending emails (notifications, deadline reminders, password reset), when sending emails is turned on</td><td><%- legal('regionResend') %></td></tr>
+    <tr><td>Discord</td><td>The beta community: support and feedback from testers (a service used outside the app, under its own privacy policy)</td><td><%- legal('regionDiscord') %></td></tr>
+  </tbody>
+</table>
+<p>No payment provider is used at this time.</p>
+<p>When a provider processes data outside the European Economic Area, the transfer is covered by the European Commission's standard contractual clauses or by an adequacy decision (including the EU–US Data Privacy Framework for certified providers).</p>
+<p>The freelancer sees the data of their own projects. The client only sees the milestone or delivery whose link they received.</p>
 
-<h2>7. Your rights</h2>
-<p>You have the following rights over your data:</p>
+<h2>4. How long do we keep it?</h2>
 <ul>
-  <li><strong>access</strong>: know which data is processed and get a copy;</li>
-  <li><strong>rectification</strong>: have inaccurate data corrected;</li>
-  <li><strong>erasure</strong>: have your data deleted, unless keeping it is necessary to comply with a legal obligation or to establish, exercise or defend legal claims;</li>
-  <li><strong>portability</strong>: receive the data you provided in a structured, machine-readable format;</li>
-  <li><strong>restriction</strong> and <strong>objection</strong> to processing based on legitimate interest.</li>
+  <li><strong>Account and project data</strong>: as long as the account exists. A project, milestone or delivery you delete is erased from the database at once, with its history.</li>
+  <li><strong>Account deletion</strong> (by yourself from "My profile", or by an administrator on written request): the account, the projects, the milestones or deliveries with their deliverables, the files, the frames and their acceptances, the notes, the supplements, the event logs and the password reset requests are erased from the database in a single operation, even if a delivery was already approved and locked. Links sent to clients stop working.</li>
+  <li><strong>Files in storage</strong>: they are erased right after the account. If the storage does not answer, or if the deletion is done by an administrator without access to it, the remaining files are put on a waiting list (table <code>storage_orphans</code>) and then erased by the cleanup command <code>admin:clean-storage</code>, within <%- legal('storageCleanupDays') %> of the account deletion.</li>
+  <li><strong>Backups</strong>: a full copy of the database is made every night. Deleted data may remain in backups until they expire, that is <%- legal('backupRetentionDays') %>, and is then erased.</li>
+  <li><strong>Inactive accounts</strong>: time before deletion: <%- legal('inactiveAccountMonths') %>. This deletion is not automatic at this time: an administrator does it.</li>
+  <li><strong>Password reset links</strong>: valid for 1 hour (24 hours when an administrator creates them), usable once.</li>
+  <li><strong>Billing data</strong> (once payments exist): <%- legal('billingRetentionYears') %>.</li>
+  <li><strong>Technical logs</strong>: according to the host's retention period.</li>
 </ul>
-<p>To exercise these rights, write to <span class="placeholder">[EMAIL]</span>. You will get an answer within one month. Proof of identity may be requested if there is a doubt.</p>
-<p><strong>Are you the client of a Signoff user?</strong> The controller of your data is the provider who sent you the link. Contact them first. If you write to Signoff, your request will be forwarded to them and Signoff will help them answer it.</p>
 
-<h2>8. Complaints</h2>
+<h2>5. Your rights</h2>
+<p>You can ask for access to your data, its rectification, its erasure, restriction of processing, portability, and object to processing based on legitimate interest. Write to <%- legal('contactEmail') %><% if (feedback) { %> (or through the app's "<%= t('feedback.link') %>" link)<% } %>; we answer within one month. Proof of identity may be requested in case of doubt. You can also delete your account yourself from "My profile".</p>
+<p><strong>Are you a freelancer's client?</strong> First contact the freelancer who sent you the link (the controller); we will help them answer.</p>
 <p>If you believe your rights are not respected, you can lodge a complaint with the Belgian supervisory authority:</p>
 <p>
-  <strong>Data Protection Authority (Autorité de protection des données / Gegevensbeschermingsautoriteit)</strong><br>
-  Rue de la Presse 35, 1000 Brussels, Belgium<br>
+  <strong>Data Protection Authority (Autorité de protection des données)</strong><br>
+  Rue de la Presse 35, 1000 Brussels<br>
   Phone: +32 (0)2 274 48 00<br>
   Email: <a href="mailto:contact@apd-gba.be">contact@apd-gba.be</a><br>
   Website: <a href="https://www.dataprotectionauthority.be" target="_blank" rel="noopener">www.dataprotectionauthority.be</a>
 </p>
 
-<h2>9. Changes</h2>
-<p>This policy may change, in particular when the beta ends. The date of the last update is shown at the top of the page. Users will be notified by email of any significant change.</p>
+<h2>6. Security</h2>
+<p>Hashed passwords, password reset links stored as a fingerprint, encrypted connection (HTTPS), protection against forged forms (CSRF), rate limiting, security headers, access control on every resource, database lock on approved milestones and deliveries, automatic backups every night. No system is infallible: in the event of a data breach likely to harm you, we notify the Data Protection Authority and the people concerned within the legal deadlines (72 hours for the authority).</p>
+
+<% if (beta) { %>
+<h2>7. Test beta</h2>
+<p>During the beta, the service is meant for testing: do not send any real client data. Beta accounts and data may be deleted at any time. When signing up, you accept the beta rules (checkbox); the date of this acceptance is recorded. Person responsible for the beta: <%- legal('betaResponsible') %>.</p>
+<p>During the beta, if sending emails is not turned on, a forgotten password is reset by an administrator, who sends you a link valid for 24 hours.</p>
+<% } %>
+
+<h2><%= beta ? '8' : '7' %>. Changes</h2>
+<p>This policy may change, especially when the beta ends; the date of the last update is at the top of the page. Last updated: <%- legal('lastUpdated') %>.</p>

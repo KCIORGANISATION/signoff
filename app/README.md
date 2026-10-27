@@ -144,6 +144,7 @@ app/
       account.js     « Supprimer mon compte »
       beta.js        bêta : page /beta, bandeau, acceptation des règles
       legal.js       mentions légales, confidentialité, conditions
+    legal-config.js  valeurs des pages légales encore inconnues (société, durées, régions)
       projects.js    tableau de bord et projets
       milestones.js  jalons, livrables, lien client, certificat côté dev
       files.js       envoi, suppression et téléchargement des fichiers côté dev
@@ -192,6 +193,13 @@ La suppression (`src/account.js`) est une seule requête SQL, donc tout ou rien 
 **Et le verrou des jalons approuvés ?** Les déclencheurs de la base refusent de modifier ou supprimer un jalon approuvé, ses livrables, ses fichiers et son journal tant que leur parent existe. Une suppression en cascade supprime d'abord le parent : les déclencheurs la laissent donc passer, sans réglage spécial ni contournement. Le verrou reste entier pour tout le reste (les tests le vérifient, sur PGlite et sur un vrai Postgres).
 
 Les sauvegardes de la base ne sont pas touchées : elles gardent les données jusqu'à leur expiration.
+
+## Pages légales
+
+`/privacy` et `/terms` existent en français et en anglais (`src/views/legal/`). Ce qui n'est pas encore connu (dénomination sociale, siège, BCE, TVA, représentant légal, durées de conservation, préavis, ville compétente en cas de litige, région de chaque prestataire, date de mise à jour) est dans `src/legal-config.js`, avec `null` par défaut. L'email de contact reprend `CONTACT_EMAIL` et le responsable de la bêta `BETA_RESPONSIBLE_NAME` si leur valeur reste `null`. Les limites d'envoi de fichiers et la phrase d'approbation sont lues dans le code, jamais recopiées.
+
+- Avec `BETA_MODE=true`, une valeur `null` s'affiche « [à compléter] » et les sections bêta apparaissent.
+- Sans bêta, une valeur `null` donne un avertissement au démarrage, et `test/legal-release.test.js` échoue. Ce test ne tourne que si `BETA_MODE` est défini ou `NODE_ENV=production` ; avant de sortir de la bêta : `BETA_MODE=false npm test`.
 
 ## Outils d'administration
 
