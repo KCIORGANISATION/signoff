@@ -39,8 +39,8 @@ function notFound(req, res) {
 
 // An approved milestone is locked: its content is what the client approved.
 // Only the payment link and note can still change.
-function locked(req, res) {
-  res.status(409).render('error', { message: req.t('milestone.locked.error') });
+function locked(req, res, message = 'milestone.locked.error') {
+  res.status(409).render('error', { message: req.t(message) });
 }
 
 // A completed or abandoned project is read-only until it is reopened.
@@ -300,6 +300,7 @@ router.post('/milestones/:id/delete', async (req, res) => {
   const milestone = await findMilestoneForUser(req.session.user.id, req.params.id);
   if (!milestone) return notFound(req, res);
   if (projectClosed(milestone)) return closed(req, res);
+  if (isLocked(milestone)) return locked(req, res, 'milestone.locked.deleteError');
 
   const keys = await storageKeys('SELECT storage_key FROM files WHERE milestone_id = $1', [milestone.id]);
   await query('DELETE FROM milestones WHERE id = $1', [milestone.id]);

@@ -84,6 +84,22 @@ test('an approved milestone is locked on the server and its certificate does not
   assert.doesNotMatch(unchanged.text, /Logo v2|Added later|example\.com\/new/);
 });
 
+test('an approved milestone cannot be deleted, but its project and the account still can', async () => {
+  const { dev, projectPath, milestoneId } = await approvedMilestone('lock-delete@example.com');
+
+  const edit = await dev.get(`/milestones/${milestoneId}/edit`);
+  assert.doesNotMatch(edit.text, new RegExp(`/milestones/${milestoneId}/delete`), 'no delete button');
+  const refused = await dev.post(`/milestones/${milestoneId}/delete`);
+  assert.equal(refused.status, 409);
+  assert.match(refused.text, /delete the project or the account/);
+  assert.equal((await query('SELECT 1 FROM milestones WHERE id = $1', [milestoneId])).length, 1);
+  await assert.rejects(query('DELETE FROM milestones WHERE id = $1', [milestoneId]), /locked/);
+
+  await dev.get(projectPath);
+  assert.equal((await dev.post(`${projectPath}/delete`)).status, 302);
+  assert.equal((await query('SELECT 1 FROM milestones WHERE id = $1', [milestoneId])).length, 0);
+});
+
 test('the payment link stays editable after approval', async () => {
   const { dev, client, milestonePath, reviewPath } = await approvedMilestone('lock-payment@example.com');
   const before = certificateBody(await dev.get(`${milestonePath}/certificate`));
@@ -135,6 +151,7 @@ test('the database refuses to change an approval record or a locked milestone', 
     /locked/,
   );
   await query(`UPDATE milestones SET payment_note = 'ok' WHERE id = $1`, [milestoneId]);
+  await assert.rejects(query(`DELETE FROM milestones WHERE id = $1`, [milestoneId]), /locked/);
 
   await dev.get(projectPath);
   const deleted = await dev.post(`${projectPath}/delete`);
