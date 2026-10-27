@@ -1,86 +1,76 @@
 <h1>Politique de confidentialité</h1>
-<p class="muted">Dernière mise à jour : 18 octobre 2026</p>
+<p class="muted">Dernière mise à jour : <%- legal('lastUpdated') %></p>
 
 <p>Cette politique explique quelles données personnelles Signoff traite, pourquoi, pendant combien de temps, avec qui, et quels sont vos droits. Elle applique le Règlement général sur la protection des données (RGPD, règlement (UE) 2016/679) et la loi belge du 30 juillet 2018 relative à la protection des personnes physiques à l'égard des traitements de données à caractère personnel.</p>
 
-<h2>1. Qui est responsable ?</h2>
-<p>Signoff est édité par Kostia Masset-Depasse, <span class="placeholder">[ADRESSE]</span>, Bruxelles, Belgique, BCE <span class="placeholder">[BCE]</span>. Contact pour toute question sur vos données : <span class="placeholder">[EMAIL]</span>.</p>
-<p>Signoff intervient dans deux rôles différents :</p>
-<ul>
-  <li><strong>Responsable du traitement</strong> pour les données des développeurs qui ont un compte Signoff (les « utilisateurs »).</li>
-  <li><strong>Sous-traitant</strong> pour les données des clients des utilisateurs (les personnes à qui un utilisateur envoie un jalon à valider). Pour ces données, le responsable du traitement est l'utilisateur qui a créé le projet. Signoff les traite uniquement pour son compte, selon l'accord de sous-traitance figurant dans les <a href="/terms#dpa">conditions d'utilisation</a>.</li>
-</ul>
-
-<h2>2. Données collectées</h2>
-<h3>Comptes des utilisateurs (développeurs)</h3>
-<ul>
-  <li>Nom ou nom commercial, adresse email, mot de passe (stocké uniquement sous forme chiffrée irréversible, jamais en clair), langue préférée.</li>
-  <li>Contenu créé dans l'application : projets, jalons, montants, livrables (liens et notes).</li>
-  <li>Demandes de réinitialisation du mot de passe (seule une empreinte du lien envoyé est conservée).</li>
-</ul>
-<h3>Clients des utilisateurs</h3>
-<ul>
-  <li>Nom et adresse email du client, saisis par l'utilisateur.</li>
-  <li>Messages de feedback écrits par le client.</li>
-  <li>Preuve d'approbation : date et heure exactes (UTC), adresse IP, navigateur (user agent) et copie figée des livrables au moment de l'approbation. L'adresse IP et le navigateur sont aussi enregistrés quand le client ouvre le lien ou laisse un feedback.</li>
-</ul>
-<h3>Données techniques</h3>
-<ul>
-  <li>Un cookie de session, strictement nécessaire au fonctionnement (connexion, langue choisie, protection des formulaires). Il est signé, n'est jamais utilisé pour vous suivre et expire après 30 jours. Signoff n'utilise ni cookie publicitaire, ni outil de mesure d'audience, ni traceur tiers : aucun consentement n'est donc demandé.</li>
-  <li>Journaux techniques de l'hébergeur (adresse IP, page demandée, date), utilisés pour la sécurité et le diagnostic.</li>
-</ul>
-
-<h2>3. Pourquoi et sur quelle base ?</h2>
+<h2>1. Qui est responsable de vos données ?</h2>
 <table>
-  <thead><tr><th>Finalité</th><th>Base légale (art. 6 RGPD)</th></tr></thead>
   <tbody>
-    <tr><td>Créer et gérer le compte, fournir le service (projets, jalons, liens de validation, certificats, emails de notification et de réinitialisation)</td><td>Exécution du contrat avec l'utilisateur (art. 6.1.b)</td></tr>
-    <tr><td>Enregistrer la preuve d'approbation du client (date, IP, navigateur, copie des livrables) pour le compte de l'utilisateur</td><td>Traitement pour le compte de l'utilisateur, qui s'appuie sur son intérêt légitime à prouver l'accord de son client (art. 6.1.f)</td></tr>
-    <tr><td>Sécuriser le service (limitation des tentatives de connexion, journaux, sauvegardes)</td><td>Intérêt légitime à protéger le service et les données (art. 6.1.f)</td></tr>
-    <tr><td>Respecter les obligations comptables et légales, le cas échéant</td><td>Obligation légale (art. 6.1.c)</td></tr>
+    <tr><th scope="row">Éditeur du service</th><td><%- legal('companyName') %> (<%- legal('legalForm') %>)</td></tr>
+    <tr><th scope="row">Siège</th><td><%- legal('address') %></td></tr>
+    <tr><th scope="row">N° d'entreprise (BCE)</th><td><%- legal('enterpriseNumber') %></td></tr>
+    <tr><th scope="row">N° de TVA</th><td><%- legal('vatNumber') %></td></tr>
+    <tr><th scope="row">Email de contact</th><td><%- legal('contactEmail') %></td></tr>
+    <tr><th scope="row">Représentant légal</th><td><%- legal('legalRepresentative') %></td></tr>
   </tbody>
 </table>
-<p>Signoff ne vend pas vos données, ne les utilise pas à des fins publicitaires et ne prend aucune décision automatisée produisant des effets juridiques à votre égard.</p>
-
-<h2>4. Combien de temps ?</h2>
+<p>Signoff est un service en ligne qui permet à un·e freelance de faire valider par son client des livrables ou des étapes de projet (appelés « jalons » ou « livraisons » selon l'activité), avec un historique horodaté.</p>
+<p>Deux situations existent :</p>
 <ul>
-  <li>Données du compte et contenu créé (y compris les données des clients et les preuves d'approbation) : pendant toute la durée du compte, puis <strong>1 an</strong> après sa clôture, afin que l'utilisateur puisse encore obtenir une preuve en cas de litige. Elles sont ensuite supprimées.</li>
-  <li>Un projet ou un jalon supprimé par l'utilisateur est effacé immédiatement de la base, ainsi que ses preuves.</li>
-  <li>Liens de réinitialisation du mot de passe : valables 1 heure, conservés avec le compte.</li>
-  <li>Sauvegardes : copies de la base conservées 30 jours maximum, puis remplacées.</li>
-  <li>Journaux techniques : selon la durée de conservation de l'hébergeur, limitée à quelques semaines.</li>
+  <li><strong>Les données de votre compte</strong> (si vous êtes freelance) : Signoff est <strong>responsable du traitement</strong>.</li>
+  <li><strong>Les données de vos clients</strong> que vous saisissez ou envoyez dans Signoff (nom, email, fichiers, commentaires) : vous êtes responsable du traitement, Signoff agit comme <strong>sous-traitant</strong> et ne les utilise que pour fournir le service, selon l'accord de sous-traitance figurant dans les <a href="/terms#dpa">conditions d'utilisation</a>.</li>
 </ul>
 
-<h2>5. Qui a accès aux données ? (sous-traitants)</h2>
-<p>Seul l'éditeur de Signoff a accès aux données, ainsi que les prestataires suivants, strictement pour faire fonctionner le service :</p>
+<h2>2. Quelles données, pourquoi, sur quelle base ?</h2>
 <table>
-  <thead><tr><th>Prestataire</th><th>Rôle</th><th>Localisation des données</th></tr></thead>
+  <thead><tr><th>Données</th><th>Finalité</th><th>Base légale (art. 6 RGPD)</th></tr></thead>
   <tbody>
-    <tr><td>Render Services, Inc.</td><td>Hébergement de l'application</td><td>Union européenne (Francfort, Allemagne)</td></tr>
-    <tr><td>Neon</td><td>Base de données</td><td>Union européenne (Francfort, Allemagne)</td></tr>
-    <tr><td>Resend</td><td>Envoi des emails (lien de validation, notifications, réinitialisation)</td><td>États-Unis</td></tr>
-    <tr><td>Cloudflare, Inc. (R2)</td><td>Stockage des sauvegardes</td><td>Union européenne</td></tr>
+    <tr><td>Compte freelance : prénom, nom, nom affiché à vos clients (nom ou nom commercial), email, mot de passe (stocké uniquement sous forme hachée, jamais en clair), langue, activité et réponses au questionnaire d'accueil<% if (beta) { %>, date d'acceptation des règles de la bêta (<code>beta_rules_accepted_at</code>)<% } %></td><td>Créer et sécuriser le compte, fournir le service</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+    <tr><td>Contenu de vos projets : projets, jalons ou livraisons, montants, livrables (liens, textes), cadre du projet, suppléments</td><td>Fournir le service</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+    <tr><td>Données client saisies par le/la freelance : nom, email, nom du projet</td><td>Permettre au client d'accéder à la page d'approbation et de valider</td><td>Exécution du contrat / intérêt légitime du/de la freelance, responsable du traitement (art. 6.1.b et f)</td></tr>
+    <tr><td>Fichiers déposés et empreinte SHA-256 de chaque fichier</td><td>Livrer le fichier au client et montrer qu'il n'a pas été modifié après approbation</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+    <tr><td>Journal d'événements : ouverture du lien, acceptation du cadre, approbation, demande de modification et ses commentaires (y compris les références de fichiers du type « /fichier1 », avec la liste des fichiers dans l'ordre où le client les a vus), réponses aux suppléments ; nom complet saisi par le client au moment d'approuver ; date et heure (UTC), adresse IP et navigateur (user agent) du client au moment de chaque action ; copie figée des livrables au moment de l'approbation</td><td>Constituer l'historique horodaté de l'approbation, élément de preuve pour le/la freelance</td><td>Intérêt légitime (preuve) / exécution du contrat (art. 6.1.f et b)</td></tr>
+    <tr><td>Notes privées du/de la freelance</td><td>Usage personnel du/de la freelance, jamais montrées au client</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+    <tr><td>Demandes de réinitialisation du mot de passe (seule une empreinte du lien est conservée)</td><td>Permettre de choisir un nouveau mot de passe</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+    <tr><td>Messages de support et de retour envoyés via le lien « <%= t('feedback.link') %> » (serveur Discord de la bêta) ou à l'adresse de contact : pseudo ou adresse, contenu du message</td><td>Répondre aux questions, corriger les bugs, améliorer le service</td><td>Intérêt légitime / consentement de la personne qui écrit (art. 6.1.f et a)</td></tr>
+    <tr><td>Cookie de session (signé, 30 jours) et jeton de sécurité contre la falsification de formulaires (CSRF)</td><td>Maintenir la connexion, retenir la langue, protéger les formulaires</td><td>Strictement nécessaires : aucun consentement requis</td></tr>
+    <tr><td>Journaux techniques du serveur (erreurs, requêtes, adresse IP)</td><td>Sécurité, dépannage</td><td>Intérêt légitime (art. 6.1.f)</td></tr>
   </tbody>
 </table>
-<p>Certains de ces prestataires sont des sociétés établies aux États-Unis. Lorsque des données sont transférées ou accessibles hors de l'Espace économique européen, ce transfert repose sur le cadre de protection des données UE–États-Unis (Data Privacy Framework) lorsque le prestataire y est certifié, ou sur les clauses contractuelles types adoptées par la Commission européenne.</p>
-<p>L'utilisateur voit les données de ses propres projets. Le client d'un utilisateur ne voit que le jalon dont il a reçu le lien.</p>
+<p>Tant que l'envoi d'emails n'est pas activé, le contenu des emails de notification (y compris les liens de réinitialisation) est écrit dans les journaux techniques du serveur au lieu d'être envoyé.</p>
+<p>Nous n'utilisons aucun cookie publicitaire, aucun outil de mesure d'audience ni aucun traceur tiers. Les polices de caractères sont servies par l'application elle-même. Nous ne vendons pas vos données. Nous ne prenons aucune décision automatisée vous concernant.</p>
 
-<h2>6. Sécurité</h2>
-<p>Connexions chiffrées (HTTPS), mots de passe et liens de réinitialisation stockés sous forme d'empreinte, protection contre la falsification de formulaires, limitation des tentatives de connexion, accès aux données limité à l'éditeur, sauvegardes quotidiennes. Aucune mesure n'est infaillible : en cas de violation de données présentant un risque, les personnes concernées et l'Autorité de protection des données seront informées comme le prévoit le RGPD.</p>
+<h2>3. Avec qui sont-elles partagées (sous-traitants) ?</h2>
+<table>
+  <thead><tr><th>Prestataire</th><th>Rôle</th><th>Localisation</th></tr></thead>
+  <tbody>
+    <tr><td>Render</td><td>Hébergement de l'application</td><td><%- legal('regionRender') %></td></tr>
+    <tr><td>Neon</td><td>Base de données PostgreSQL</td><td><%- legal('regionNeon') %></td></tr>
+    <tr><td>Cloudflare R2</td><td>Stockage des fichiers déposés, et stockage des sauvegardes de la base (dans un espace séparé)</td><td><%- legal('regionR2') %></td></tr>
+    <tr><td>GitHub (Actions)</td><td>Exécute chaque nuit la sauvegarde automatique de la base : la copie est produite sur une machine de GitHub, puis envoyée vers Cloudflare R2</td><td><%- legal('regionGitHub') %></td></tr>
+    <tr><td>Resend</td><td>Envoi des emails (notifications, rappels de délai, réinitialisation), lorsque l'envoi d'emails est activé</td><td><%- legal('regionResend') %></td></tr>
+    <tr><td>Discord</td><td>Communauté de la bêta : support et retours des testeurs (service utilisé hors de l'application, soumis à sa propre politique de confidentialité)</td><td><%- legal('regionDiscord') %></td></tr>
+  </tbody>
+</table>
+<p>Aucun prestataire de paiement n'est utilisé à ce jour.</p>
+<p>Lorsqu'un prestataire traite des données hors de l'Espace économique européen, le transfert est encadré par les clauses contractuelles types de la Commission européenne ou par une décision d'adéquation (dont le cadre de protection des données UE–États-Unis pour les prestataires certifiés).</p>
+<p>Le/la freelance voit les données de ses propres projets. Le client ne voit que le jalon ou la livraison dont il a reçu le lien.</p>
 
-<h2>7. Vos droits</h2>
-<p>Vous disposez des droits suivants sur vos données :</p>
+<h2>4. Combien de temps les conservons-nous ?</h2>
 <ul>
-  <li><strong>accès</strong> : savoir quelles données sont traitées et en obtenir une copie ;</li>
-  <li><strong>rectification</strong> : faire corriger des données inexactes ;</li>
-  <li><strong>suppression</strong> : faire effacer vos données, sauf si leur conservation est nécessaire pour respecter une obligation légale ou pour la constatation, l'exercice ou la défense de droits en justice ;</li>
-  <li><strong>portabilité</strong> : recevoir les données que vous avez fournies dans un format structuré et lisible par machine ;</li>
-  <li><strong>limitation</strong> et <strong>opposition</strong> au traitement fondé sur l'intérêt légitime.</li>
+  <li><strong>Données du compte et des projets</strong> : tant que le compte existe. Un projet, un jalon ou une livraison que vous supprimez est effacé immédiatement de la base, avec son historique.</li>
+  <li><strong>Suppression du compte</strong> (vous-même depuis « Mon profil », ou un administrateur sur demande écrite) : le compte, les projets, les jalons ou livraisons avec leurs livrables, les fichiers, les cadres et leurs acceptations, les notes, les suppléments, les journaux d'événements et les demandes de réinitialisation sont effacés de la base de données en une seule opération, même si une livraison était déjà approuvée et verrouillée. Les liens envoyés aux clients cessent de fonctionner.</li>
+  <li><strong>Fichiers du stockage</strong> : ils sont effacés juste après le compte. Si le stockage ne répond pas, ou si la suppression est faite par un administrateur qui n'y a pas accès, les fichiers restants sont inscrits dans une liste d'attente (table <code>storage_orphans</code>) puis effacés par la commande de nettoyage <code>admin:clean-storage</code>, dans un délai de <%- legal('storageCleanupDays') %> après la suppression du compte.</li>
+  <li><strong>Sauvegardes</strong> : une copie complète de la base est faite chaque nuit. Les données supprimées peuvent subsister dans les sauvegardes jusqu'à leur expiration, soit <%- legal('backupRetentionDays') %>, puis sont effacées.</li>
+  <li><strong>Comptes inactifs</strong> : durée avant suppression : <%- legal('inactiveAccountMonths') %>. Cette suppression n'est pas automatique à ce jour : elle est faite par un administrateur.</li>
+  <li><strong>Liens de réinitialisation du mot de passe</strong> : valables 1 heure (24 heures lorsqu'ils sont créés par un administrateur), utilisables une seule fois.</li>
+  <li><strong>Données de facturation</strong> (quand les paiements existeront) : <%- legal('billingRetentionYears') %>.</li>
+  <li><strong>Journaux techniques</strong> : selon la durée de conservation de l'hébergeur.</li>
 </ul>
-<p>Pour exercer ces droits, écrivez à <span class="placeholder">[EMAIL]</span>. Une réponse vous sera donnée dans un délai d'un mois. Une preuve d'identité peut être demandée en cas de doute.</p>
-<p><strong>Vous êtes le client d'un utilisateur de Signoff ?</strong> Le responsable de vos données est le prestataire qui vous a envoyé le lien. Adressez-vous d'abord à lui. Si vous écrivez à Signoff, votre demande lui sera transmise et Signoff l'aidera à y répondre.</p>
 
-<h2>8. Réclamation</h2>
+<h2>5. Vos droits</h2>
+<p>Vous pouvez demander l'accès à vos données, leur rectification, leur effacement, la limitation du traitement, la portabilité, et vous opposer aux traitements fondés sur l'intérêt légitime. Écrivez à <%- legal('contactEmail') %><% if (feedback) { %> (ou via le lien « <%= t('feedback.link') %> » de l'application)<% } %> ; nous répondons dans un délai d'un mois. Une preuve d'identité peut être demandée en cas de doute. La suppression du compte peut aussi se faire seul·e depuis « Mon profil ».</p>
+<p><strong>Vous êtes le client d'un·e freelance ?</strong> Adressez-vous d'abord au/à la freelance qui vous a envoyé le lien (responsable du traitement) ; nous l'aiderons à répondre.</p>
 <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de l'autorité de contrôle belge :</p>
 <p>
   <strong>Autorité de protection des données</strong><br>
@@ -90,5 +80,14 @@
   Site : <a href="https://www.autoriteprotectiondonnees.be" target="_blank" rel="noopener">www.autoriteprotectiondonnees.be</a>
 </p>
 
-<h2>9. Modifications</h2>
-<p>Cette politique peut évoluer, notamment à la sortie de la bêta. La date de dernière mise à jour figure en haut de la page. En cas de changement important, les utilisateurs seront prévenus par email.</p>
+<h2>6. Sécurité</h2>
+<p>Mots de passe hachés, liens de réinitialisation stockés sous forme d'empreinte, connexion chiffrée (HTTPS), protection contre la falsification de formulaires (CSRF), limitation des tentatives, en-têtes de sécurité, contrôle d'accès à chaque ressource, verrouillage en base des jalons et livraisons approuvés, sauvegardes automatiques chaque nuit. Aucun système n'est infaillible : en cas de violation de données susceptible de vous porter préjudice, nous le notifions à l'Autorité de protection des données et aux personnes concernées dans les délais légaux (72 heures pour l'autorité).</p>
+
+<% if (beta) { %>
+<h2>7. Bêta de test</h2>
+<p>Pendant la bêta, le service est destiné à des tests : n'envoyez aucune donnée réelle de client. Les comptes et données de la bêta peuvent être supprimés à tout moment. À l'inscription, vous acceptez les règles de la bêta (case à cocher) ; la date de cette acceptation est enregistrée. Responsable de la bêta : <%- legal('betaResponsible') %>.</p>
+<p>Pendant la bêta, si l'envoi d'emails n'est pas activé, un mot de passe oublié est réinitialisé par un administrateur, qui vous transmet un lien valable 24 heures.</p>
+<% } %>
+
+<h2><%= beta ? '8' : '7' %>. Modifications</h2>
+<p>Cette politique peut évoluer, notamment à la sortie de la bêta ; la date de dernière mise à jour figure en haut de la page. Dernière mise à jour : <%- legal('lastUpdated') %>.</p>

@@ -1,89 +1,134 @@
-<h1>Terms of use (beta)</h1>
-<p class="muted">Last updated: 18 October 2026</p>
+<h1>Terms of use<%= beta ? ' (beta)' : '' %></h1>
+<p class="muted">Last updated: <%- legal('lastUpdated') %></p>
 
-<p>These terms apply to the use of Signoff, published by Kostia Masset-Depasse, <span class="placeholder">[ADRESSE]</span>, Brussels, Belgium, company number <span class="placeholder">[BCE]</span> ("Signoff", "we"). By creating an account, you (the "user") accept them.</p>
+<h2>1. Publisher</h2>
+<table>
+  <tbody>
+    <tr><th scope="row">Publisher of the service</th><td><%- legal('companyName') %> (<%- legal('legalForm') %>)</td></tr>
+    <tr><th scope="row">Registered office</th><td><%- legal('address') %></td></tr>
+    <tr><th scope="row">Enterprise number (BCE/KBO)</th><td><%- legal('enterpriseNumber') %></td></tr>
+    <tr><th scope="row">VAT number</th><td><%- legal('vatNumber') %></td></tr>
+    <tr><th scope="row">Contact email</th><td><%- legal('contactEmail') %></td></tr>
+    <tr><th scope="row">Legal representative</th><td><%- legal('legalRepresentative') %></td></tr>
+  </tbody>
+</table>
 
-<h2>1. The service</h2>
-<p>Signoff lets freelance developers and service providers send project milestones to their clients for approval through a unique link, and get a dated record of the client's approval or feedback. The service is intended for professionals acting in the course of their business.</p>
+<h2>2. Purpose</h2>
+<p>These terms govern the use of Signoff ("Signoff", "we"), an online service that lets a freelancer submit deliverables or project stages to their client, collect the client's approval or change requests, and keep a timestamped history. They apply as soon as an account is created. The service is intended for professionals acting in the course of their business.</p>
+<p>A freelancer's client who opens an approval page is also bound by sections 6 and 8. When approving, the page tells the client: "<%= t('review.decision.intro') %>"</p>
 
-<h2>2. A beta, without warranty</h2>
-<p>Signoff is currently in a <strong>testing phase (beta)</strong>, available by invitation. The service is provided "as is" and "as available":</p>
+<h2>3. What Signoff is, and what it is not</h2>
 <ul>
-  <li>it may contain errors and may be interrupted, changed or discontinued at any time;</li>
-  <li>no warranty is given as to its availability, accuracy or fitness for a particular purpose;</li>
-  <li>data may be lost despite backups. Keep a copy of your important certificates ("Print or save as PDF" button).</li>
+  <li>Signoff provides a timestamped history and a digital fingerprint (SHA-256) of the files, which can serve as an element of proof of an agreement between the freelancer and their client. On approval, Signoff records the full name typed by the client, the date and time (UTC), their IP address, their browser and a frozen copy of the deliverables, and produces an approval certificate.</li>
+  <li>Signoff does not verify the identity of the person who uses the link. The history is not a qualified electronic signature within the meaning of Regulation (EU) No 910/2014 ("eIDAS"), nor an advanced form of one, and does not replace a written contract. In a dispute, it is for the judge to assess this history together with the other evidence.</li>
+  <li>Signoff is not a party to the relationship between the freelancer and their client: it does not answer for the quality of the work, the payment or the performance of the contract between them, and gives no legal advice.</li>
+  <li>Signoff is not a payment service and collects no money on the freelancer's behalf.</li>
 </ul>
-<p>No payment is requested during the beta without prior agreement. Any pricing will be communicated before anything is billed.</p>
 
-<h2>3. Your account</h2>
-<p>You provide accurate information, keep your password confidential and are responsible for the use of your account. Tell us at <span class="placeholder">[EMAIL]</span> if there is any unauthorised access.</p>
+<h2>4. Account and access</h2>
+<ul>
+  <li>Sign-up is currently by invitation (invitation code).</li>
+  <li>You provide accurate information, keep your password confidential and are responsible for the activity of your account. Tell us at <%- legal('contactEmail') %> if there is any unauthorised access.</li>
+  <li>You declare that you use the service in the course of your professional activity.</li>
+  <li>One account per person. You can delete it at any time from "My profile" (password and confirmation word required). Deletion erases the account, the projects, the milestones or deliveries with their deliverables, the files, the notes, the supplements and the logs, including what was already approved and locked; links sent to clients stop working. The details, including the storage cleanup and the expiry of backups, are in the <a href="/privacy">privacy policy</a>.</li>
+<% if (beta) { %>
+  <li>When signing up, you accept the beta rules (checkbox); the date of this acceptance is recorded.</li>
+  <li>If you forget your password during the beta, while sending emails is not turned on, an administrator resets it and sends you a link valid for 24 hours.</li>
+<% } %>
+</ul>
 
-<h2>4. Acceptable use</h2>
-<p>You agree to use Signoff lawfully and not to: send unlawful or misleading content or content that infringes the rights of others; use the service for spam; try to bypass its protections or access other users' data; disrupt its operation. You alone are responsible for the content you upload (deliverables, notes, links) and for the client data you enter.</p>
+<% if (beta) { %>
+<h2>5. Beta phase</h2>
+<ul>
+  <li>The service is a test beta: errors, interruptions or data loss are possible, with no commitment to availability. Keep a copy of your important certificates ("<%= t('cert.print') %>" button).</li>
+  <li>You do not send any real client data or files: test data only.</li>
+  <li>Beta accounts and data may be deleted or reset at any time.</li>
+  <li>A feedback link ("<%= t('feedback.link') %>") and a contact address let you report a bug or suggest an idea; a Discord server serves as the beta community.</li>
+  <li>The beta is free. Pricing will be communicated before any switch to a paid service.</li>
+  <li>Person responsible for the beta: <%- legal('betaResponsible') %>.</li>
+</ul>
+<% } %>
 
-<h2>5. Nature of the approval certificate</h2>
-<p>When a client clicks "I approve", Signoff records the date and time (UTC), the IP address, the browser and a frozen copy of the deliverables, and generates an approval certificate.</p>
-<p>This certificate is <strong>dated evidence of the client's agreement</strong> to the content shown. It is <strong>not a qualified electronic signature</strong> within the meaning of Regulation (EU) No 910/2014 ("eIDAS"), nor an advanced electronic signature, and therefore does not have the legal effect equivalent to a handwritten signature that the regulation reserves for qualified signatures. Signoff does not verify the identity of the person who clicks the link: the link is sent to the email address entered by the user, and anyone who has the link can use it. In a dispute, the evidential value of the certificate is assessed by the competent court together with the other evidence.</p>
-<p>Signoff is not a party to the contracts between users and their clients and gives no legal advice.</p>
+<h2>6. Your commitments</h2>
+<ul>
+  <li>You alone are responsible for the content and files you upload, and you declare that you have the right to use them and share them with your client.</li>
+  <li>You inform your clients that their data (name, email, approvals) is processed through Signoff, and you comply with the GDPR towards them; see the <a href="/privacy">privacy policy</a>.</li>
+  <li>It is forbidden to upload content that is unlawful, infringes the rights of others, is malicious (viruses) or is meant to deceive; to use the service for spam; to try to access other people's data; to disrupt the service; to bypass the technical limits.</li>
+</ul>
 
-<h2>6. Liability</h2>
-<p>To the fullest extent permitted by law, Signoff is not liable for indirect damage (loss of revenue, customers, data or opportunities), nor for disputes between users and their clients. During the free beta, Signoff's total liability is limited to 100 euros. These limits do not apply in case of fraud, intentional misconduct or gross negligence, or in any other case where the law prohibits limiting liability.</p>
+<h2>6a. Technical limits</h2>
+<ul>
+  <li><%= uploadRules.size %> MB maximum per file, <%= uploadRules.count %> files maximum per milestone or delivery, <%= uploadRules.quota %> MB maximum per account.</li>
+  <li>Accepted formats: <%= uploadRules.types %>. The type is recognised from the content of the file, not from its name; other formats (SVG, HTML, archives, executables…) are refused.</li>
+</ul>
 
-<h2>7. Personal data</h2>
-<p>How users' data is processed is described in the <a href="/privacy">privacy policy</a>. For your clients' data, Signoff acts as a processor under the agreement in section 11 below.</p>
+<h2>7. How approvals work</h2>
+<ul>
+  <li>An approved milestone is locked: its content can no longer be changed. Any change goes through a new milestone or a supplement. The freelancer can still delete it, with its history.</li>
+  <li>Approval is a deliberate action by the client on the page sent to them: they type their full name and confirm. The link stays usable for 7 days after approval.</li>
+  <li>Signoff never approves a milestone automatically when the client stays silent. When the project sets a validation deadline, the reminders sent to the client (halfway through and the day before the deadline) are mere notifications; once the deadline has passed, the history says so and the freelancer is told, but the milestone keeps waiting for the client's own decision.</li>
+  <li>Depending on the activity chosen in the profile (video, design, illustration, photography), the app says "delivery"; for other activities, "milestone". In these terms, both mean the same thing.</li>
+  <li>The freelancer alone is responsible for who receives the link and for sending it correctly. Anyone who has the link can act as the client: only share it with them.</li>
+</ul>
 
 <h2>8. Intellectual property</h2>
-<p>Signoff remains the owner of the service, its code and its brand. You remain the owner of your content and only grant us the right to store and display it as needed to provide the service.</p>
+<p>The service, its code, its design and its brand remain the property of the publisher. You keep all rights to your content; you only grant us the right to host it and show it to your client in order to provide the service.</p>
 
-<h2>9. Term, suspension and termination</h2>
-<p>You can stop using Signoff and ask for your account to be closed at any time by writing to <span class="placeholder">[EMAIL]</span>. We may suspend or close an account that breaches these terms, or end the beta by notifying users by email at least 30 days in advance, except in an emergency. After closure, data is kept for 1 year and then deleted, as set out in the privacy policy. You can ask for a copy of your data before it is deleted.</p>
+<h2>9. Liability</h2>
+<p>To the extent permitted by law, and except in case of fraud, gross negligence or intentional misconduct by the publisher, the publisher's liability is limited to direct damage and, for all damage together, to the amount paid by the user for the service over the <%- legal('liabilityMonths') %> before the event giving rise to the damage (zero during the free beta). The publisher is not liable for indirect loss (loss of profit, customers, data or opportunities), nor for disputes between a freelancer and their client. These limits do not apply where the law prohibits limiting liability.</p>
 
-<h2>10. Changes</h2>
-<p>These terms may change, in particular when the beta ends. Users will be notified by email of any significant change. Continuing to use the service after the effective date means you accept the new terms.</p>
+<h2>10. Personal data</h2>
+<p>How data is processed is described in the <a href="/privacy">privacy policy</a>, which forms part of these terms. For your clients' data, Signoff acts as a processor under the agreement in section 15 below.</p>
 
-<h2 id="dpa">11. Data processing agreement (Article 28 GDPR)</h2>
-<p>This section is the data processing agreement required by Article 28(3) of Regulation (EU) 2016/679 ("GDPR"). It applies to the personal data that the user (the "controller") entrusts to Signoff (the "processor") about their clients.</p>
+<h2>11. Suspension and termination</h2>
+<p>You can delete your account at any time from "My profile", with the effects described in section 4. The publisher may suspend or delete an account that breaches these terms or is misused, or end the service with <%- legal('serviceEndNoticeDays') %> notice so that you can retrieve your data (a copy on request, certificates to print or save as PDF).</p>
 
-<h3>11.1 Subject matter, duration, nature and purpose</h3>
-<p>The processor hosts and processes the data needed to send milestones to the controller's clients for approval, collect their approval or feedback, and produce approval certificates. Processing lasts as long as the user's account, plus the retention period in 11.9.</p>
+<h2>12. Pricing and payment</h2>
+<p>No payment is requested at this time. Plans, prices and the terms of billing, cancellation and refunds will be added here before any switch to a paid service.</p>
 
-<h3>11.2 Data and data subjects</h3>
+<h2>13. Changes to the terms</h2>
+<p>The publisher may change these terms; significant changes are announced <%- legal('termsChangeNoticeDays') %> in advance by email or in the app. Continuing to use the service after they take effect means you accept them.</p>
+
+<h2>14. Governing law and disputes</h2>
+<p>These terms are governed by Belgian law. Unless a mandatory rule provides otherwise, the courts of <%- legal('courtCity') %> have jurisdiction. Before taking any action, the parties seek an amicable solution by writing to <%- legal('contactEmail') %>.</p>
+
+<h2 id="dpa">15. Data processing agreement (Article 28 GDPR)</h2>
+<p>This section is the processing contract required by Article 28(3) of Regulation (EU) 2016/679 ("GDPR"). It applies to the personal data that the user (the "controller") entrusts to Signoff (the "processor") for their clients.</p>
+
+<h3>15.1 Subject matter, duration, nature and purpose</h3>
+<p>The processor hosts and processes the data needed to send milestones or deliveries to the controller's clients for approval, collect their approval or change requests, and produce approval certificates. Processing lasts as long as the user's account, plus the periods set out in 15.9.</p>
+
+<h3>15.2 Data and data subjects</h3>
 <ul>
-  <li><strong>Data subjects</strong>: the controller's clients and their representatives or staff, and any person mentioned in the deliverables.</li>
-  <li><strong>Categories of data</strong>: name, email address, feedback messages, IP address, browser (user agent), date and time of actions, content of deliverables.</li>
-  <li>No special categories of data (Art. 9 GDPR) are expected. The controller agrees not to upload any in deliverables.</li>
+  <li><strong>Data subjects</strong>: the controller's clients and their representatives or employees, and any people mentioned in the deliverables.</li>
+  <li><strong>Categories of data</strong>: name, email address, full name typed on approval, comments (including file references), IP address, browser (user agent), date and time of actions, content of deliverables and files.</li>
+  <li>No special categories of data (Art. 9 GDPR) are expected. The controller undertakes not to upload any in the deliverables.</li>
 </ul>
 
-<h3>11.3 Instructions</h3>
-<p>The processor processes the data only on documented instructions from the controller. These terms and the use of the service's features are those instructions. The processor immediately informs the controller if, in its opinion, an instruction infringes the GDPR or other data protection rules, or if Union or Member State law requires it to process the data, unless that law prohibits such information.</p>
+<h3>15.3 Instructions</h3>
+<p>The processor processes the data only on documented instructions from the controller. These terms and the use of the service's features are those instructions. The processor immediately informs the controller if, in its opinion, an instruction infringes the GDPR or other data protection rules, or if Union or Member State law requires it to process data, unless that law prohibits such information.</p>
 
-<h3>11.4 Confidentiality</h3>
-<p>Persons authorised to process the data are bound by confidentiality.</p>
+<h3>15.4 Confidentiality</h3>
+<p>People authorised to process the data are bound by confidentiality.</p>
 
-<h3>11.5 Security</h3>
-<p>The processor implements the technical and organisational measures required by Article 32 GDPR, including: encrypted connections (HTTPS), passwords stored as hashes, access control limiting each user to their own projects, protection against forged form submissions, login attempt limits, hosting in the European Union, daily backups.</p>
+<h3>15.5 Security</h3>
+<p>The processor implements the technical and organisational measures required by Article 32 GDPR, in particular: encrypted connections (HTTPS), passwords stored as hashes, access control limiting each user to their own projects, protection against forged forms, rate limiting, database lock on approved milestones, backups every night.</p>
 
-<h3>11.6 Sub-processors</h3>
-<p>The controller gives a general authorisation to use the sub-processors listed in the <a href="/privacy">privacy policy</a> (Render, Neon, Resend, Cloudflare). The processor informs the controller by email of any addition or replacement at least 30 days in advance; the controller may object on reasonable data protection grounds and, failing agreement, close their account. The processor imposes equivalent data protection obligations on each sub-processor by contract and remains liable for their performance.</p>
+<h3>15.6 Sub-processors</h3>
+<p>The controller gives general authorisation for the sub-processors listed in the <a href="/privacy">privacy policy</a> (Render, Neon, Cloudflare, GitHub, Resend). The processor informs the controller by email of any addition or replacement at least 30 days in advance; the controller may object on reasonable data protection grounds and, failing agreement, delete their account. The processor imposes equivalent data protection obligations on each sub-processor by contract and remains responsible for their performance.</p>
 
-<h3>11.7 Transfers outside the European Economic Area</h3>
+<h3>15.7 Transfers outside the European Economic Area</h3>
 <p>Any transfer of data outside the EEA relies on an adequacy decision (including the EU–US Data Privacy Framework for certified providers) or on the European Commission's standard contractual clauses.</p>
 
-<h3>11.8 Assistance</h3>
-<p>Taking into account the nature of the processing, the processor assists the controller with appropriate measures: in responding to requests from data subjects exercising their rights (it forwards any request received directly without delay); in ensuring the security of processing; and, where applicable, in carrying out a data protection impact assessment and prior consultation of the supervisory authority.</p>
-<p>In the event of a personal data breach, the processor notifies the controller without undue delay and at the latest <strong>48 hours</strong> after becoming aware of it, with the information available so that the controller can meet its own obligations (Articles 33 and 34 GDPR).</p>
+<h3>15.8 Assistance</h3>
+<p>Taking into account the nature of the processing, the processor assists the controller with appropriate measures: in responding to requests from data subjects exercising their rights (forwarding without delay any request received directly); in ensuring the security of processing; and, where applicable, in carrying out a data protection impact assessment and prior consultation of the supervisory authority.</p>
+<p>In the event of a personal data breach, the processor notifies the controller without undue delay and no later than <strong>48 hours</strong> after becoming aware of it, with the information available to allow the controller to meet its own obligations (Articles 33 and 34 GDPR).</p>
 
-<h3>11.9 End of processing</h3>
-<p>When the account is closed, the controller may request a copy of its data. The processor then deletes the data no later than 1 year after closure, and from backups no later than 30 days after that, unless the law requires it to be kept. The controller may request earlier deletion.</p>
+<h3>15.9 End of processing</h3>
+<p>Before deleting their account, the controller can ask for a copy of their data. Deleting the account erases the data from the database at once; files in storage are erased right after or, failing that, within <%- legal('storageCleanupDays') %>; backups holding a copy expire after <%- legal('backupRetentionDays') %>.</p>
 
-<h3>11.10 Audits and information</h3>
+<h3>15.10 Audits and information</h3>
 <p>The processor makes available to the controller the information needed to demonstrate compliance with Article 28 GDPR, and allows audits, including inspections, by the controller or an auditor it appoints, with reasonable notice and a confidentiality undertaking.</p>
 
-<h3>11.11 Controller's obligations</h3>
-<p>The controller warrants that it has a legal basis for entrusting this data to Signoff and that it informs its clients of the processing. The review page shows its clients information about the data recorded at approval.</p>
-
-<h2>12. Governing law and disputes</h2>
-<p>These terms are governed by Belgian law. Any dispute falls under the exclusive jurisdiction of the courts of Brussels, unless mandatory rules provide otherwise. Before taking action, the parties will try to reach an amicable solution.</p>
-
-<h2>Contact</h2>
-<p><span class="placeholder">[EMAIL]</span></p>
+<h3>15.11 Controller's obligations</h3>
+<p>The controller declares that it has a legal basis for entrusting this data to Signoff, and informs its clients of the processing. The approval page shows the controller's clients information about the data recorded on approval.</p>

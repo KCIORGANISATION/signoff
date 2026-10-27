@@ -1,7 +1,7 @@
 import { deliveryWording } from './vocabulary.js';
 
 const en = {
-  'app.tagline': 'Client sign-off for freelance developers',
+  'app.tagline': 'Client sign-off for every kind of freelancer',
   'nav.dashboard': 'Dashboard',
   'nav.logout': 'Log out',
   'nav.login': 'Log in',
@@ -827,7 +827,7 @@ const en = {
 };
 
 const fr = {
-  'app.tagline': 'La validation client pour les développeurs freelance',
+  'app.tagline': 'La validation client pour tous les freelances',
   'nav.dashboard': 'Tableau de bord',
   'nav.logout': 'Déconnexion',
   'nav.login': 'Connexion',
