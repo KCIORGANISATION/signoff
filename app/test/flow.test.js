@@ -189,3 +189,15 @@ test('legal pages exist in French and English, fonts are self-hosted', async () 
   assert.equal((await visitor.get('/fonts/caveat/caveat-latin-600-normal.woff2')).status, 200);
   assert.equal((await visitor.get('/logo.svg')).status, 200);
 });
+
+test('the login and sign-up pages speak to every freelancer, not only developers', async () => {
+  const visitor = new Browser(server.base);
+  for (const [lang, tagline] of [['en', 'Client sign-off for every kind of freelancer'], ['fr', 'La validation client pour tous les freelances']]) {
+    await visitor.get(`/lang/${lang}`);
+    for (const path of ['/login', '/signup']) {
+      const page = await visitor.get(path);
+      assert.ok(page.text.includes(`<p class="lead">${tagline}</p>`), `${lang} ${path}`);
+      assert.doesNotMatch(page.text, /freelance developers|développeurs freelance/, `${lang} ${path}`);
+    }
+  }
+});
