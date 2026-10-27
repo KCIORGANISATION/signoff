@@ -117,6 +117,21 @@ CREATE OR REPLACE TRIGGER milestones_locked
   BEFORE UPDATE ON milestones
   FOR EACH ROW EXECUTE FUNCTION signoff_milestone_locked();
 
+-- An approved milestone cannot be deleted on its own. Deleting its project or its account
+-- still works: the cascade runs once the project row is gone.
+CREATE OR REPLACE FUNCTION signoff_milestone_undeletable() RETURNS trigger AS $$
+BEGIN
+  IF OLD.status = 'approved' AND EXISTS (SELECT 1 FROM projects WHERE id = OLD.project_id) THEN
+    RAISE EXCEPTION 'milestone % is approved and locked', OLD.id;
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER milestones_undeletable
+  BEFORE DELETE ON milestones
+  FOR EACH ROW EXECUTE FUNCTION signoff_milestone_undeletable();
+
 CREATE OR REPLACE FUNCTION signoff_deliverables_locked() RETURNS trigger AS $$
 DECLARE
   target INTEGER := CASE WHEN TG_OP = 'DELETE' THEN OLD.milestone_id ELSE NEW.milestone_id END;

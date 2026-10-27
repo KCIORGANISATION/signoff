@@ -111,7 +111,7 @@
     <section class="glass panel panel-tight reveal" style="--i: 2;">
       <p class="lock-note"><%- include('../partials/icon', { name: 'lock', cls: 'icon-sm' }) %><span><%= t('milestone.form.lockNote') %></span></p>
     </section>
-    <% if (milestone) { %>
+    <% if (milestone && !isLocked) { %>
       <form method="post" action="/milestones/<%= milestone.id %>/delete" data-confirm="<%= t('milestone.delete.confirm') %>">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn btn-danger btn-small" type="submit"><%- include('../partials/icon', { name: 'trash', cls: 'icon-sm' }) %><%= t('milestone.delete') %></button>

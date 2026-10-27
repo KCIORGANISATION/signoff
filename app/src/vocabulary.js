@@ -47,6 +47,7 @@ const frDelivery = {
   'milestone.editedAfterApproval': 'Vous avez modifié cette livraison après sa validation. Le certificat montre toujours exactement ce que le client a validé.',
   'milestone.locked': 'Cette livraison est approuvée et verrouillée. Toute modification se fait dans une nouvelle livraison.',
   'milestone.locked.error': 'Cette livraison est approuvée et verrouillée : son contenu ne peut plus changer. Créez plutôt une livraison de suite.',
+  'milestone.locked.deleteError': 'Cette livraison est approuvée et verrouillée : elle ne peut pas être supprimée seule. Pour l’effacer, supprimez le projet ou le compte.',
   'milestone.followUp': 'Créer une livraison de suite',
   'files.error.count': 'Une livraison peut contenir {count} fichiers au maximum.',
   'files.error.limits': "L'envoi a été refusé : la livraison est verrouillée ou une limite est atteinte.",
