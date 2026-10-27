@@ -106,6 +106,11 @@ test('during the beta, the pages show "[à compléter]" and the beta sections', 
     assert.match(fr, /Responsable de la bêta : <span class="placeholder">/, path);
     assert.doesNotMatch(fr + en, /\[ADRESSE\]|\[BCE\]|\[EMAIL\]|Masset/, 'no old placeholder, no personal name');
   }
+  const legalFr = await page('/legal', 'fr');
+  const legalEn = await page('/legal', 'en');
+  assert.match(legalFr, /Responsable de la publication : <span class="placeholder">\[à compléter\]<\/span>/);
+  assert.match(legalEn, /Publication manager: <span class="placeholder">\[to be completed\]<\/span>/);
+  assert.doesNotMatch(legalFr + legalEn, /\[ADRESSE\]|\[BCE\]|\[TVA\]|\[EMAIL\]|Masset|Kostia/, 'the legal notice names nobody and has no old placeholder');
   assert.match(await page('/privacy', 'fr'), /<h2>7\. Bêta de test<\/h2>/);
   assert.match(await page('/terms', 'en'), /<h2>5\. Beta phase<\/h2>/);
 
@@ -170,7 +175,7 @@ test('the legal pages avoid the forbidden words', async () => {
   for (const enabled of [true, false]) {
     setBeta({ enabled });
     for (const lang of ['fr', 'en']) {
-      for (const path of ['/privacy', '/terms']) {
+      for (const path of ['/legal', '/privacy', '/terms']) {
         const text = (await page(path, lang))
           .replace(/n(&#39;|')est pas une signature électronique qualifiée/g, '')
           .replace(/is not a qualified electronic signature/g, '')

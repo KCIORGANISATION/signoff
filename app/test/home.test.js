@@ -88,6 +88,16 @@ test('"Powered by Signoff" on client pages points to the app home page', async (
   assert.doesNotMatch(page.text, /netlify|github\.com/i);
 });
 
+test('the home page speaks to every freelancer, not only developers', async () => {
+  const visitor = new Browser(server.base);
+  for (const [lang, tagline] of [['fr', 'La validation client pour tous les freelances'], ['en', 'Client sign-off for every kind of freelancer']]) {
+    await visitor.get(`/lang/${lang}`);
+    const page = await visitor.get('/');
+    assert.ok(page.text.includes(tagline), `${lang} lead`);
+    assert.doesNotMatch(page.text, /développeurs? freelance|freelance developers?/i, lang);
+  }
+});
+
 // Last: the database is closed, and the public pages still answer.
 test('the home page and /acces do not need the database', async () => {
   await server.stop();
